@@ -11,29 +11,77 @@
 <style>
   :root{
     --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
-    --brand:#2563eb; --accent:#b75507;
+    --brand:#2563eb; --accent:#b75507; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
   }
+  *{ box-sizing:border-box }
   body{
     font-family:'Inter',sans-serif;
     background:var(--bg); color:var(--text);
-    margin:0; padding:20px;
+    margin:0; padding:24px;
   }
   header{
     display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:24px;
+    gap:12px; margin-bottom:24px;
   }
-  h1{margin:0;font-size:1.5rem;}
-  .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+  h1{margin:0;font-size:1.5rem;line-height:1.1}
+  .btn{
+    padding:10px 16px;border:none;border-radius:12px;cursor:pointer;font-weight:600;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(.98) }
   .btn.back{background:var(--accent);color:#fff}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:20px}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(12,1fr);
+    gap:20px;
+  }
+  /* 4 col x 3 linhas (desktop) */
+  .span-6{ grid-column: span 6 }  /* meia largura */
+  .span-4{ grid-column: span 4 }  /* 1/3 */
+  .span-12{ grid-column: span 12 }/* full */
+
   .card{
     background:var(--panel);border:1px solid var(--line);
     border-radius:12px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.3);
   }
-  .card h2{font-size:1.1rem;margin-bottom:10px}
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  th,td{padding:6px 8px;border:1px solid var(--line);font-size:.9rem}
-  th{background:#fff;color:#000}
+  .card h2{font-size:1.1rem;margin:0 0 10px}
+  .muted{ color:var(--muted) }
+  .pill{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.8rem }
+
+  /* tabelas */
+  .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:10px }
+  table{min-width:600px; width:100%; border-collapse:collapse}
+  th,td{padding:8px 10px;border:1px solid var(--line);font-size:.92rem;text-align:left}
+  th{background:#fff;color:#000;font-weight:600}
+  tr.is-high td{ background: rgba(239,68,68,.12) }   /* danger translucido */
+  tr.is-mid td{ background: rgba(245,158,11,.12) }  /* warn translucido */
+
+  /* responsivo */
+  @media (max-width: 1200px){
+    .grid{ grid-template-columns:repeat(8,1fr) }
+    .span-6{ grid-column: span 8 } /* ocupa linha inteira no 8-col quando necessário */
+    .span-4{ grid-column: span 4 }
+  }
+  @media (max-width: 1024px){ /* tablet */
+    body{ padding:18px }
+    .grid{ grid-template-columns:repeat(6,1fr) }
+    .span-6{ grid-column: span 6 }
+    .span-4{ grid-column: span 6 } /* cada card vira full na faixa tablet estreita */
+    .btn{ min-height:44px }
+  }
+  @media (max-width: 768px){ /* celular */
+    body{ padding:12px }
+    header{ flex-direction:column; align-items:flex-start }
+    h1{ font-size:1.25rem }
+    .grid{ grid-template-columns:1fr; gap:14px }
+    .span-6, .span-4, .span-12{ grid-column: span 1 }
+    .card{ padding:14px }
+    th,td{ white-space:nowrap } /* não quebrar: usa scroll horizontal */
+    .btn{ width:100% } /* botão voltar fácil de tocar */
+  }
+  @media (hover: none){
+    .btn{ min-height:44px }
+  }
 </style>
 </head>
 <body>
@@ -45,57 +93,67 @@
 
 <div class="grid">
 
-  <!-- Relatório 1: Quantidade de Receitas -->
-  <div class="card">
+  <!-- Relatório 1: Quantidade de Receitas (span 6 = metade) -->
+  <div class="card span-6">
     <h2>📌 Quantidade de Receitas</h2>
-    <canvas id="chartReceitas"></canvas>
-    <div id="resumoReceitas" style="margin-top:10px;font-size:.9rem;color:var(--muted)">
-      Total de receitas: <b id="totalReceitas">0</b>
+    <canvas id="chartReceitas" height="140"></canvas>
+    <div id="resumoReceitas" style="margin-top:10px;font-size:.9rem">
+      <span class="pill">Total de receitas: <b id="totalReceitas">0</b></span>
     </div>
   </div>
 
-  <!-- Relatório 2: Produtos com custos diferentes -->
-  <div class="card">
+  <!-- Relatório 2: Produtos com custos diferentes (span 6) -->
+  <div class="card span-6">
     <h2>💰 Produtos com Custos Muito Diferentes</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Produto</th>
-          <th>Custo Mín.</th>
-          <th>Custo Máx.</th>
-          <th>Variação</th>
-        </tr>
-      </thead>
-      <tbody id="tblProdutos"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Custo Mín.</th>
+            <th>Custo Máx.</th>
+            <th>Variação</th>
+          </tr>
+        </thead>
+        <tbody id="tblProdutos"></tbody>
+      </table>
+    </div>
+    <div class="muted" style="margin-top:8px;font-size:.9rem">
+      Itens destacados têm variação acima do limite configurado.
+    </div>
   </div>
 
-  <!-- Relatório 3: Ingredientes com variação alta -->
-  <div class="card">
+  <!-- Relatório 3: Ingredientes com variação alta (span 4) -->
+  <div class="card span-4">
     <h2>🥗 Ingredientes com Diferença de Custo</h2>
-    <canvas id="chartIngredientes"></canvas>
+    <canvas id="chartIngredientes" height="180"></canvas>
   </div>
 
-  <!-- Relatório 4: Análise Detalhada -->
-  <div class="card">
+  <!-- Relatório 4: Análise Detalhada (span 8) -->
+  <div class="card span-8">
     <h2>🔎 Análise Detalhada</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Receita</th>
-          <th>Qtd. Ingredientes</th>
-          <th>Custo Total</th>
-          <th>Custo Médio</th>
-        </tr>
-      </thead>
-      <tbody id="tblDetalhada"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Receita</th>
+            <th>Qtd. Ingredientes</th>
+            <th>Custo Total</th>
+            <th>Custo Médio</th>
+          </tr>
+        </thead>
+        <tbody id="tblDetalhada"></tbody>
+      </table>
+    </div>
   </div>
 
 </div>
 
 <script>
-/* Exemplo de dados mockados - depois vamos puxar do Apps Script */
+/* ========= Helpers ========= */
+const fmtBRL = n => (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+/* ========= Dados mockados (substituir por Apps Script depois) ========= */
 const receitas = [
   {nome:"Bolo Chocolate", qtdIng:5, custo:45},
   {nome:"Pão Francês", qtdIng:3, custo:25},
@@ -105,55 +163,105 @@ const receitas = [
 
 const produtos = [
   {nome:"Farinha", min:4.5, max:7.0},
-  {nome:"Leite", min:3.2, max:5.5},
-  {nome:"Ovo", min:0.4, max:0.9},
+  {nome:"Leite",   min:3.2, max:5.5},
+  {nome:"Ovo",     min:0.4, max:0.9},
 ];
 
-/* 1. Quantidade de Receitas */
+/* ========= 1. Quantidade de Receitas ========= */
 document.getElementById("totalReceitas").innerText = receitas.length;
-new Chart(document.getElementById("chartReceitas"), {
+
+const ctx1 = document.getElementById("chartReceitas");
+new Chart(ctx1, {
   type:"bar",
   data:{
     labels:receitas.map(r=>r.nome),
-    datasets:[{label:"Custo (R$)", data:receitas.map(r=>r.custo), backgroundColor:"#2563eb"}]
+    datasets:[{
+      label:"Custo (R$)",
+      data:receitas.map(r=>r.custo),
+      backgroundColor:"#2563eb",
+      borderWidth:0
+    }]
   },
-  options:{responsive:true}
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{ labels:{ color:"#e5e7eb" } },
+      tooltip:{ callbacks:{ label:(c)=>`${fmtBRL(c.parsed.y)}` } }
+    },
+    scales:{
+      x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" } },
+      y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" } }
+    }
+  }
 });
 
-/* 2. Produtos com custos diferentes */
+/* ========= 2. Produtos com custos diferentes ========= */
 const tbodyP = document.getElementById("tblProdutos");
-produtos.forEach(p=>{
-  let variacao = (p.max - p.min).toFixed(2);
-  let tr = `<tr>
+/* regra: destaca se variação absoluta >= limiteAbs ou percentual >= limitePerc */
+const limiteAbs = 2.0;     // R$ 2,00
+const limitePerc = 0.35;   // 35%
+
+// ordena do maior para o menor impacto
+const produtosOrdenados = [...produtos].sort((a,b)=>(b.max-b.min)-(a.max-a.min));
+
+produtosOrdenados.forEach(p=>{
+  const variacaoAbs  = (p.max - p.min);
+  const variacaoPerc = p.min>0 ? (variacaoAbs / p.min) : 0;
+  const cls = variacaoPerc >= 0.6 || variacaoAbs >= 5 ? 'is-high'
+            : (variacaoPerc >= limitePerc || variacaoAbs >= limiteAbs) ? 'is-mid' : '';
+
+  const tr = document.createElement('tr');
+  if(cls) tr.classList.add(cls);
+  tr.innerHTML = `
     <td>${p.nome}</td>
-    <td>R$ ${p.min.toFixed(2)}</td>
-    <td>R$ ${p.max.toFixed(2)}</td>
-    <td>R$ ${variacao}</td>
-  </tr>`;
-  tbodyP.innerHTML += tr;
+    <td>${fmtBRL(p.min)}</td>
+    <td>${fmtBRL(p.max)}</td>
+    <td>${fmtBRL(variacaoAbs)} (${(variacaoPerc*100).toFixed(0)}%)</td>
+  `;
+  tbodyP.appendChild(tr);
 });
 
-/* 3. Ingredientes com variação alta (gráfico) */
-new Chart(document.getElementById("chartIngredientes"), {
+/* ========= 3. Ingredientes com variação alta (gráfico) ========= */
+const ctx2 = document.getElementById("chartIngredientes");
+new Chart(ctx2, {
   type:"pie",
   data:{
     labels:produtos.map(p=>p.nome),
-    datasets:[{data:produtos.map(p=>(p.max-p.min)), backgroundColor:["#2563eb","#f59e0b","#ef4444"]}]
+    datasets:[{
+      data:produtos.map(p=>(p.max-p.min)),
+      backgroundColor:["#2563eb","#f59e0b","#ef4444","#10b981","#a78bfa","#f97316"]
+    }]
   },
-  options:{responsive:true}
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{ position:'bottom', labels:{ color:"#e5e7eb" } },
+      tooltip:{ callbacks:{ label:(c)=>`${c.label}: ${fmtBRL(c.parsed)}` } }
+    }
+  }
 });
 
-/* 4. Análise detalhada */
+/* ========= 4. Análise detalhada ========= */
 const tbodyD = document.getElementById("tblDetalhada");
 receitas.forEach(r=>{
-  let custoMedio = (r.custo/r.qtdIng).toFixed(2);
-  tbodyD.innerHTML += `<tr>
+  const custoMedio = r.qtdIng>0 ? (r.custo/r.qtdIng) : 0;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
     <td>${r.nome}</td>
     <td>${r.qtdIng}</td>
-    <td>R$ ${r.custo.toFixed(2)}</td>
-    <td>R$ ${custoMedio}</td>
-  </tr>`;
+    <td>${fmtBRL(r.custo)}</td>
+    <td>${fmtBRL(custoMedio)}</td>
+  `;
+  tbodyD.appendChild(tr);
 });
+
+/* ========= (Opcional futuro) carregar via Apps Script =========
+fetch(WEBAPP_URL+'?action=relatorios')
+  .then(r=>r.json())
+  .then(j=>{ ...atualizar charts e tabelas com j.data... });
+*/
 </script>
 
 </body>
