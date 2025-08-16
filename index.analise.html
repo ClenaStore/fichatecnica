@@ -40,15 +40,19 @@
   .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;font-size:.75rem}
   .link{cursor:pointer;color:#93c5fd}
 
-  /* tabela */
+  /* grupo de ações (Histórico/Relatórios/Atualizar) */
+  .actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
+  .actions .btn{ flex:0 0 auto }
+
+  /* tabela principal */
+  .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
+  /* força rolagem no mobile sem amassar colunas */
+  #tblReceitas{ min-width: 980px; }
   th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
-  th {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: 1px solid var(--line);
-}
+  th{
+    background:#fff; color:#000; font-weight:600; border:1px solid var(--line);
+  }
 
   .best{outline:2px solid #16a34a; background:rgba(22,163,74,.12)}
   .best::after{content:" 💚"}
@@ -57,7 +61,7 @@
   .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
 
   /* ===== MODAL DETALHE ===== */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
   .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
 
   .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
@@ -65,7 +69,7 @@
   .m-title .name{font-size:1.4rem;font-weight:700;margin:0;line-height:1.1}
   .m-title .sub{font-size:.95rem;color:var(--muted)}
   .m-right{display:grid;grid-template-rows:auto auto;gap:10px;align-items:start;justify-items:end}
-  .m-actions{display:flex;gap:8px;align-items:center}
+  .m-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .ctrl{height:40px; padding:10px 14px; border-radius:12px}
   .ctrl.w{width:220px}
   .foto{
@@ -74,26 +78,51 @@
     box-shadow:0 6px 20px rgba(0,0,0,.35);
   }
 
-  .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+  /* tabela do detalhe (scroll horizontal garantido) */
+  #tblDet{ min-width: 900px; }
 
   /* ===== MODAL HISTÓRICO ===== */
-  .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52}
+  .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52;padding:8px}
   .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
   .h-filtros{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
   .h-filtros > div{grid-column: span 3}
   .h-filtros .w2{grid-column: span 2}
   .h-filtros .w4{grid-column: span 4}
   .h-table{border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .h-table table{ min-width: 760px; }
+
+  /* ===== ACESSIBILIDADE EM TELAS TOUCH ===== */
+  @media (hover:none){
+    .btn{ min-height:44px }
+  }
+
+  /* ===== RESPONSIVO ===== */
+  @media (max-width: 1024px){
+    body{ padding:18px }
+  }
 
   @media (max-width: 768px){
+    :root{ --foto-size: 140px; }
     body{padding:12px}
-    .row{grid-template-columns:1fr;gap:10px}
     header{flex-direction:column;align-items:flex-start;gap:10px}
+    .row{grid-template-columns:1fr;gap:10px}
+
+    /* ações do topo mais fluidas no mobile */
+    .actions{ justify-content:stretch }
+    .actions .btn{ flex:1 1 140px } /* quebra em 2–3 por linha conforme espaço */
+
+    /* modal detalhe empilha header e controles */
     .m-head{grid-template-columns: 1fr}
     .m-right{justify-items:start}
     .ctrl.w{width:100%}
+
+    /* filtros histórico em 1 coluna */
     .h-filtros{grid-template-columns:1fr}
     .h-filtros > div{grid-column: span 1}
+
+    /* caixas com menos padding */
+    .card{ padding:14px }
+    th,td{ white-space:nowrap } /* mantem rolagem horizontal nas tabelas */
   }
 </style>
 </head>
@@ -114,26 +143,28 @@
         <label>Buscar</label>
         <input id="fBusca" placeholder="Item, classificação, código...">
       </div>
-      <div style="grid-column: span 4;align-self:end" class="right">
-  <button class="btn ghost" id="btnHistorico">Histórico</button>
-  <button class="btn primary" onclick="window.location.href='relatorios.html'">Relatórios</button>
-  <button class="btn secondary" id="btnAtualizar">Atualizar</button>
-</div>
+      <div style="grid-column: span 4;align-self:end" class="actions">
+        <button class="btn ghost" id="btnHistorico">Histórico</button>
+        <button class="btn primary" onclick="window.location.href='relatorios.html'">Relatórios</button>
+        <button class="btn secondary" id="btnAtualizar">Atualizar</button>
+      </div>
     </div>
     <div id="metaInfo" class="small muted" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
-    <table id="tblReceitas">
-      <thead>
-        <tr>
-          <th>Empresa</th><th>Código</th><th>Nº</th><th>Item</th><th>Classificação</th>
-          <th>Rendimento</th><th>U.M.</th><th class="right">Custo da Receita</th>
-          <th class="right">Custo por kg/L</th><th>Data</th><th>Usuário</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyReceitas"></tbody>
-    </table>
+    <div class="tbl-wrap">
+      <table id="tblReceitas">
+        <thead>
+          <tr>
+            <th>Empresa</th><th>Código</th><th>Nº</th><th>Item</th><th>Classificação</th>
+            <th>Rendimento</th><th>U.M.</th><th class="right">Custo da Receita</th>
+            <th class="right">Custo por kg/L</th><th>Data</th><th>Usuário</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyReceitas"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Modal Detalhe -->
