@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cadastro de Produto & Receita</title>
+<style>
+  :root{ --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf; --brand:#2563eb; --ghost:#374151; --accent:#b75507; }
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
+  h1{margin:0 0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  label{font-size:.85rem;color:var(--muted)}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:8px;text-align:left}
+  th{background:#000}
+  .accent{background:var(--accent);color:#fff}
+  .right{text-align:right}
+  .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;background:var(--brand);color:#fff}
+  .btn.secondary{background:#334155}
+  .btn.ghost{background:transparent;border:1px solid var(--ghost)}
+  .muted{opacity:.85}
+  .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);font-size:.8rem;background:#111}
+  .totais{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .small{font-size:.9rem}
+  .inline{display:flex;gap:8px;align-items:center}
+  .mini{padding:6px 10px;border-radius:10px}
+  .icon{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ghost);border-radius:10px;background:transparent;color:#fff}
+  .btn-analise { position: absolute; top: 24px; right: 24px; background: var(--brand); color: #fff; padding: 10px 14px; border-radius: 12px; text-decoration: none; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,.3); transition: background 0.2s; }
+  .btn-analise:hover { background: #1e4fbf; }
+  .sticky-actions{ display:none; }
+
+  /* selo composto */
+  .badge{font-size:.75rem;border:1px solid var(--ghost);border-radius:999px;padding:2px 6px}
+  .badge.comp{border-color:#7c3aed;color:#e9d5ff;background:#1f1433}
+
+  /* editor de composição (modal) */
+  .comp-wrap{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;background:#101012}
+  .comp-head{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .comp-table{width:100%;border-collapse:collapse}
+  .comp-table th,.comp-table td{border:1px solid var(--line);padding:6px;vertical-align:middle}
+  .comp-table th{background:#0a0a0a}
+  .comp-resumo{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .comp-pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);background:#0e0e11;font-size:.8rem}
+  .link{cursor:pointer;color:#93c5fd;text-decoration:underline}
+
+  /* ------- POP-UP COM ROLAGEM ------- */
+  .modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center; z-index:60;
+    overflow:auto;                 /* fallback de rolagem geral */
+  }
+  .modal .box{
+    width:min(98vw, 920px);        /* mais largo */
+    max-height:calc(100vh - 48px); /* limita altura */
+    overflow-y:auto;               /* rolagem interna */
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+  }
+  /* a lista da composição rola sem mexer no cabeçalho/botões */
+  .tbl-wrap{
+    max-height:50vh;
+    overflow:auto;
+    border-radius:10px;
+  }
+
+  @media (max-width: 768px){
+    body{padding:12px}
+    .row{grid-template-columns:1fr;gap:10px}
+    .totais{flex-direction:column}
+    .desktop-only{display:none !important}
+    .sticky-actions{position:sticky;bottom:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;gap:8px;justify-content:space-between}
+    .card{padding:12px}
+    table{font-size:.95rem}
+    th:nth-child(5), td:nth-child(5){display:none;}
+    .modal .box{ width:calc(100vw - 12px); max-height:calc(100vh - 12px); }
+    .tbl-wrap{ max-height:55vh; }
+  }
+
+  /* picker lateral (continua igual) */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet{width:100%;max-width:680px;background:#121212;border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--line);padding:12px 12px 16px}
+  .sheet .handle{width:44px;height:4px;background:#333;border-radius:999px;margin:6px auto 12px}
+  .sheet header{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .list{max-height:55vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .row-item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid #1f1f1f}
+  .row-item:hover{background:#0f0f10}
+  .search{display:flex;gap:8px}
+  .search input{flex:1}
+
+  .foto-preview{display:flex;gap:12px;align-items:center;margin-top:8px}
+  .foto-preview img{height:120px;width:auto;border-radius:12px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+  <a href="index.analise.html" class="btn-analise">Análise Técnica</a>
+  <h1>Cadastro de Produto & Receita</h1>
+
+  <!-- Dados do produto -->
+  <div class="card">
+    <div class="row">
+      <div style="grid-column: span 3">
+        <label>Código Sistema</label>
+        <input id="codigoSistema" placeholder="Ex.: P-001">
+      </div>
+      <div style="grid-column: span 2">
+        <label>Nº</label>
+        <input id="numero" type="number" inputmode="numeric">
+      </div>
+      <div style="grid-column: span 3">
+        <label>Classificação</label>
+        <input id="classificacao" placeholder="Ex.: Confeitaria">
+      </div>
+      <div style="grid-column: span 4">
+        <label>Item (nome do produto)</label>
+        <input id="item" placeholder="Ex.: Bolo de Chocolate">
+      </div>
+      <div style="grid-column: span 3">
+        <label>QTD / Rendimento</label>
+        <input id="rendimento" type="number" step="0.01" placeholder="Ex.: 1200">
+      </div>
+      <div style="grid-column: span 2">
+        <label>U.M. (do rendimento)</label>
+        <select id="unidadeRend">
+          <option value="kg">kg</option>
+          <option value="ml">ml</option>
+          <option value="l">l</option>
+          <option value="un">un</option>
+        </select>
+      </div>
+      <div style="grid-column: span 3">
+        <label>Empresa</label>
+        <select id="empresa"></select>
+        <div class="small muted" id="infoEmpresa"></div>
+      </div>
+      <div style="grid-column: span 3">
+        <label>Usuário <span class="small muted">(selecione ou digite)</span></label>
+        <input id="usuario" list="listaUsuarios" placeholder="Seu nome ou login" autocomplete="off">
+        <datalist id="listaUsuarios"></datalist>
+      </div>
+      <div style="grid-column: span 6">
+        <label>OBS.</label>
+        <input id="obs" placeholder="Anotações gerais">
+      </div>
+      <div style="grid-column: span 12">
+        <label>Foto do produto (opcional)</label>
+        <input id="fotoProduto" type="file" accept="image/*">
+        <div id="fotoPreview" class="foto-preview" style="display:none">
+          <img id="fotoImg" alt="Prévia da foto" />
+          <button class="btn ghost mini" id="removerFoto">Remover foto</button>
+        </div>
+        <div class="small muted">A imagem será enviada ao Google Drive e o link ficará salvo na planilha após a receita.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receita / ingredientes -->
+  <div class="card">
+    <div class="grid-2">
+      <div><strong>Receita (ingredientes)</strong><div class="small muted">Pegue do menu flutuante ou edite/crie.</div></div>
+      <div class="right">
+        <button class="btn ghost" id="addLinha">+ Ingrediente</button>
+      </div>
+    </div>
+
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th class="accent">Item <span class="desktop-only">(clique p/ buscar)</span></th>
+          <th>Qtd</th>
+          <th>U.M.</th>
+          <th>Custo Unit. (R$)</th>
+          <th class="desktop-only">Observação</th>
+          <th class="right">Subtotal (R$)</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="totais">
+      <span class="pill">Custo da Receita: <strong id="custoReceita">R$ 0,00</strong></span>
+      <span class="pill">Custo por grama/ML: <strong id="custoPorGMl">R$ 0,000</strong></span>
+      <span class="pill">Custo por kg/L: <strong id="custoPorKgL">R$ 0,00</strong></span>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="card">
+    <div class="row desktop-only">
+      <div style="grid-column: span 7"></div>
+      <div style="grid-column: span 5" class="right">
+        <button class="btn ghost" id="limpar">Limpar</button>
+        <span class="small muted" id="statusDesktop" style="margin:0 8px"></span>
+        <button class="btn secondary" id="recalcular">Recalcular</button>
+        <button class="btn" id="salvar">Salvar na Planilha</button>
+      </div>
+    </div>
+
+    <div class="sticky-actions">
+      <button class="btn ghost mini" id="limpar_m">Limpar</button>
+      <button class="btn secondary mini" id="recalcular_m">Recalcular</button>
+      <button class="btn mini" id="salvar_m">Salvar</button>
+      <span class="small muted" id="status"></span>
+    </div>
+  </div>
+
+  <!-- Picker -->
+  <div class="overlay" id="picker">
+    <div class="sheet">
+      <div class="handle"></div>
+      <header>
+        <div class="search">
+          <input id="buscaIng" placeholder="Buscar ingrediente por nome ou código...">
+          <button class="btn ghost" id="novoIng">+ Novo</button>
+        </div>
+        <button class="btn ghost" onclick="closePicker()">Fechar</button>
+      </header>
+      <div class="list" id="listaIng"></div>
+    </div>
+  </div>
+
+  <!-- Modal ingrediente -->
+  <div class="modal" id="modalIng">
+    <div class="box">
+      <h3 id="modalTitulo">Editar ingrediente</h3>
+      <div class="row" style="margin-top:8px">
+        <div style="grid-column: span 4">
+          <label>Código</label>
+          <input id="ing_codigo" placeholder="(gerado se vazio)">
+        </div>
+        <div style="grid-column: span 8">
+          <label>Nome</label>
+          <input id="ing_nome">
+        </div>
+        <div style="grid-column: span 4">
+          <label>U.M. <span class="small muted">(obrigatório)</span></label>
+          <select id="ing_um" required>
+            <option value="">— selecione —</option>
+            <option value="kg">kg</option>
+            <option value="ml">ml</option>
+            <option value="l">l</option>
+            <option value="un">un</option>
+          </select>
+        </div>
+        <div style="grid-column: span 4">
+          <label>Custo Unitário (R$)</label>
+          <input id="ing_custo" type="number" step="0.0001" inputmode="decimal" placeholder="R$ por U.M.">
+        </div>
+        <div style="grid-column: span 12">
+          <label>Observação</label>
+          <input id="ing_obs">
+        </div>
+      </div>
+
+      <!-- Tipo + Composição -->
+      <div id="tipoCompContainer"></div>
+
+      <div class="right" style="margin-top:12px">
+        <button class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn" id="salvarIng">Salvar ingrediente</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== TOAST ===== */
+function toast(msg){
+  let el = document.getElementById('appToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'appToast';
+    el.style.position='fixed'; el.style.left='50%'; el.style.bottom='18px';
+    el.style.transform='translateX(-50%)'; el.style.background='#111';
+    el.style.border='1px solid #333'; el.style.color='#fff'; el.style.padding='10px 14px';
+    el.style.borderRadius='10px'; el.style.zIndex='999'; el.style.boxShadow='0 6px 24px rgba(0,0,0,.4)'; el.style.transition='opacity .25s';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+}
+
+/* ===== CONFIG ===== */
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwvWmsR9Sng_2UHJXKZnjn0Z6oUbqMa0FE2XmvhA_IZjIs1D3ocmm0WcgdI_MPgyJ3z/exec';
+const DEFAULT_EMPRESAS = ['Mercatto','Padaria'];
+
+/* ===== ESTADO ===== */
+let INGREDIENTES = [];
+let EMPRESAS = [];
+let pickerTargetRow = null;   // pode ser <tr> (receita) ou { _compIndex: number }
+let modalRowRef = null;
+let FOTO = null;
+
+/* ===== HELPERS ===== */
+const tbody = document.getElementById('tbody');
+const fmtBRL = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const FACTOR = { g:1, kg:1000, ml:1, l:1000, un:1 };
+const TYPE   = u => (u==='g'||u==='kg')?'mass' : (u==='ml'||u==='l')?'vol' : 'count';
+function convertQty(qty, from, to){
+  from = (from||'').toLowerCase(); to = (to||'').toLowerCase();
+  if(!FACTOR[from] || !FACTOR[to]) return qty; if(TYPE(from) !== TYPE(to)) return NaN;
+  return qty * (FACTOR[from] / FACTOR[to]);
+}
+function toNumberBR(val){ if(typeof val !== 'string') val = String(val||''); val = val.replace(/\./g, '').replace(',', '.'); const n = parseFloat(val); return isNaN(n) ? 0 : n; }
+
+/* ===== USUÁRIOS ===== */
+const USERS_KEY = 'AUTH_USERS_V1';
+function getUsers(){ try{ const j=localStorage.getItem(USERS_KEY); const arr=j?JSON.parse(j):[]; return Array.isArray(arr)?arr:[]; }catch(_){ return []; } }
+function setUsers(arr){ try{ localStorage.setItem(USERS_KEY, JSON.stringify(arr)); }catch(_){} }
+function renderUsersDatalist(){ const dl=document.getElementById('listaUsuarios'); if(!dl) return; dl.innerHTML=''; getUsers().forEach(u=>{ const o=document.createElement('option'); o.value=u; dl.appendChild(o); }); }
+function rememberUser(name){ name=String(name||'').trim(); if(!name) return; const list=getUsers(); if(!list.find(x=>x.toLowerCase()===name.toLowerCase())){ list.push(name); setUsers(list); } try{ localStorage.setItem('AUTH_USER', name); }catch(_){} renderUsersDatalist(); }
+
+/* ===== FOTO ===== */
+const inpFoto = document.getElementById('fotoProduto');
+const previewWrap = document.getElementById('fotoPreview');
+const previewImg = document.getElementById('fotoImg');
+const btnRemoverFoto = document.getElementById('removerFoto');
+async function fileToBase64(file){ return new Promise((resolve, reject)=>{ const fr = new FileReader(); fr.onload = ()=>{ const res = String(fr.result||''); const base64 = res.split(',')[1] || res; resolve(base64); }; fr.onerror = reject; fr.readAsDataURL(file); }); }
+inpFoto.addEventListener('change', async (e)=>{ const f = e.target.files && e.target.files[0]; if(!f){ FOTO=null; previewWrap.style.display='none'; return; } if(!/^image\//i.test(f.type)) { toast('Envie uma imagem válida.'); inpFoto.value=''; return; } if(f.size > 5 * 1024 * 1024){ toast('Imagem até 5MB.'); inpFoto.value=''; return; } const base64 = await fileToBase64(f); FOTO = { name: f.name, type: f.type, base64 }; previewImg.src = URL.createObjectURL(f); previewWrap.style.display='flex'; });
+btnRemoverFoto.addEventListener('click', ()=>{ FOTO = null; inpFoto.value=''; previewImg.src=''; previewWrap.style.display='none'; });
+
+/* ===== Compostos: helpers de visualização ===== */
+function compListHTML(ing){
+  if(!ing || ing.tipo!=='composto' || !Array.isArray(ing.ingredientes) || !ing.ingredientes.length) return '';
+  const um = (ing.um||'').toLowerCase() || 'U.M.';
+  const rows = ing.ingredientes.map(p=>{
+    const nome = p.nome || p.item || p.codigo || '(ingrediente)';
+    const qtd  = (p.qtd ?? p.quantidade ?? 0);
+    const ump  = (p.um||'').toLowerCase();
+    const cst  = (typeof p.custoUnit==='number') ? ` • ${fmtBRL(p.custoUnit)}/${(ump||'U.M.').toUpperCase()}` : '';
+    return `<li>${nome}: <strong>${qtd}</strong> ${(ump||'U.M.').toUpperCase()}${cst}</li>`;
+  }).join('');
+  return `
+    <details style="margin-top:4px">
+      <summary class="small">ver composição (por 1 ${um.toUpperCase()})</summary>
+      <ul class="small" style="margin:6px 0 0 14px">${rows}</ul>
+    </details>
+  `;
+}
+
+/* ===== UI DE LINHAS ===== */
+function setIngInfo(tr, ing){
+  const info = tr.querySelector('.ingInfo');
+  if(!info) return;
+  if(!ing){ info.textContent=''; return; }
+  const base = `${(ing.codigo||'')}${ing.empresa?(' • '+ing.empresa):''} • ${fmtBRL(ing.custoUnit||0)} ${(ing.obs?('• '+ing.obs):'')}`;
+  const tag = (ing.tipo==='composto') ? ' <span class="badge comp">composto</span>' : '';
+  info.innerHTML = base + tag + compListHTML(ing);
+}
+function novaLinha(data={}){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <div class="inline">
+        <input placeholder="Toque/clique p/ buscar" value="${data.item||''}" class="inpItem" readonly>
+        <button class="btn ghost mini btnPick">Buscar</button>
+        <button class="icon btnEditIcon" title="Editar ingrediente" style="display:none">✏️</button>
+      </div>
+      <div class="small muted ingInfo"></div>
+    </td>
+    <td><input type="number" step="0.0001" inputmode="decimal" value="${data.qtd||''}" class="inpQtd"></td>
+    <td>
+      <select class="selUM" required>
+        <option value="">— selecione —</option>
+        <option value="kg">kg</option>
+        <option value="ml">ml</option>
+        <option value="l">l</option>
+        <option value="un">un</option>
+      </select>
+    </td>
+    <td><input type="number" step="0.0001" inputmode="decimal" value="${data.custoUnit||''}" class="inpCusto" placeholder="R$ por U.M."></td>
+    <td class="desktop-only"><input placeholder="Obs. (linha)" value="${data.obs||''}" class="inpObs"></td>
+    <td class="right subtotal">R$ 0,00</td>
+    <td><button class="btn ghost mini btnDel">Remover</button></td>`;
+
+  if (data.um) tr.querySelector('.selUM').value = data.um;
+
+  if (data.codigo || data.tipo==='composto') {
+    const ingLite = {
+      codigo: data.codigo || null,
+      nome: data.item || '',
+      um: (data.priceUm || data.um || '').toLowerCase(),
+      custoUnit: data.custoUnit || 0,
+      empresa: (document.getElementById('empresa')?.value || ''),
+      tipo: data.tipo || null,
+      ingredientes: Array.isArray(data.ingredientes) ? data.ingredientes : (Array.isArray(data.comp) ? data.comp : undefined)
+    };
+    tr.dataset.ing = JSON.stringify(ingLite);
+    tr.dataset.priceUm = (ingLite.um || '').toLowerCase();
+    tr.querySelector('.btnPick').style.display = 'none';
+    tr.querySelector('.btnEditIcon').style.display = 'inline-flex';
+    setIngInfo(tr, ingLite);
+  }
+
+  tr.querySelector('.btnDel').addEventListener('click', ()=>{ tr.remove(); atualizarTotais(); autoSave(); });
+  tr.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('input', ()=>{ atualizarTotais(); autoSave(); });
+    el.addEventListener('change', ()=>{ atualizarTotais(); autoSave(); });
+  });
+
+  const openPick = () => { pickerTargetRow = tr; openPicker(); };
+  tr.querySelector('.btnPick').addEventListener('click', openPick);
+  tr.querySelector('.inpItem').addEventListener('click', openPick);
+  tr.querySelector('.btnEditIcon').addEventListener('click', ()=>{
+    const info = tr.dataset.ing ? JSON.parse(tr.dataset.ing) : null; modalRowRef = tr; openModal(info);
+  });
+
+  tbody.appendChild(tr); atualizarTotais();
+}
+function aplicarIngredienteNaLinha(tr, ing){
+  if(!tr || !ing) return;
+  tr.querySelector('.inpItem').value   = ing.nome || '';
+  const actualUM = tr.querySelector('.selUM').value || (ing.um||'').toLowerCase();
+  tr.querySelector('.selUM').value     = actualUM;
+  tr.querySelector('.inpCusto').value  = ing.custoUnit || 0;
+  const toSave = {
+    codigo: ing.codigo || null,
+    nome: ing.nome || '',
+    um: (ing.um||'').toLowerCase(),
+    custoUnit: ing.custoUnit || 0,
+    empresa: ing.empresa || '',
+    obs: ing.obs || '',
+    tipo: ing.tipo || null,
+    ingredientes: Array.isArray(ing.ingredientes) ? ing.ingredientes : undefined
+  };
+  tr.dataset.ing = JSON.stringify(toSave);
+  tr.dataset.priceUm = (ing.um||'').toLowerCase();
+  tr.querySelector('.inpCusto').placeholder = `R$ por ${tr.dataset.priceUm || 'U.M.'}`;
+  tr.querySelector('.btnPick').style.display = 'none';
+  tr.querySelector('.btnEditIcon').style.display = 'inline-flex';
+  setIngInfo(tr, toSave);
+  atualizarTotais(); autoSave();
+}
+
+/* ===== LEITURA E CÁLCULO ===== */
+function lerTabela(){
+  const linhas = [...tbody.querySelectorAll('tr')];
+  return linhas.map(tr=>{
+    const info = tr.querySelector('.ingInfo');
+    let codigo = null, priceUmFromDataset = null, tipo=null, compArr=undefined;
+
+    try{
+      const ing = tr.dataset.ing ? JSON.parse(tr.dataset.ing) : null;
+      if (ing) {
+        codigo = ing.codigo || null;
+        priceUmFromDataset = (ing.um || '').toLowerCase();
+        tipo = ing.tipo || null;
+        compArr = Array.isArray(ing.ingredientes) ? ing.ingredientes : undefined;
+        setIngInfo(tr, ing);
+      } else if(info) {
+        info.textContent = '';
+      }
+    }catch{ if(info) info.textContent = ''; }
+
+    const qtd = toNumberBR(tr.querySelector('.inpQtd').value);
+    const custo = toNumberBR(tr.querySelector('.inpCusto').value);
+    const umLinha  = (tr.querySelector('.selUM').value||'').toLowerCase();
+    const umPreco  = (tr.dataset.priceUm || priceUmFromDataset || umLinha || '').toLowerCase();
+
+    const qtdNaUMdoPreco = convertQty(isNaN(qtd)?0:qtd, umLinha, umPreco);
+    const subtotal = (isNaN(qtdNaUMdoPreco)?0:qtdNaUMdoPreco) * (isNaN(custo)?0:custo);
+    if(Number.isNaN(qtdNaUMdoPreco)){ if(info) info.textContent = '⚠ U.M. incompatível (qtd vs preço)'; }
+
+    return {
+      codigo,
+      item: tr.querySelector('.inpItem').value.trim(),
+      qtd: isNaN(qtd)?0:qtd,
+      um: umLinha,
+      priceUm: umPreco,
+      custoUnit: isNaN(custo)?0:custo,
+      obs: (tr.querySelector('.inpObs')?.value||'').trim(),
+      subtotal,
+      tipo: tipo || undefined,
+      ingredientes: compArr || undefined
+    };
+  }).filter(x=>x.item);
+}
+function atualizarTotais(){
+  const itens = lerTabela(); let total = 0;
+  [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{ const st = itens[i]?.subtotal || 0; tr.querySelector('.subtotal').textContent = fmtBRL(st); total += st; });
+  document.getElementById('custoReceita').textContent = fmtBRL(total);
+  const rendimento = toNumberBR(document.getElementById('rendimento').value);
+  const unidadeRend = document.getElementById('unidadeRend').value.toLowerCase();
+  let custoPorGMl = 0, custoPorKgL = 0; const toBase = u => u==='kg' ? 1000 : u==='l' ? 1000 : 1;
+  if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){ const emBase = rendimento * toBase(unidadeRend); custoPorGMl = total / emBase; custoPorKgL = total / (emBase/1000); }
+  document.getElementById('custoPorGMl').textContent = isFinite(custoPorGMl) ? 'R$ ' + (custoPorGMl).toFixed(4).replace('.',',') : '—';
+  document.getElementById('custoPorKgL').textContent = isFinite(custoPorKgL) ? fmtBRL(custoPorKgL) : '—';
+}
+
+/* ===== BACKEND ===== */
+async function salvarProduto(payload){
+  const CURRENT_USER = (payload?.usuario || document.getElementById('usuario')?.value || localStorage.getItem('AUTH_USER') || '').trim();
+  if(CURRENT_USER){ try{ localStorage.setItem('AUTH_USER', CURRENT_USER); }catch(_){} }
+  const res = await fetch(WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ type:'produto', payload, usuario: CURRENT_USER })
+  });
+  const txt = await res.text();
+  try { return JSON.parse(txt); }
+  catch { return { ok:false, error:'Resposta não-JSON do GAS: '+txt }; }
+}
+async function upsertIngrediente(obj){
+  const res = await fetch(WEBAPP_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify({ type:'ingrediente_upsert', ingrediente: obj })
+  });
+  const txt = await res.text();
+  try { return JSON.parse(txt); }
+  catch { return { ok:false, error:'Resposta não-JSON do GAS: '+txt }; }
+}
+async function fetchEmpresas(){
+  try{
+    const r = await fetch(WEBAPP_URL + '?action=empresas');
+    const j = await r.json();
+    if(j.ok && Array.isArray(j.data) && j.data.length){
+      EMPRESAS = j.data;
+    } else {
+      EMPRESAS = DEFAULT_EMPRESAS.slice();
+    }
+  }catch(e){
+    EMPRESAS = DEFAULT_EMPRESAS.slice();
+  }
+  renderEmpresasSelect();
+}
+function renderEmpresasSelect(){
+  const sel = document.getElementById('empresa'); if(!sel) return; sel.innerHTML = '';
+  const opt0=document.createElement('option'); opt0.value=''; opt0.textContent='— selecione —'; sel.appendChild(opt0);
+  EMPRESAS.forEach(nome=>{ const o=document.createElement('option'); o.value=nome; o.textContent=nome; sel.appendChild(o); });
+}
+async function fetchIngredientes(empresa){
+  const url = WEBAPP_URL + '?action=ingredientes&empresa=' + encodeURIComponent(empresa||'') + '&ts=' + Date.now();
+  try{
+    const r = await fetch(url, { cache: 'no-store' });
+    const j = await r.json();
+    if(j.ok){
+      INGREDIENTES = Array.isArray(j.data) ? j.data : [];
+      renderListaIng();
+      document.getElementById('infoEmpresa').textContent = empresa ? (`Tabela: ${empresa} • ${INGREDIENTES.length} itens`) : '' ;
+      updateCostsForExistingRows();
+    } else {
+      toast('Erro ao carregar ingredientes.');
+      console.warn(j.error);
+    }
+  }catch(e){
+    toast('Erro ao carregar ingredientes.');
+    console.error(e);
+  }
+}
+function updateCostsForExistingRows(){
+  const byCodigo = new Map(); const byNome = new Map();
+  INGREDIENTES.forEach(x=>{ if(x.codigo) byCodigo.set(String(x.codigo).trim().toLowerCase(), x); if(x.nome) byNome.set(String(x.nome).trim().toLowerCase(), x); });
+  [...tbody.querySelectorAll('tr')].forEach(tr=>{
+    try{
+      const ingSel = tr.dataset.ing ? JSON.parse(tr.dataset.ing) : null; if(!ingSel) return;
+      let novo = null;
+      if(ingSel.codigo && byCodigo.has(String(ingSel.codigo).trim().toLowerCase())) novo = byCodigo.get(String(ingSel.codigo).trim().toLowerCase());
+      else if(ingSel.nome && byNome.has(String(ingSel.nome).trim().toLowerCase())) novo = byNome.get(String(ingSel.nome).trim().toLowerCase());
+      if(novo){ aplicarIngredienteNaLinha(tr, novo); }
+    }catch(_){ /* ignora */ }
+  });
+}
+
+/* ===== PICKER ===== */
+const picker = document.getElementById('picker');
+const listaIng = document.getElementById('listaIng');
+const buscaIng = document.getElementById('buscaIng');
+function openPicker(){ picker.style.display='flex'; renderListaIng(); buscaIng.focus(); }
+function closePicker(){ picker.style.display='none'; }
+function renderListaIng(){
+  const q = (buscaIng.value||'').toLowerCase();
+  const arr = INGREDIENTES.filter(x=> (x.nome||'').toLowerCase().includes(q) || String(x.codigo||'').toLowerCase().includes(q) );
+  listaIng.innerHTML = '';
+  if(!arr.length){
+    const empty=document.createElement('div'); empty.className='row-item';
+    empty.innerHTML='<em class="muted">Nada encontrado para a empresa selecionada.</em>';
+    listaIng.appendChild(empty); return;
+  }
+  arr.forEach((x, idx) => {
+    const row = document.createElement('div'); row.className = 'row-item';
+    const tipoBadge = (x.tipo==='composto') ? ' <span class="badge comp">composto</span>' : '';
+    row.innerHTML = `
+      <div>
+        <div><strong>${x.nome||''}</strong> <span class="badge">${(x.um||'').toLowerCase()}</span>${tipoBadge}</div>
+        <div class="small muted">${x.codigo||'-'}${x.empresa?(' • '+x.empresa):''} • ${fmtBRL(x.custoUnit||0)} ${(x.obs?('• '+x.obs):'')}</div>
+      </div>
+      <div class="inline">
+        <button class="btn ghost mini" data-act="sel" data-idx="${idx}">Selecionar</button>
+        <button class="btn ghost mini" data-act="edit" data-idx="${idx}">Editar</button>
+      </div>`;
+    listaIng.appendChild(row);
+  });
+  listaIng.querySelectorAll('button').forEach(btn=>{
+    const i = Number(btn.dataset.idx); const act = btn.dataset.act;
+    btn.addEventListener('click', ()=>{
+      const ing = INGREDIENTES[i]; if(!ing) return;
+      if(act==='sel'){ selectIng(ing); }
+      if(act==='edit'){ openModal(ing); }
+    });
+  });
+}
+buscaIng.addEventListener('input', renderListaIng);
+document.getElementById('novoIng').addEventListener('click', ()=> openModal(null));
+function selectIng(ing){
+  if(!pickerTargetRow) return;
+  // Seleção para COMPOSIÇÃO
+  if(typeof pickerTargetRow === 'object' && pickerTargetRow._compIndex!=null){
+    const i = pickerTargetRow._compIndex;
+    if(COMP_TEMP[i]){
+      COMP_TEMP[i].codigo = ing.codigo || null;
+      COMP_TEMP[i].nome   = ing.nome || '';
+      if(!COMP_TEMP[i].um) COMP_TEMP[i].um = (ing.um||'').toLowerCase();
+      if(!(COMP_TEMP[i].custoUnit>0)) COMP_TEMP[i].custoUnit = Number(ing.custoUnit||0);
+      renderCompTable();
+      computeCompPreview();
+    }
+    closePicker();
+    return;
+  }
+  // Seleção para linha de receita
+  aplicarIngredienteNaLinha(pickerTargetRow, ing);
+  closePicker();
+}
+
+/* ===== MODAL ingrediente ===== */
+const modal = document.getElementById('modalIng');
+const modalTitulo = document.getElementById('modalTitulo');
+const inpCod = document.getElementById('ing_codigo');
+const inpNome = document.getElementById('ing_nome');
+const selUm = document.getElementById('ing_um');
+const inpCusto = document.getElementById('ing_custo');
+const inpObs = document.getElementById('ing_obs');
+let selIngEmpresa = document.getElementById('ing_empresa');
+if(!selIngEmpresa){
+  const elNome = inpNome.closest('div[style*="grid-column"]');
+  selIngEmpresa = document.createElement('div'); selIngEmpresa.style.gridColumn = 'span 4';
+  selIngEmpresa.innerHTML = '<label>Empresa (ingrediente)</label><select id="ing_empresa"></select>';
+  elNome.parentElement.insertBefore(selIngEmpresa, elNome.nextSibling);
+  selIngEmpresa = selIngEmpresa.querySelector('select');
+}
+function fillEmpresasSelect(el){
+  if(!el) return; el.innerHTML='';
+  const opt0=document.createElement('option'); opt0.value=''; opt0.textContent='— selecione —'; el.appendChild(opt0);
+  (EMPRESAS||[]).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; el.appendChild(o); });
+}
+const btnSalvarIng = document.getElementById('salvarIng');
+
+/* ======= Editor de composição no modal ======= */
+let selIngTipo = null;
+let compWrap = null;
+let compTbody = null;
+let compResumo = null;
+let COMP_TEMP = [];
+
+function ensureTipoCompUI(){
+  const host = document.getElementById('tipoCompContainer');
+  if(host.dataset.ready==='1') return;
+
+  // Tipo
+  const tipoBox = document.createElement('div');
+  tipoBox.className='row';
+  tipoBox.innerHTML = `
+    <div style="grid-column: span 4">
+      <label>Tipo</label>
+      <select id="ing_tipo">
+        <option value="simples">simples</option>
+        <option value="composto">composto</option>
+      </select>
+    </div>
+  `;
+  host.appendChild(tipoBox);
+  selIngTipo = tipoBox.querySelector('#ing_tipo');
+
+  // Composição
+  compWrap = document.createElement('div');
+  compWrap.className = 'comp-wrap';
+  compWrap.style.display = 'none';
+  compWrap.innerHTML = `
+    <div class="comp-head">
+      <div class="small muted">Composição do ingrediente (por 1 <span id="comp_um_ref">U.M.</span>)</div>
+      <button class="btn ghost mini" id="btnCompAdd">+ Adicionar item</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="comp-table">
+        <thead>
+          <tr><th style="min-width:220px">Item</th><th style="width:110px">Qtd</th><th style="width:90px">U.M.</th><th style="width:150px">Custo Unit. (R$)</th><th style="width:100px">Ações</th></tr>
+        </thead>
+        <tbody id="comp_tbody"></tbody>
+      </table>
+    </div>
+    <div class="comp-resumo">
+      <span class="comp-pill">Itens: <strong id="comp_itens">0</strong></span>
+      <span class="comp-pill">Estimativa: <strong id="comp_estim">R$ 0,00</strong> por 1 <strong id="comp_um_lbl">U.M.</strong></span>
+      <button class="btn mini" id="btnUseEstim" title="Aplicar estimativa no campo de custo">Usar estimativa</button>
+    </div>
+    <div class="small muted" style="margin-top:6px">
+      Dica: deixe o custo unitário em branco para puxar do cadastro do item selecionado. Você pode sobrescrever se quiser.
+      Conversões: kg↔g, L↔ml, un 1:1.
+    </div>
+  `;
+  host.appendChild(compWrap);
+
+  compTbody  = compWrap.querySelector('#comp_tbody');
+  compResumo = {
+    itens: compWrap.querySelector('#comp_itens'),
+    estim: compWrap.querySelector('#comp_estim'),
+    umRef: compWrap.querySelector('#comp_um_ref'),
+    umLbl: compWrap.querySelector('#comp_um_lbl'),
+  };
+
+  compWrap.querySelector('#btnCompAdd').addEventListener('click', ()=>{ addCompRow(); });
+  compWrap.querySelector('#btnUseEstim').addEventListener('click', ()=>{
+    const est = computeCompPreview();
+    if(est>0){ inpCusto.value = est.toFixed(4); toast('Custo do composto atualizado com a estimativa ✓'); }
+  });
+
+  selIngTipo.addEventListener('change', ()=> toggleCompUI());
+  host.dataset.ready='1';
+}
+function toggleCompUI(){
+  const isComp = (selIngTipo.value==='composto');
+  compWrap.style.display = isComp ? 'block' : 'none';
+  compResumo.umRef.textContent = (selUm.value||'U.M.').toUpperCase();
+  compResumo.umLbl.textContent = (selUm.value||'U.M.').toUpperCase();
+  computeCompPreview();
+}
+function addCompRow(data={}){
+  COMP_TEMP.push({
+    codigo: data.codigo || null,
+    nome:   data.nome   || data.item || '',
+    qtd:    Number(data.qtd || data.quantidade || 0),
+    um:     (data.um || '').toLowerCase(),
+    custoUnit: (typeof data.custoUnit==='number') ? data.custoUnit : (data.custoUnit?Number(data.custoUnit):null)
+  });
+  renderCompTable();
+  computeCompPreview();
+}
+function delCompRow(idx){
+  COMP_TEMP.splice(idx,1);
+  renderCompTable();
+  computeCompPreview();
+}
+function renderCompTable(){
+  compTbody.innerHTML = '';
+  COMP_TEMP.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+
+    const tdItem = document.createElement('td');
+    const name = document.createElement('div');
+    const meta = document.createElement('div');
+    name.innerHTML = `<strong>${r.nome||'(selecione)'}</strong> ${r.codigo?`<span class="small muted">• ${r.codigo}</span>`:''}`;
+    meta.className = 'small muted';
+    meta.innerHTML = `<span class="link" data-pick="${idx}">buscar</span>`;
+    tdItem.appendChild(name); tdItem.appendChild(meta);
+
+    const tdQtd = document.createElement('td');
+    const iQtd = document.createElement('input'); iQtd.type='number'; iQtd.step='0.0001'; iQtd.value = r.qtd||0; iQtd.style.width='100%';
+    tdQtd.appendChild(iQtd);
+
+    const tdUm = document.createElement('td');
+    const sUm = document.createElement('select'); sUm.innerHTML = `<option value="">—</option><option value="kg">kg</option><option value="g">g</option><option value="l">l</option><option value="ml">ml</option><option value="un">un</option>`;
+    sUm.value = r.um||''; tdUm.appendChild(sUm);
+
+    const tdC = document.createElement('td');
+    const iC = document.createElement('input'); iC.type='number'; iC.step='0.0001'; iC.placeholder='(cadastro)'; iC.value = (r.custoUnit!=null && !isNaN(r.custoUnit)) ? r.custoUnit : '';
+    tdC.appendChild(iC);
+
+    const tdA = document.createElement('td');
+    const bDel = document.createElement('button'); bDel.className='btn ghost mini'; bDel.textContent='Remover';
+    tdA.appendChild(bDel);
+
+    tr.appendChild(tdItem); tr.appendChild(tdQtd); tr.appendChild(tdUm); tr.appendChild(tdC); tr.appendChild(tdA);
+    compTbody.appendChild(tr);
+
+    // events
+    meta.querySelector('[data-pick]').addEventListener('click', ()=>{
+      pickerTargetRow = { _compIndex: idx };
+      openPicker();
+    });
+    iQtd.addEventListener('input', ()=>{ COMP_TEMP[idx].qtd = Number(iQtd.value||0); computeCompPreview(); });
+    sUm.addEventListener('change', ()=>{ COMP_TEMP[idx].um = (sUm.value||'').toLowerCase(); computeCompPreview(); });
+    iC.addEventListener('input', ()=>{ const v = iC.value===''?null:Number(iC.value||0); COMP_TEMP[idx].custoUnit = v; computeCompPreview(); });
+    bDel.addEventListener('click', ()=> delCompRow(idx));
+  });
+  compResumo.itens.textContent = COMP_TEMP.length;
+}
+function findInCadastro(codigo, nome){
+  const byCode = codigo ? INGREDIENTES.find(x => String(x.codigo||'')===String(codigo)) : null;
+  if(byCode) return byCode;
+  if(nome) return INGREDIENTES.find(x=> String(x.nome||'').toLowerCase()===String(nome).toLowerCase());
+  return null;
+}
+function computeCompPreview(){
+  if(!selIngTipo || selIngTipo.value!=='composto') return 0;
+  let total = 0;
+  COMP_TEMP.forEach(r=>{
+    const base = findInCadastro(r.codigo, r.nome);
+    const priceUm = (base && base.um) ? String(base.um).toLowerCase() : (r.um||'');
+    const price   = (r.custoUnit!=null && !isNaN(r.custoUnit)) ? Number(r.custoUnit) : Number(base?.custoUnit||0);
+    const conv    = convertQty(Number(r.qtd||0), r.um||'', priceUm||'');
+    if(!isNaN(conv) && price>0) total += conv * price;
+  });
+  compResumo.estim.textContent = fmtBRL(total);
+  return total;
+}
+
+function openModal(ing){
+  modal.style.display='flex'; modalTitulo.textContent = ing ? 'Editar ingrediente' : 'Novo ingrediente';
+  inpCod.value = ing?.codigo||''; inpNome.value = ing?.nome||''; selUm.value = (ing?.um||'').toLowerCase(); inpCusto.value = ing?.custoUnit ?? ''; inpObs.value = ing?.obs || '';
+  fillEmpresasSelect(selIngEmpresa); selIngEmpresa.value = ing?.empresa || (document.getElementById('empresa')?.value||'');
+  inpCusto.placeholder = selUm.value ? `R$ por ${selUm.value}` : 'R$ por U.M.';
+
+  ensureTipoCompUI();
+  selIngTipo.value = (ing?.tipo||'simples').toLowerCase();
+  COMP_TEMP = Array.isArray(ing?.ingredientes) ? JSON.parse(JSON.stringify(ing.ingredientes)) : [];
+  renderCompTable();
+  toggleCompUI();
+}
+function closeModal(){ modal.style.display='none'; modalRowRef = null; pickerTargetRow = null; COMP_TEMP = []; }
+selUm.addEventListener('change', ()=>{ inpCusto.placeholder = selUm.value ? `R$ por ${selUm.value}` : 'R$ por U.M.'; if(compResumo){ compResumo.umRef.textContent = (selUm.value||'U.M.').toUpperCase(); compResumo.umLbl.textContent = (selUm.value||'U.M.').toUpperCase(); }});
+btnSalvarIng.addEventListener('click', async ()=>{
+  const data = {
+    codigo: (inpCod.value||'').trim() || null,
+    nome: (inpNome.value||'').trim(),
+    empresa: (selIngEmpresa?.value||'').trim(),
+    um: (selUm.value||'').toLowerCase(),
+    custoUnit: (inpCusto.value===''?0:Number(inpCusto.value||0)),
+    obs: (inpObs.value||'').trim(),
+    tipo: (selIngTipo?.value||'simples').toLowerCase(),
+    ingredientes: (selIngTipo && selIngTipo.value==='composto') ? COMP_TEMP.filter(x => (x.nome||x.codigo)).map(x=>({
+      codigo: x.codigo || null,
+      nome: x.nome || '',
+      qtd: Number(x.qtd||0),
+      um: (x.um||'').toLowerCase(),
+      custoUnit: (x.custoUnit!=null && !isNaN(x.custoUnit)) ? Number(x.custoUnit) : undefined
+    })) : undefined
+  };
+  if(!data.nome){ alert('Informe o nome do ingrediente.'); return; }
+  if(!data.um){ alert('Selecione a U.M. do ingrediente.'); return; }
+  if(!data.empresa){ alert('Selecione a empresa do ingrediente.'); return; }
+  if(data.tipo==='composto' && (!inpCusto.value || Number(inpCusto.value)<=0)){
+    const est = computeCompPreview();
+    if(est>0){ data.custoUnit = Number(est.toFixed(6)); }
+  }
+  const res = await upsertIngrediente(data);
+  if(!res.ok){ alert('Erro ao salvar ingrediente: ' + (res.error||'')); return; }
+  await fetchIngredientes(document.getElementById('empresa')?.value||'');
+  if(modalRowRef){
+    const novo = INGREDIENTES.find(x=> String(x.codigo)===(res.codigo||data.codigo));
+    if(novo) aplicarIngredienteNaLinha(modalRowRef, novo);
+  }
+  closeModal(); toast('Ingrediente salvo ✓');
+});
+
+/* ===== SALVAR PRODUTO ===== */
+async function handleSalvar(){
+  const CURRENT_USER = (document.getElementById('usuario')?.value || localStorage.getItem('AUTH_USER') || '').trim();
+  const empresaSel = document.getElementById('empresa')?.value || '';
+  const receita = lerTabela();
+  try{
+    if(!empresaSel) throw new Error('Selecione a Empresa.');
+    if(!receita.length) throw new Error('Adicione pelo menos 1 ingrediente.');
+    if(receita.some(r => !r.qtd || r.qtd < 0)) throw new Error('Quantidade deve ser > 0.');
+    if(receita.some(r => !r.custoUnit || r.custoUnit < 0)) throw new Error('Custo unitário deve ser > 0.');
+    if(receita.some(r => !r.um)) throw new Error('Selecione a U.M. em todas as linhas.');
+  }catch(e){ alert(e.message); return; }
+  const total = receita.reduce((s,i)=>s+i.subtotal,0);
+  const rendimento = toNumberBR(document.getElementById('rendimento').value);
+  const unidadeRend = document.getElementById('unidadeRend').value.toLowerCase();
+  let custoPorGMl = 0, custoPorKgL = 0; const toBase = u => u==='kg' ? 1000 : u==='l' ? 1000 : 1;
+  if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){ const emBase = rendimento * toBase(unidadeRend); custoPorGMl = total / emBase; custoPorKgL = total / (emBase/1000); }
+  const foto = FOTO ? { name: FOTO.name, type: FOTO.type, base64: FOTO.base64 } : null;
+  const payload = { empresa: empresaSel, codigoSistema: document.getElementById('codigoSistema').value.trim(), numero: document.getElementById('numero').value.trim(), classificacao: document.getElementById('classificacao').value.trim(), item: document.getElementById('item').value.trim(), rendimento: document.getElementById('rendimento').value.trim(), unidadeRend, custoReceita: Number(total.toFixed(4)), custoPorGramaOuML: Number(custoPorGMl.toFixed(6)), custoPorKgOuL: Number(custoPorKgL.toFixed(4)), obs: document.getElementById('obs').value.trim(), receita, usuario: CURRENT_USER || '', foto };
+  const setStatus = (msg)=>{ const s1=document.getElementById('status'); const s2=document.getElementById('statusDesktop'); if(s1) s1.textContent=msg; if(s2) s2.textContent=msg; };
+  setStatus('Enviando...');
+  try{
+    const r = await salvarProduto(payload);
+    if(r.ok){
+      setStatus('Salvo com sucesso na aba "Produtos".');
+      toast('Produto salvo ✓');
+      rememberUser(CURRENT_USER);
+      clearDraft();
+    } else {
+      setStatus('Erro ao salvar: ' + (r.error||'')); toast('Erro ao salvar');
+    }
+  }
+  catch(err){ setStatus('Falha de rede: ' + err.message); toast('Falha de rede'); }
+}
+
+/* ===== RASCUNHO ===== */
+const DRAFT_KEY = 'RECEITA_DRAFT_EMPRESA_V1';
+function getDraft(){
+  const receita = lerTabela();
+  return {
+    empresa: document.getElementById('empresa').value,
+    codigoSistema: document.getElementById('codigoSistema').value.trim(),
+    numero: document.getElementById('numero').value.trim(),
+    classificacao: document.getElementById('classificacao').value.trim(),
+    item: document.getElementById('item').value.trim(),
+    rendimento: document.getElementById('rendimento').value.trim(),
+    unidadeRend: document.getElementById('unidadeRend').value,
+    obs: document.getElementById('obs').value.trim(),
+    usuario: document.getElementById('usuario').value.trim(),
+    receita: receita.map(r=>({
+      codigo:r.codigo||null, item:r.item, qtd:r.qtd, um:r.um,
+      priceUm:r.priceUm, custoUnit:r.custoUnit, obs:r.obs,
+      tipo: r.tipo || null,
+      ingredientes: Array.isArray(r.ingredientes)? r.ingredientes : undefined
+    }))
+  };
+}
+function applyDraft(d){
+  if(!d) return;
+  document.getElementById('codigoSistema').value=d.codigoSistema||'';
+  document.getElementById('numero').value=d.numero||'';
+  document.getElementById('classificacao').value=d.classificacao||'';
+  document.getElementById('item').value=d.item||'';
+  document.getElementById('rendimento').value=d.rendimento||'';
+  if(d.unidadeRend) document.getElementById('unidadeRend').value=d.unidadeRend;
+  document.getElementById('obs').value=d.obs||'';
+  document.getElementById('usuario').value=d.usuario||'';
+  const sel=document.getElementById('empresa');
+  if(sel && d.empresa){ sel.value=d.empresa; fetchIngredientes(d.empresa); }
+  tbody.innerHTML='';
+  (d.receita||[]).forEach(l=> novaLinha(l));
+  if(!(d.receita&&d.receita.length)){ novaLinha(); novaLinha(); novaLinha(); }
+  atualizarTotais();
+}
+function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(getDraft())); }catch(_){} }
+function loadDraft(){ try{ const j = localStorage.getItem(DRAFT_KEY); if(j){ applyDraft(JSON.parse(j)); return true; } }catch(_){} return false; }
+function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(_){} }
+
+/* ===== LIMPAR ===== */
+function limparFormulario(){
+  if(!confirm('Limpar todos os campos?')) return;
+  document.getElementById('codigoSistema').value='';
+  document.getElementById('numero').value='';
+  document.getElementById('classificacao').value='';
+  document.getElementById('item').value='';
+  document.getElementById('rendimento').value='';
+  document.getElementById('unidadeRend').value='kg';
+  document.getElementById('obs').value='';
+  document.getElementById('usuario').value='';
+  const sel=document.getElementById('empresa'); if(sel) sel.value='';
+  FOTO=null; const f=document.getElementById('fotoProduto'); if(f) f.value='';
+  const pw=document.getElementById('fotoPreview'); const pi=document.getElementById('fotoImg'); if(pw){ pw.style.display='none'; } if(pi){ pi.src=''; }
+  tbody.innerHTML=''; novaLinha(); novaLinha(); novaLinha(); atualizarTotais();
+  clearDraft(); toast('Formulário limpo');
+}
+
+/* ===== BOOT ===== */
+document.getElementById('salvar').addEventListener('click', handleSalvar);
+document.getElementById('salvar_m').addEventListener('click', handleSalvar);
+document.getElementById('recalcular').addEventListener('click', atualizarTotais);
+document.getElementById('recalcular_m').addEventListener('click', atualizarTotais);
+document.getElementById('limpar').addEventListener('click', limparFormulario);
+document.getElementById('limpar_m').addEventListener('click', limparFormulario);
+
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closePicker(); closeModal(); }});
+
+document.getElementById('addLinha').addEventListener('click', ()=> { novaLinha(); saveDraft(); });
+
+let _svT=null; function autoSave(){ clearTimeout(_svT); _svT=setTimeout(saveDraft, 300); }
+['codigoSistema','numero','classificacao','item','rendimento','unidadeRend','obs','usuario','empresa']
+  .forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener('input', autoSave);
+      el.addEventListener('change', async (e)=>{
+        if(id==='empresa'){ await fetchIngredientes(e.target.value); }
+        autoSave();
+      });
+    }
+  });
+
+tbody.addEventListener('input', autoSave); tbody.addEventListener('change', autoSave);
+const usuarioInput=document.getElementById('usuario'); if(usuarioInput){ usuarioInput.addEventListener('change', ()=>{ rememberUser(usuarioInput.value); }); }
+
+(async function boot(){
+  await fetchEmpresas();
+  const sel=document.getElementById('empresa'); if(sel && !sel.value && EMPRESAS.length){ sel.value = EMPRESAS[0]; }
+  await fetchIngredientes(sel?.value||'');
+  renderUsersDatalist();
+  try{ const savedUser = localStorage.getItem('AUTH_USER'); if(savedUser && !document.getElementById('usuario').value){ document.getElementById('usuario').value = savedUser; } }catch(_){ }
+  if(!loadDraft()){ novaLinha(); novaLinha(); novaLinha(); }
+})();
+
+/* ===== util tests ===== */
+console.assert(convertQty(1,'kg','g')===1000,'convertQty kg→g');
+console.assert(convertQty(1,'l','ml')===1000,'convertQty l→ml');
+console.assert(toNumberBR('1.234,56')===1234.56,'toNumberBR 1.234,56');
+console.log('Front carregado ✔');
+</script>
+</body>
+</html>
