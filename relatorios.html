@@ -30,15 +30,17 @@
   }
   .btn:active{ transform:scale(.98) }
   .btn.back{background:var(--accent);color:#fff}
+
+  /* GRID */
   .grid{
     display:grid;
     grid-template-columns:repeat(12,1fr);
     gap:20px;
   }
-  /* 4 col x 3 linhas (desktop) */
-  .span-6{ grid-column: span 6 }  /* meia largura */
-  .span-4{ grid-column: span 4 }  /* 1/3 */
-  .span-12{ grid-column: span 12 }/* full */
+  .span-6{ grid-column: span 6 }
+  .span-4{ grid-column: span 4 }
+  .span-8{ grid-column: span 8 }   /* ✅ faltava essa classe */
+  .span-12{ grid-column: span 12 }
 
   .card{
     background:var(--panel);border:1px solid var(--line);
@@ -48,36 +50,43 @@
   .muted{ color:var(--muted) }
   .pill{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.8rem }
 
+  /* Chart wrapper garante altura responsiva */
+  .chart-box{ position:relative; width:100%; height:220px }
+  .chart-box.tall{ height:260px }
+
   /* tabelas */
   .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:10px }
   table{min-width:600px; width:100%; border-collapse:collapse}
   th,td{padding:8px 10px;border:1px solid var(--line);font-size:.92rem;text-align:left}
   th{background:#fff;color:#000;font-weight:600}
-  tr.is-high td{ background: rgba(239,68,68,.12) }   /* danger translucido */
-  tr.is-mid td{ background: rgba(245,158,11,.12) }  /* warn translucido */
+  tr.is-high td{ background: rgba(239,68,68,.12) }
+  tr.is-mid td{ background: rgba(245,158,11,.12) }
 
   /* responsivo */
   @media (max-width: 1200px){
     .grid{ grid-template-columns:repeat(8,1fr) }
-    .span-6{ grid-column: span 8 } /* ocupa linha inteira no 8-col quando necessário */
+    .span-6{ grid-column: span 8 }
     .span-4{ grid-column: span 4 }
+    .span-8{ grid-column: span 8 }
   }
-  @media (max-width: 1024px){ /* tablet */
+  @media (max-width: 1024px){
     body{ padding:18px }
     .grid{ grid-template-columns:repeat(6,1fr) }
     .span-6{ grid-column: span 6 }
-    .span-4{ grid-column: span 6 } /* cada card vira full na faixa tablet estreita */
+    .span-4{ grid-column: span 6 }
+    .span-8{ grid-column: span 6 }
     .btn{ min-height:44px }
   }
-  @media (max-width: 768px){ /* celular */
+  @media (max-width: 768px){
     body{ padding:12px }
     header{ flex-direction:column; align-items:flex-start }
     h1{ font-size:1.25rem }
     .grid{ grid-template-columns:1fr; gap:14px }
-    .span-6, .span-4, .span-12{ grid-column: span 1 }
+    .span-6, .span-4, .span-8, .span-12{ grid-column: span 1 }
     .card{ padding:14px }
-    th,td{ white-space:nowrap } /* não quebrar: usa scroll horizontal */
-    .btn{ width:100% } /* botão voltar fácil de tocar */
+    th,td{ white-space:nowrap }
+    .btn{ width:100% }
+    .chart-box{ height:200px }
   }
   @media (hover: none){
     .btn{ min-height:44px }
@@ -93,16 +102,18 @@
 
 <div class="grid">
 
-  <!-- Relatório 1: Quantidade de Receitas (span 6 = metade) -->
+  <!-- 1. Quantidade / Custos das Receitas -->
   <div class="card span-6">
-    <h2>📌 Quantidade de Receitas</h2>
-    <canvas id="chartReceitas" height="140"></canvas>
+    <h2>📌 Custo das Receitas</h2>
+    <div class="chart-box">
+      <canvas id="chartReceitas"></canvas>
+    </div>
     <div id="resumoReceitas" style="margin-top:10px;font-size:.9rem">
       <span class="pill">Total de receitas: <b id="totalReceitas">0</b></span>
     </div>
   </div>
 
-  <!-- Relatório 2: Produtos com custos diferentes (span 6) -->
+  <!-- 2. Produtos com custos diferentes -->
   <div class="card span-6">
     <h2>💰 Produtos com Custos Muito Diferentes</h2>
     <div class="table-wrap">
@@ -123,13 +134,15 @@
     </div>
   </div>
 
-  <!-- Relatório 3: Ingredientes com variação alta (span 4) -->
+  <!-- 3. Ingredientes com variação alta -->
   <div class="card span-4">
-    <h2>🥗 Ingredientes com Diferença de Custo</h2>
-    <canvas id="chartIngredientes" height="180"></canvas>
+    <h2>🥗 Diferença de Custo por Ingrediente</h2>
+    <div class="chart-box tall">
+      <canvas id="chartIngredientes"></canvas>
+    </div>
   </div>
 
-  <!-- Relatório 4: Análise Detalhada (span 8) -->
+  <!-- 4. Análise Detalhada -->
   <div class="card span-8">
     <h2>🔎 Análise Detalhada</h2>
     <div class="table-wrap">
@@ -151,14 +164,14 @@
 
 <script>
 /* ========= Helpers ========= */
-const fmtBRL = n => (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtBRL = n => (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
 /* ========= Dados mockados (substituir por Apps Script depois) ========= */
 const receitas = [
   {nome:"Bolo Chocolate", qtdIng:5, custo:45},
-  {nome:"Pão Francês", qtdIng:3, custo:25},
-  {nome:"Pizza Mussarela", qtdIng:6, custo:60},
-  {nome:"Torta Frango", qtdIng:7, custo:55},
+  {nome:"Pão Francês",    qtdIng:3, custo:25},
+  {nome:"Pizza Mussarela",qtdIng:6, custo:60},
+  {nome:"Torta Frango",   qtdIng:7, custo:55},
 ];
 
 const produtos = [
@@ -167,7 +180,7 @@ const produtos = [
   {nome:"Ovo",     min:0.4, max:0.9},
 ];
 
-/* ========= 1. Quantidade de Receitas ========= */
+/* ========= 1. Custo das Receitas (bar) ========= */
 document.getElementById("totalReceitas").innerText = receitas.length;
 
 const ctx1 = document.getElementById("chartReceitas");
@@ -175,36 +188,61 @@ new Chart(ctx1, {
   type:"bar",
   data:{
     labels:receitas.map(r=>r.nome),
-    datasets:[{
-      label:"Custo (R$)",
-      data:receitas.map(r=>r.custo),
-      backgroundColor:"#2563eb",
-      borderWidth:0
-    }]
+    datasets:[
+      {
+        label:"Custo (R$)",
+        data:receitas.map(r=>r.custo),
+        backgroundColor:"#2563eb"
+      },
+      {
+        label:"Qtd. ingredientes",
+        data:receitas.map(r=>r.qtdIng),
+        type:"line",
+        borderColor:"#f59e0b",
+        borderWidth:2,
+        pointRadius:3,
+        fill:false,
+        yAxisID:'y2'
+      }
+    ]
   },
   options:{
     responsive:true,
     maintainAspectRatio:false,
     plugins:{
       legend:{ labels:{ color:"#e5e7eb" } },
-      tooltip:{ callbacks:{ label:(c)=>`${fmtBRL(c.parsed.y)}` } }
+      tooltip:{
+        callbacks:{
+          label:(c)=>{
+            if(c.datasetIndex===0) return `${c.label}: ${fmtBRL(c.parsed.y)}`;
+            return `${c.label}: ${c.parsed.y}`;
+          }
+        }
+      }
     },
     scales:{
       x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" } },
-      y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" } }
+      y:{
+        ticks:{ color:"#cbd5e1" },
+        grid:{ color:"rgba(255,255,255,.06)" },
+        title:{ display:true, text:"Custo (R$)", color:"#cbd5e1" }
+      },
+      y2:{
+        position:'right',
+        grid:{ display:false },
+        ticks:{ color:"#fbbf24" },
+        title:{ display:true, text:"Qtd. ingredientes", color:"#fbbf24" }
+      }
     }
   }
 });
 
-/* ========= 2. Produtos com custos diferentes ========= */
+/* ========= 2. Produtos com custos diferentes (tabela com destaque) ========= */
 const tbodyP = document.getElementById("tblProdutos");
-/* regra: destaca se variação absoluta >= limiteAbs ou percentual >= limitePerc */
-const limiteAbs = 2.0;     // R$ 2,00
-const limitePerc = 0.35;   // 35%
+const limiteAbs = 2.0;   // R$
+const limitePerc = 0.35; // 35%
 
-// ordena do maior para o menor impacto
 const produtosOrdenados = [...produtos].sort((a,b)=>(b.max-b.min)-(a.max-a.min));
-
 produtosOrdenados.forEach(p=>{
   const variacaoAbs  = (p.max - p.min);
   const variacaoPerc = p.min>0 ? (variacaoAbs / p.min) : 0;
@@ -222,15 +260,24 @@ produtosOrdenados.forEach(p=>{
   tbodyP.appendChild(tr);
 });
 
-/* ========= 3. Ingredientes com variação alta (gráfico) ========= */
+/* ========= 3. Diferença por Ingrediente (pie) ========= */
+const diffs = produtos.map(p=>Math.max(0,(p.max-p.min)));
+const labelsIng = produtos.map(p=>p.nome);
+
+// gera paleta segura (repete se precisar)
+const palette = ["#2563eb","#f59e0b","#ef4444","#10b981","#a78bfa","#f97316","#22c55e","#eab308","#3b82f6","#f43f5e"];
+const colors = labelsIng.map((_,i)=>palette[i % palette.length]);
+
 const ctx2 = document.getElementById("chartIngredientes");
 new Chart(ctx2, {
   type:"pie",
   data:{
-    labels:produtos.map(p=>p.nome),
+    labels: labelsIng,
     datasets:[{
-      data:produtos.map(p=>(p.max-p.min)),
-      backgroundColor:["#2563eb","#f59e0b","#ef4444","#10b981","#a78bfa","#f97316"]
+      data: diffs,
+      backgroundColor: colors,
+      borderColor: "rgba(0,0,0,.25)",
+      borderWidth: 1
     }]
   },
   options:{
@@ -243,7 +290,7 @@ new Chart(ctx2, {
   }
 });
 
-/* ========= 4. Análise detalhada ========= */
+/* ========= 4. Análise detalhada (tabela) ========= */
 const tbodyD = document.getElementById("tblDetalhada");
 receitas.forEach(r=>{
   const custoMedio = r.qtdIng>0 ? (r.custo/r.qtdIng) : 0;
@@ -257,10 +304,10 @@ receitas.forEach(r=>{
   tbodyD.appendChild(tr);
 });
 
-/* ========= (Opcional futuro) carregar via Apps Script =========
+/* ========= (Hook futuro) carregar via Apps Script =========
 fetch(WEBAPP_URL+'?action=relatorios')
   .then(r=>r.json())
-  .then(j=>{ ...atualizar charts e tabelas com j.data... });
+  .then(j=>{ ...atualizar charts e tabelas... });
 */
 </script>
 
