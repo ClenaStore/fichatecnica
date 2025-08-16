@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Relatórios e Análises</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
+    --brand:#2563eb; --accent:#b75507;
+  }
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg); color:var(--text);
+    margin:0; padding:20px;
+  }
+  header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:24px;
+  }
+  h1{margin:0;font-size:1.5rem;}
+  .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+  .btn.back{background:var(--accent);color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:20px}
+  .card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.3);
+  }
+  .card h2{font-size:1.1rem;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:6px 8px;border:1px solid var(--line);font-size:.9rem}
+  th{background:#fff;color:#000}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Relatórios e Análises</h1>
+  <button class="btn back" onclick="window.location.href='index.html'">⬅ Voltar</button>
+</header>
+
+<div class="grid">
+
+  <!-- Relatório 1: Quantidade de Receitas -->
+  <div class="card">
+    <h2>📌 Quantidade de Receitas</h2>
+    <canvas id="chartReceitas"></canvas>
+    <div id="resumoReceitas" style="margin-top:10px;font-size:.9rem;color:var(--muted)">
+      Total de receitas: <b id="totalReceitas">0</b>
+    </div>
+  </div>
+
+  <!-- Relatório 2: Produtos com custos diferentes -->
+  <div class="card">
+    <h2>💰 Produtos com Custos Muito Diferentes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Custo Mín.</th>
+          <th>Custo Máx.</th>
+          <th>Variação</th>
+        </tr>
+      </thead>
+      <tbody id="tblProdutos"></tbody>
+    </table>
+  </div>
+
+  <!-- Relatório 3: Ingredientes com variação alta -->
+  <div class="card">
+    <h2>🥗 Ingredientes com Diferença de Custo</h2>
+    <canvas id="chartIngredientes"></canvas>
+  </div>
+
+  <!-- Relatório 4: Análise Detalhada -->
+  <div class="card">
+    <h2>🔎 Análise Detalhada</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Receita</th>
+          <th>Qtd. Ingredientes</th>
+          <th>Custo Total</th>
+          <th>Custo Médio</th>
+        </tr>
+      </thead>
+      <tbody id="tblDetalhada"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+/* Exemplo de dados mockados - depois vamos puxar do Apps Script */
+const receitas = [
+  {nome:"Bolo Chocolate", qtdIng:5, custo:45},
+  {nome:"Pão Francês", qtdIng:3, custo:25},
+  {nome:"Pizza Mussarela", qtdIng:6, custo:60},
+  {nome:"Torta Frango", qtdIng:7, custo:55},
+];
+
+const produtos = [
+  {nome:"Farinha", min:4.5, max:7.0},
+  {nome:"Leite", min:3.2, max:5.5},
+  {nome:"Ovo", min:0.4, max:0.9},
+];
+
+/* 1. Quantidade de Receitas */
+document.getElementById("totalReceitas").innerText = receitas.length;
+new Chart(document.getElementById("chartReceitas"), {
+  type:"bar",
+  data:{
+    labels:receitas.map(r=>r.nome),
+    datasets:[{label:"Custo (R$)", data:receitas.map(r=>r.custo), backgroundColor:"#2563eb"}]
+  },
+  options:{responsive:true}
+});
+
+/* 2. Produtos com custos diferentes */
+const tbodyP = document.getElementById("tblProdutos");
+produtos.forEach(p=>{
+  let variacao = (p.max - p.min).toFixed(2);
+  let tr = `<tr>
+    <td>${p.nome}</td>
+    <td>R$ ${p.min.toFixed(2)}</td>
+    <td>R$ ${p.max.toFixed(2)}</td>
+    <td>R$ ${variacao}</td>
+  </tr>`;
+  tbodyP.innerHTML += tr;
+});
+
+/* 3. Ingredientes com variação alta (gráfico) */
+new Chart(document.getElementById("chartIngredientes"), {
+  type:"pie",
+  data:{
+    labels:produtos.map(p=>p.nome),
+    datasets:[{data:produtos.map(p=>(p.max-p.min)), backgroundColor:["#2563eb","#f59e0b","#ef4444"]}]
+  },
+  options:{responsive:true}
+});
+
+/* 4. Análise detalhada */
+const tbodyD = document.getElementById("tblDetalhada");
+receitas.forEach(r=>{
+  let custoMedio = (r.custo/r.qtdIng).toFixed(2);
+  tbodyD.innerHTML += `<tr>
+    <td>${r.nome}</td>
+    <td>${r.qtdIng}</td>
+    <td>R$ ${r.custo.toFixed(2)}</td>
+    <td>R$ ${custoMedio}</td>
+  </tr>`;
+});
+</script>
+
+</body>
+</html>
