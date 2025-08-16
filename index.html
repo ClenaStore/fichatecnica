@@ -51,12 +51,12 @@
   .modal{
     position:fixed; inset:0; background:rgba(0,0,0,.6);
     display:none; align-items:center; justify-content:center; z-index:60;
-    overflow:auto;                 /* fallback de rolagem geral */
+    overflow:auto;
   }
   .modal .box{
-    width:min(98vw, 920px);        /* mais largo */
-    max-height:calc(100vh - 48px); /* limita altura */
-    overflow-y:auto;               /* rolagem interna */
+    width:min(98vw, 920px);
+    max-height:calc(100vh - 48px);
+    overflow-y:auto;
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:16px;
@@ -64,12 +64,7 @@
     display:flex;
     flex-direction:column;
   }
-  /* a lista da composição rola sem mexer no cabeçalho/botões */
-  .tbl-wrap{
-    max-height:50vh;
-    overflow:auto;
-    border-radius:10px;
-  }
+  .tbl-wrap{ max-height:50vh; overflow:auto; border-radius:10px; }
 
   @media (max-width: 768px){
     body{padding:12px}
@@ -97,6 +92,20 @@
 
   .foto-preview{display:flex;gap:12px;align-items:center;margin-top:8px}
   .foto-preview img{height:120px;width:auto;border-radius:12px;border:1px solid var(--line)}
+
+  /* ===== AJUSTES PEDIDOS ===== */
+  /* Campo "Item" da tabela de RECEITA: branco com letras pretas */
+  .inpItem{ background:#fff !important; color:#000 !important; }
+
+  /* Campo "Item" da COMPOSIÇÃO: select branco com letras pretas */
+  .comp-table select.compItemSel{
+    width:100%;
+    padding:8px;
+    border-radius:10px;
+    border:1px solid #555;
+    background:#fff;
+    color:#000;
+  }
 </style>
 </head>
 <body>
@@ -611,7 +620,7 @@ buscaIng.addEventListener('input', renderListaIng);
 document.getElementById('novoIng').addEventListener('click', ()=> openModal(null));
 function selectIng(ing){
   if(!pickerTargetRow) return;
-  // Seleção para COMPOSIÇÃO
+  // Seleção para COMPOSIÇÃO (mantida para compatibilidade, mas agora usamos select direto)
   if(typeof pickerTargetRow === 'object' && pickerTargetRow._compIndex!=null){
     const i = pickerTargetRow._compIndex;
     if(COMP_TEMP[i]){
@@ -660,6 +669,19 @@ let compTbody = null;
 let compResumo = null;
 let COMP_TEMP = [];
 
+/* util: achar índice do ingrediente no array global */
+function idxFromCodigoOrNome(codigo, nome){
+  let i = -1;
+  if(codigo!=null){
+    i = INGREDIENTES.findIndex(x => String(x.codigo||'') === String(codigo));
+    if(i>=0) return i;
+  }
+  if(nome){
+    i = INGREDIENTES.findIndex(x => String(x.nome||'').toLowerCase() === String(nome).toLowerCase());
+  }
+  return i;
+}
+
 function ensureTipoCompUI(){
   const host = document.getElementById('tipoCompContainer');
   if(host.dataset.ready==='1') return;
@@ -691,7 +713,7 @@ function ensureTipoCompUI(){
     <div class="tbl-wrap">
       <table class="comp-table">
         <thead>
-          <tr><th style="min-width:220px">Item</th><th style="width:110px">Qtd</th><th style="width:90px">U.M.</th><th style="width:150px">Custo Unit. (R$)</th><th style="width:100px">Ações</th></tr>
+          <tr><th style="min-width:260px">Item</th><th style="width:110px">Qtd</th><th style="width:90px">U.M.</th><th style="width:150px">Custo Unit. (R$)</th><th style="width:100px">Ações</th></tr>
         </thead>
         <tbody id="comp_tbody"></tbody>
       </table>
@@ -702,7 +724,7 @@ function ensureTipoCompUI(){
       <button class="btn mini" id="btnUseEstim" title="Aplicar estimativa no campo de custo">Usar estimativa</button>
     </div>
     <div class="small muted" style="margin-top:6px">
-      Dica: deixe o custo unitário em branco para puxar do cadastro do item selecionado. Você pode sobrescrever se quiser.
+      Dica: se o custo ficar em branco, puxa do cadastro do item selecionado. Você pode sobrescrever se quiser.
       Conversões: kg↔g, L↔ml, un 1:1.
     </div>
   `;
@@ -748,18 +770,27 @@ function delCompRow(idx){
   renderCompTable();
   computeCompPreview();
 }
+function optionListHTML(selectedIdx){
+  const opts = ['<option value="">— selecione —</option>'];
+  INGREDIENTES.forEach((x, i)=>{
+    const tag = (x.tipo==='composto') ? ' [composto]' : '';
+    const texto = `${x.nome||''} — ${x.um||''} • ${x.codigo||'-'}`;
+    opts.push(`<option value="${i}" ${i===selectedIdx?'selected':''}>${texto}${tag}</option>`);
+  });
+  return opts.join('');
+}
 function renderCompTable(){
   compTbody.innerHTML = '';
   COMP_TEMP.forEach((r, idx)=>{
     const tr = document.createElement('tr');
 
+    // ITEM: agora é um SELECT (barra)
     const tdItem = document.createElement('td');
-    const name = document.createElement('div');
-    const meta = document.createElement('div');
-    name.innerHTML = `<strong>${r.nome||'(selecione)'}</strong> ${r.codigo?`<span class="small muted">• ${r.codigo}</span>`:''}`;
-    meta.className = 'small muted';
-    meta.innerHTML = `<span class="link" data-pick="${idx}">buscar</span>`;
-    tdItem.appendChild(name); tdItem.appendChild(meta);
+    const sel = document.createElement('select');
+    sel.className = 'compItemSel';
+    const preIdx = idxFromCodigoOrNome(r.codigo, r.nome);
+    sel.innerHTML = optionListHTML(preIdx);
+    tdItem.appendChild(sel);
 
     const tdQtd = document.createElement('td');
     const iQtd = document.createElement('input'); iQtd.type='number'; iQtd.step='0.0001'; iQtd.value = r.qtd||0; iQtd.style.width='100%';
@@ -781,9 +812,17 @@ function renderCompTable(){
     compTbody.appendChild(tr);
 
     // events
-    meta.querySelector('[data-pick]').addEventListener('click', ()=>{
-      pickerTargetRow = { _compIndex: idx };
-      openPicker();
+    sel.addEventListener('change', ()=>{
+      const v = sel.value==='' ? null : Number(sel.value);
+      if(v==null || isNaN(v) || !INGREDIENTES[v]){ COMP_TEMP[idx].codigo=null; COMP_TEMP[idx].nome=''; return; }
+      const base = INGREDIENTES[v];
+      COMP_TEMP[idx].codigo = base.codigo || null;
+      COMP_TEMP[idx].nome   = base.nome || '';
+      // se não tiver U.M., herdamos do cadastro
+      if(!COMP_TEMP[idx].um){ COMP_TEMP[idx].um = (base.um||'').toLowerCase(); sUm.value = COMP_TEMP[idx].um||''; }
+      // se custo não foi definido manualmente, puxa do cadastro
+      if(!(COMP_TEMP[idx].custoUnit>0)){ COMP_TEMP[idx].custoUnit = Number(base.custoUnit||0); iC.value = (COMP_TEMP[idx].custoUnit||''); }
+      computeCompPreview();
     });
     iQtd.addEventListener('input', ()=>{ COMP_TEMP[idx].qtd = Number(iQtd.value||0); computeCompPreview(); });
     sUm.addEventListener('change', ()=>{ COMP_TEMP[idx].um = (sUm.value||'').toLowerCase(); computeCompPreview(); });
