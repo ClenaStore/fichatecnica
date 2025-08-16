@@ -1,0 +1,782 @@
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel de Análise • Receitas</title>
+<style>
+  :root{
+    --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
+    --brand:#2563eb; --ghost:#374151; --accent:#b75507;
+    /* 👉 ALTERE AQUI O TAMANHO DA FOTO DO MODAL */
+    --foto-size: 200px; /* ex.: 120px, 160px, 200px, 260px... */
+  }
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
+  h1{margin:0 0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  label{font-size:.85rem;color:var(--muted)}
+  input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+  th{background:#000}
+  .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;background:var(--brand);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid var(--ghost)}
+  .btn.secondary{background:#334155}
+  .right{text-align:right}
+  .muted{opacity:.85}
+  .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);font-size:.8rem;background:#111}
+  .small{font-size:.9rem}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;font-size:.75rem}
+  .link{cursor:pointer;color:#93c5fd}
+  .best{outline:2px solid #16a34a; background:rgba(22,163,74,.12)}
+  .best::after{content:" 💚";}
+  /* mini badge composto */
+  .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
+
+  /* ===== MODAL DETALHE ===== */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+
+  .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
+  .m-title{display:flex;flex-direction:column;gap:4px}
+  .m-title .name{font-size:1.4rem;font-weight:700;margin:0;line-height:1.1}
+  .m-title .sub{font-size:.95rem;color:var(--muted)}
+  .m-right{display:grid;grid-template-rows:auto auto;gap:10px;align-items:start;justify-items:end}
+  .m-actions{display:flex;gap:8px;align-items:center}
+  .ctrl{height:40px; padding:10px 14px; border-radius:12px}
+  .ctrl.w{width:220px}
+  .foto{
+    width:var(--foto-size); height:var(--foto-size);
+    object-fit:cover; border-radius:12px; border:1px solid var(--line);
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+
+  .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+
+  /* ===== MODAL HISTÓRICO ===== */
+  .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52}
+  .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .h-filtros{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
+  .h-filtros > div{grid-column: span 3}
+  .h-filtros .w2{grid-column: span 2}
+  .h-filtros .w4{grid-column: span 4}
+  .h-table{border:1px solid var(--line);border-radius:12px;overflow:auto}
+
+  @media (max-width: 768px){
+    body{padding:12px}
+    .row{grid-template-columns:1fr;gap:10px}
+    .m-head{grid-template-columns: 1fr}
+    .m-right{justify-items:start}
+    .ctrl.w{width:100%}
+    .h-filtros{grid-template-columns:1fr}
+    .h-filtros > div{grid-column: span 1}
+  }
+</style>
+</head>
+<body>
+  <h1>Painel de Análise de Receitas</h1>
+
+  <div class="card">
+    <div class="row">
+      <div style="grid-column: span 3">
+        <label>Empresa</label>
+        <select id="fEmpresa"><option value="">(Todas)</option></select>
+      </div>
+      <div style="grid-column: span 5">
+        <label>Buscar</label>
+        <input id="fBusca" placeholder="Item, classificação, código...">
+      </div>
+      <div style="grid-column: span 4;align-self:end" class="right">
+        <button class="btn ghost" id="btnHistorico">Histórico</button>
+        <button class="btn secondary" id="btnAtualizar">Atualizar</button>
+      </div>
+    </div>
+    <div id="metaInfo" class="small muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <table id="tblReceitas">
+      <thead>
+        <tr>
+          <th>Empresa</th><th>Código</th><th>Nº</th><th>Item</th><th>Classificação</th>
+          <th>Rendimento</th><th>U.M.</th><th class="right">Custo da Receita</th>
+          <th class="right">Custo por kg/L</th><th>Data</th><th>Usuário</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyReceitas"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal Detalhe -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <div class="m-head">
+        <div class="m-title">
+          <div id="mTitulo" class="name"></div>
+          <div id="mSub" class="sub"></div>
+        </div>
+        <div class="m-right">
+          <div class="m-actions">
+            <label class="small" for="mCompare" style="margin-right:6px">Empresas</label>
+            <select id="mCompare" class="ctrl w"></select>
+            <button class="btn ghost ctrl" id="mFechar">Fechar</button>
+          </div>
+          <img id="mFoto" class="foto" alt="foto" style="display:none"/>
+        </div>
+      </div>
+
+      <div id="mResumo" class="pill" style="margin-bottom:12px"></div>
+
+      <div class="tbl-wrap">
+        <table id="tblDet">
+          <thead id="theadDet"></thead>
+          <tbody id="tbodyDet"></tbody>
+        </table>
+      </div>
+
+      <div id="mTotals" class="row" style="margin-top:12px"></div>
+      <div id="mExplain" class="small muted" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- Modal Histórico -->
+  <div class="hist-modal" id="histModal">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;font-size:1.1rem">Histórico</div>
+        <div>
+          <button class="btn ghost" id="hFechar">Fechar</button>
+        </div>
+      </div>
+
+      <div class="h-filtros">
+        <div class="w2">
+          <label>De</label>
+          <input type="date" id="hDe">
+        </div>
+        <div class="w2">
+          <label>Até</label>
+          <input type="date" id="hAte">
+        </div>
+        <div class="w4">
+          <label>Empresa</label>
+          <select id="hEmpresa"><option value="">(Todas)</option></select>
+        </div>
+        <div class="w4">
+          <label>Item/Receita (busca)</label>
+          <input id="hBusca" placeholder="Item, nº, código, usuário...">
+        </div>
+      </div>
+
+      <div class="small muted" id="hInfo" style="margin-bottom:6px"></div>
+
+      <div class="h-table">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Usuário</th>
+              <th>Entidade</th>
+              <th>Ação</th>
+              <th>Chave</th>
+              <th>Detalhes</th>
+            </tr>
+          </thead>
+          <tbody id="hTbody"></tbody>
+        </table>
+      </div>
+
+      <div id="hFallback" style="display:none;margin-top:10px">
+        <button class="btn" id="hAbrirPlanilha">Abrir histórico no Google Sheets</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== CONFIG ===== */
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx0ofovABeAIpUR8BgR0NyPSLFxetxYyJIp5I8PbPo6nYeQcwKxOzcSqKmzoBydKjbG/exec'; /* ⬅️ SUBSTITUA */
+
+/* ===== ESTADO ===== */
+let PRODUTOS = [];
+let ING_TODOS = [];
+let EMPRESAS = [];
+let EMPRESA_ATUAL = '';
+let HIST = [];
+let HIST_LINK = '';
+
+/* ===== HELPERS ===== */
+const tbodyR = document.getElementById('tbodyReceitas');
+const fmtBRL = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const norm = s => String(s||'').trim().toLowerCase();
+const FACTOR = { g:1, kg:1000, ml:1, l:1000, un:1 };
+const TYPE   = u => (u==='g'||u==='kg')?'mass' : (u==='ml'||u==='l')?'vol' : 'count';
+function convertQty(qty, from, to){
+  from=(from||'').toLowerCase(); to=(to||'').toLowerCase();
+  if(!FACTOR[from]||!FACTOR[to]) return qty;
+  if(TYPE(from)!==TYPE(to)) return NaN;
+  return qty*(FACTOR[from]/FACTOR[to]);
+}
+function qtyUmFrom(r){
+  const qtd = Number(r.qtd ?? r.quantidade ?? r.qtdReceita ?? 0);
+  const um  = String(r.um ?? r.unidade ?? r.unidadeReceita ?? '').toLowerCase();
+  return {qtd, um};
+}
+function driveImgSrc(uOrId, size=800){
+  if(!uOrId) return '';
+  const s = String(uOrId);
+  let id = '';
+  const m1 = s.match(/\/d\/([^/]+)/);
+  const m2 = s.match(/[?&]id=([^&]+)/);
+  if (m1 && m1[1]) id = m1[1];
+  else if (m2 && m2[1]) id = m2[1];
+  else if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) id = s;
+  if(!id) return s;
+  return `https://drive.google.com/thumbnail?id=${id}&sz=w${size}`;
+}
+function parseBRDateTime(ts){
+  const m = String(ts||'').match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})/);
+  if(!m) return null;
+  return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), Number(m[4]), Number(m[5]));
+}
+
+/* ==== helpers p/ histórico (pretty JSON + diff resumido) ==== */
+function hEsc(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
+function hTryParseJSON(s){ if(!s) return null; try{ return JSON.parse(String(s)); }catch(_){ return null; } }
+function hPretty(v){ try{ return JSON.stringify(v, null, 2); }catch(_){ return String(v); } }
+function hRenderVal(v){
+  if(v===undefined) return '<span class="small muted">—</span>';
+  if(v===null)      return '<span class="small muted">null</span>';
+  if(typeof v==='object') return `<pre style="white-space:pre-wrap;font-size:.8rem;margin:0">${hEsc(hPretty(v))}</pre>`;
+  const t = String(v);
+  return t.length>120 ? `<pre style="white-space:pre-wrap;font-size:.8rem;margin:0">${hEsc(t)}</pre>` : `<code>${hEsc(t)}</code>`;
+}
+function hKeysUnion(a,b){ return Array.from(new Set([...Object.keys(a||{}), ...Object.keys(b||{})])).sort(); }
+function hDeepEq(a,b){ return JSON.stringify(a)===JSON.stringify(b); }
+function hResumoAlteracoes(diffObj, antesObj, depoisObj){
+  let map = {};
+  if(diffObj && typeof diffObj==='object' && !Array.isArray(diffObj)){
+    map = diffObj;
+  }else if(antesObj || depoisObj){
+    hKeysUnion(antesObj||{}, depoisObj||{}).forEach(k=>{
+      const av = antesObj?antesObj[k]:undefined;
+      const dv = depoisObj?depoisObj[k]:undefined;
+      if(!hDeepEq(av,dv)) map[k] = {before: av, after: dv};
+    });
+  }
+  const ks = Object.keys(map);
+  const rows = ks.length
+    ? ks.map(k=>`
+        <tr>
+          <td style="white-space:nowrap">${hEsc(k)}</td>
+          <td style="vertical-align:top;background:rgba(239,68,68,.08)">${hRenderVal(map[k].before)}</td>
+          <td style="vertical-align:top;background:rgba(34,197,94,.08)">${hRenderVal(map[k].after)}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" class="small muted">Sem alterações detectadas</td></tr>`;
+  return `
+    <div class="small muted">Resumo de alterações</div>
+    <div class="tbl-wrap" style="margin:6px 0">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ===== GAS ===== */
+async function apiGet(path){
+  const r = await fetch(WEBAPP_URL+path, {cache:'no-store'});
+  return r.json();
+}
+
+/* Carrega empresas = união (Produtos ∪ Ingredientes) e ingredientes */
+async function carregarEmpresas(){
+  try{
+    const [p,i] = await Promise.all([
+      apiGet('?action=produtos&ts='+Date.now()),
+      apiGet('?action=ingredientes&ts='+Date.now())
+    ]);
+    const set = new Set();
+    if(p.ok) (p.data||[]).forEach(r=> r.empresa && set.add(r.empresa));
+    if(i.ok) (i.data||[]).forEach(r=> r.empresa && set.add(r.empresa));
+    EMPRESAS = [...set];
+    ING_TODOS = i.ok ? (i.data||[]) : [];
+  }catch(_){
+    EMPRESAS = [];
+    ING_TODOS = [];
+  }
+}
+async function carregarDados(){
+  const p = await apiGet('?action=produtos&ts='+Date.now());
+  PRODUTOS = p.ok ? (p.data||[]) : [];
+}
+
+/* ===== RENDER LISTA ===== */
+function renderEmpresasSelect(){
+  const sel = document.getElementById('fEmpresa');
+  sel.innerHTML = '<option value="">(Todas)</option>' + EMPRESAS.map(e=>`<option value="${e}">${e}</option>`).join('');
+  if(EMPRESA_ATUAL){ sel.value = EMPRESA_ATUAL; }
+}
+function renderTabela(){
+  const busca = norm(document.getElementById('fBusca').value);
+  const emp = document.getElementById('fEmpresa').value;
+  EMPRESA_ATUAL = emp;
+
+  const arr = (PRODUTOS||[]).filter(r=>{
+    const empOk = !emp || norm(r.empresa)===norm(emp);
+    const bOk = !busca || [r.item,r.classificacao,r.codigoSistema,r.numero].some(v=> String(v||'').toLowerCase().includes(busca));
+    return empOk && bOk;
+  });
+
+  tbodyR.innerHTML = '';
+  arr.forEach((r,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="tag">${r.empresa||'-'}</span></td>
+      <td>${r.codigoSistema||''}</td>
+      <td>${r.numero||''}</td>
+      <td><span class="link" data-idx="${idx}">${r.item||''}</span></td>
+      <td>${r.classificacao||''}</td>
+      <td>${r.rendimento||''}</td>
+      <td>${(r.unidadeRend||'').toUpperCase()}</td>
+      <td class="right">${fmtBRL(Number(r.custoReceita||0))}</td>
+      <td class="right">${fmtBRL(Number(r.custoPorKgOuL||0))}</td>
+      <td>${r.data||''}</td>
+      <td>${r.usuario||''}</td>`;
+    tbodyR.appendChild(tr);
+  });
+
+  tbodyR.querySelectorAll('.link').forEach(a=> a.addEventListener('click', (e)=>{
+    const idx = Number(e.target.dataset.idx);
+    const listaFiltrada = (PRODUTOS||[]).filter(r=>{
+      const empOk = !EMPRESA_ATUAL || norm(r.empresa)===norm(EMPRESA_ATUAL);
+      const b = norm(document.getElementById('fBusca').value);
+      const bOk = !b || [r.item,r.classificacao,r.codigoSistema,r.numero].some(v=> String(v||'').toLowerCase().includes(b));
+      return empOk && bOk;
+    });
+    const item = listaFiltrada[idx];
+    if(item) abrirModal(item);
+  }));
+
+  document.getElementById('metaInfo').textContent = `${arr.length} receitas exibidas${emp?` • Empresa: ${emp}`:''}`;
+}
+
+/* ===== ÍNDICE DE INGREDIENTES (cliente) ===== */
+function buildIngIndex(){
+  const map = {};
+  (ING_TODOS||[]).forEach(x=>{
+    const emp = x.empresa||''; if(!map[emp]) map[emp]={};
+    const keyCod  = x.codigo ? `#${String(x.codigo).trim()}` : null;
+    const keyNome = `n:${norm(x.nome)}`;
+    if(keyCod) map[emp][keyCod] = x;
+    map[emp][keyNome] = x;
+  });
+  return map;
+}
+function acharIng(map, empresa, recItem){
+  const keyCod = recItem.codigo ? `#${String(recItem.codigo).trim()}` : null;
+  const keyNome = `n:${norm(recItem.item)}`;
+  const m = map[empresa]||{};
+  return (keyCod && m[keyCod]) || m[keyNome] || null;
+}
+
+/* ======= Compostos: cálculo local por empresa ======= */
+function detalharComposto(ing, empresa, idx){
+  if(!(ing && ing.tipo==='composto' && Array.isArray(ing.ingredientes))) return null;
+  const umComp = String(ing.um||'').toLowerCase();
+  const filhos = ing.ingredientes.map(spec=>{
+    const keyCod = spec.codigo ? `#${String(spec.codigo).trim()}` : null;
+    const keyNome = `n:${norm(spec.nome||spec.item||'')}`;
+    const base = (idx[empresa]||{})[keyCod] || (idx[empresa]||{})[keyNome] || null;
+    const umPreco   = String(base?.um||'').toLowerCase();
+    const custoUnit = (typeof spec.custoUnit==='number') ? spec.custoUnit : Number(base?.custoUnit||0);
+    const qtdComp   = Number(spec.qtd || spec.quantidade || 0);
+    const umCompF   = String(spec.um||'').toLowerCase();
+    const qtdConv   = (qtdComp>0 && umCompF && umPreco) ? convertQty(qtdComp, umCompF, umPreco) : null;
+    const valor     = (qtdConv==null || isNaN(qtdConv)) ? null : Number((qtdConv * custoUnit).toFixed(6));
+    return {
+      nome: spec.nome || spec.item || base?.nome || '(ingrediente)',
+      codigo: spec.codigo || base?.codigo || '',
+      qtdComp, umComp: umCompF,
+      umPreco, custoUnit,
+      qtdConvertida: (qtdConv==null || isNaN(qtdConv)) ? null : qtdConv,
+      valor
+    };
+  });
+  const total = filhos.filter(f=> f.valor!=null).reduce((s,f)=> s+f.valor, 0);
+  return { umComp, filhos, custoUnitComp: Number(total.toFixed(6)) };
+}
+
+/* ===== MODAL DETALHE ===== */
+const modal = document.getElementById('modal');
+document.getElementById('mFechar').addEventListener('click', ()=> modal.style.display='none');
+
+async function compararViaAPI(rec){
+  try{
+    const {qtd, um} = qtyUmFrom(rec);
+    const codigo = rec.codigo ? `codigo=${encodeURIComponent(rec.codigo)}` : '';
+    const nome   = !rec.codigo ? `nome=${encodeURIComponent(rec.item||'')}` : '';
+    const qs = (codigo || nome) + `&qtd=${encodeURIComponent(qtd||0)}&um=${encodeURIComponent(um)}`;
+    const j = await apiGet(`?action=comparar_ingrediente&${qs}&ts=${Date.now()}`);
+    if(j && j.ok) return j.data;
+  }catch(_){}
+  return null;
+}
+function compararLocal(rec){
+  const {qtd, um} = qtyUmFrom(rec);
+  const idxAll = buildIngIndex();
+  const empresas = EMPRESAS.map(emp=>{
+    const ing = acharIng(idxAll, emp, rec);
+    if(!ing) return null;
+
+    // composto?
+    if(ing.tipo==='composto' && Array.isArray(ing.ingredientes)){
+      const det = detalharComposto(ing, emp, idxAll);
+      const umPreco = String(ing.um||'').toLowerCase();
+      const conv = (qtd>0 && um) ? convertQty(qtd, um, umPreco) : null;
+      const custo = Number(det?.custoUnitComp||0);
+      const subtotal = (conv===null || isNaN(conv)) ? null : conv * custo;
+      return {
+        empresa: emp,
+        codigo: ing.codigo||'',
+        nome:   ing.nome||'',
+        umPreco,
+        custoUnit: custo,
+        qtdConvertida: (conv===null||isNaN(conv))?null:conv,
+        subtotal: (subtotal===null||isNaN(subtotal))?null:Number(subtotal.toFixed(6)),
+        tipo: 'composto',
+        comp: det?.filhos||[],
+        compTotal: det?.custoUnitComp||0,
+        compUm: det?.umComp||umPreco
+      };
+    }
+
+    // simples
+    const umPreco = String(ing.um||'').toLowerCase();
+    const conv = (qtd>0 && um) ? convertQty(qtd, um, umPreco) : null;
+    const custo = Number(ing.custoUnit||0);
+    const subtotal = (conv===null || isNaN(conv)) ? null : conv * custo;
+    return {
+      empresa: emp,
+      codigo: ing.codigo||'',
+      nome:   ing.nome||'',
+      umPreco,
+      custoUnit: custo,
+      qtdConvertida: (conv===null||isNaN(conv))?null:conv,
+      subtotal: (subtotal===null||isNaN(subtotal))?null:Number(subtotal.toFixed(6))
+    };
+  }).filter(Boolean);
+
+  let idxBarato=-1, menor=Infinity;
+  empresas.forEach((x,i)=>{ if(typeof x.custoUnit==='number' && x.custoUnit<menor){ menor=x.custoUnit; idxBarato=i; }});
+  return {
+    chave: rec.codigo ? {tipo:'codigo', valor:rec.codigo} : {tipo:'nome', valor:rec.item||''},
+    qtd, umReceita: um, empresas, idxMaisBarata: idxBarato
+  };
+}
+
+/* render auxiliar: tabela da composição por empresa */
+function renderCompTable(x){
+  if(!(x && x.tipo==='composto' && Array.isArray(x.comp))) return '';
+  const rows = x.comp.map(f=>`
+    <tr>
+      <td>${f.nome||''}${f.codigo?` <span class="small muted">(cod: ${f.codigo})</span>`:''}</td>
+      <td class="right">${Number(f.qtdComp||0)} ${(f.umComp||'').toUpperCase()}</td>
+      <td class="right">${f.qtdConvertida!=null?f.qtdConvertida.toFixed(4):'—'} ${(f.umPreco||'').toUpperCase()}</td>
+      <td class="right">${fmtBRL(f.custoUnit||0)}</td>
+      <td class="right">${f.valor!=null?fmtBRL(f.valor):'—'}</td>
+    </tr>
+  `).join('');
+  return `
+    <div class="tbl-wrap" style="margin-top:6px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr><th>Item</th><th class="right">Qtd (comp.)</th><th class="right">Conv. → preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr><td colspan="4" class="right"><strong>Total (1 ${ (x.compUm||x.umPreco||'U.M.').toUpperCase() })</strong></td><td class="right"><strong>${fmtBRL(x.compTotal||0)}</strong></td></tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+
+async function abrirModal(prod){
+  const baseEmp = prod.empresa || EMPRESA_ATUAL || '';
+
+  const cmpSel = document.getElementById('mCompare');
+  const opts = ['<option value="__ALL__">(Todas)</option>'].concat(EMPRESAS.map(e=>`<option value="${e}">${e}</option>`));
+  cmpSel.innerHTML = opts.join('');
+  cmpSel.value = '__ALL__';
+
+  async function fetchComparativo(rec){
+    const viaAPI = await compararViaAPI(rec);
+    if(viaAPI) return viaAPI;
+    return compararLocal(rec);
+  }
+
+  async function render(){
+    const val = cmpSel.value;
+    let empresasToShow = val==='__ALL__' ? [...EMPRESAS] : [val];
+    if(!empresasToShow.includes(baseEmp)) empresasToShow.unshift(baseEmp);
+
+    document.getElementById('mTitulo').textContent = `${prod.item||''}`;
+    document.getElementById('mSub').textContent = `${prod.classificacao||''} • Empresa base: ${baseEmp} • Nº ${prod.numero||''}`;
+
+    const fotoEl = document.getElementById('mFoto');
+    fotoEl.referrerPolicy = 'no-referrer';
+    let fotoSrc = driveImgSrc(prod.fotoUrl || prod.fotoId, 800);
+    if(!prod.fotoUrl && !prod.fotoId){
+      const cand = (PRODUTOS||[]).find(p =>
+        (p.codigoSistema && p.codigoSistema===prod.codigoSistema && p.fotoUrl) ||
+        (p.item && norm(p.item)===norm(prod.item) && p.fotoUrl)
+      );
+      if(cand && cand.fotoUrl) fotoSrc = driveImgSrc(cand.fotoUrl, 800);
+    }
+    if(fotoSrc){ fotoEl.onerror=()=>{fotoEl.style.display='none'}; fotoEl.src=fotoSrc; fotoEl.style.display='block'; }
+    else { fotoEl.style.display='none'; }
+
+    const receita = Array.isArray(prod.receita) ? prod.receita : [];
+    const thead = document.getElementById('theadDet');
+    const tbody = document.getElementById('tbodyDet');
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+
+    const thCols = ['Ingrediente','Qtd (receita)','U.M.'].concat(empresasToShow.map(e=>`Preço • ${e}`));
+    const trH = document.createElement('tr');
+    thCols.forEach(h=>{ const th=document.createElement('th'); th.textContent=h; if(h.startsWith('Preço')) th.className='right'; trH.appendChild(th); });
+    thead.appendChild(trH);
+
+    const totais = {}; empresasToShow.forEach(e=> totais[e]=0);
+
+    const comps = await Promise.all(receita.map(r=>fetchComparativo(r)));
+
+    receita.forEach((r, idxI)=>{
+      const comp = comps[idxI];
+      const {qtd, um} = qtyUmFrom(r);
+      const porEmpresa = (comp?.empresas||[]).filter(x=> empresasToShow.includes(x.empresa));
+
+      const validos = porEmpresa.filter(x=> x.subtotal!=null);
+      const minVal = validos.length ? Math.min(...validos.map(x=>x.subtotal)) : null;
+
+      const anyComp = porEmpresa.some(x=> x.tipo==='composto');
+
+      const tr = document.createElement('tr');
+      const compMark = anyComp ? ' <span class="comp-badge">composto</span>' : '';
+      tr.innerHTML = `
+        <td>${r.item||''}${r.codigo?` <span class="small muted">(cod: ${r.codigo})</span>`:''}${!comp?' <span class="small muted">• sem cadastro</span>':''}${compMark}</td>
+        <td class="right">${Number(qtd||0)}</td>
+        <td>${(um||'').toUpperCase()}</td>
+      `;
+
+      empresasToShow.forEach(emp=>{
+        const x = porEmpresa.find(e=> e.empresa===emp);
+        const td = document.createElement('td'); td.className='right';
+        if(!x){
+          td.textContent='—';
+          td.title = comp ? 'Sem cadastro desta empresa para este ingrediente' : 'Ingrediente não encontrado';
+        }else{
+          if(x.subtotal!=null) totais[emp]+=x.subtotal;
+          td.title = (x.qtdConvertida==null)
+            ? `Sem conversão (unidades incompatíveis)`
+            : `Conversão: ${qtd} ${(um||'').toLowerCase()} → ${x.qtdConvertida.toFixed(4)} ${x.umPreco} • subtotal = ${x.qtdConvertida.toFixed(4)} × ${fmtBRL(x.custoUnit)}`;
+          td.textContent = (x.subtotal==null)
+            ? `${fmtBRL(x.custoUnit)} • —`
+            : `${fmtBRL(x.custoUnit)} • ${fmtBRL(x.subtotal)}`;
+          if(minVal!=null && x.subtotal===minVal) td.classList.add('best');
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+
+      // bloco de composição (se for composto)
+      if(anyComp){
+        const trComp = document.createElement('tr');
+        const tdComp = document.createElement('td');
+        tdComp.colSpan = thCols.length;
+        const blocks = empresasToShow.map(emp=>{
+          const x = porEmpresa.find(e=> e.empresa===emp);
+          if(!(x && x.tipo==='composto')) return '';
+          return `
+            <div style="margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px">
+              <div class="pill" style="display:inline-block;margin-bottom:6px">
+                Empresa: <strong>${emp}</strong> • Total do composto (1 ${(x.compUm||x.umPreco||'U.M.').toUpperCase()}): <strong>${fmtBRL(x.compTotal||0)}</strong>
+              </div>
+              ${renderCompTable(x)}
+            </div>
+          `;
+        }).join('');
+        tdComp.innerHTML = `<div class="small muted">Composição por empresa (valor por 1 U.M. do composto):</div>${blocks}`;
+        trComp.appendChild(tdComp);
+        tbody.appendChild(trComp);
+      }
+    });
+
+    const totalsWrap = document.getElementById('mTotals');
+    totalsWrap.innerHTML = '';
+    empresasToShow.forEach(emp=>{
+      const div = document.createElement('div');
+      div.style.gridColumn = 'span 6';
+      div.innerHTML = `<span class="pill">Total na empresa (${emp}): <strong>${fmtBRL(totais[emp]||0)}</strong></span>`;
+      totalsWrap.appendChild(div);
+    });
+
+    document.getElementById('mResumo').textContent =
+      `Rendimento: ${prod.rendimento||''} ${(prod.unidadeRend||'').toUpperCase()} • Itens: ${Array.isArray(prod.receita)?prod.receita.length:0}`;
+
+    document.getElementById('mExplain').textContent =
+      'Os preços vêm do cadastro de ingredientes. A quantidade da receita é convertida para a U.M. do preço (kg↔g, L↔ml, un 1:1). Para ingredientes compostos, o painel calcula o custo por 1 U.M. somando os itens filhos (com conversões) por empresa. A célula 💚 indica o menor subtotal por ingrediente.';
+  }
+
+  await render();
+  document.getElementById('mCompare').onchange = render;
+  modal.style.display='flex';
+}
+
+/* ===== HISTÓRICO ===== */
+const histModal = document.getElementById('histModal');
+document.getElementById('hFechar').addEventListener('click', ()=> histModal.style.display='none');
+document.getElementById('btnHistorico').addEventListener('click', abrirHistorico);
+
+async function abrirHistorico(){
+  const hEmp = document.getElementById('hEmpresa');
+  hEmp.innerHTML = '<option value="">(Todas)</option>' + EMPRESAS.map(e=>`<option value="${e}">${e}</option>`).join('');
+
+  const dAte = new Date();
+  const dDe  = new Date(); dDe.setDate(dAte.getDate()-30);
+  const iso = d => d.toISOString().slice(0,10);
+  document.getElementById('hDe').value = iso(dDe);
+  document.getElementById('hAte').value = iso(dAte);
+
+  await carregarHistorico();
+  aplicarFiltroHistorico();
+  histModal.style.display='flex';
+}
+async function carregarHistorico(){
+  HIST = []; HIST_LINK = '';
+  try{
+    const j = await apiGet('?action=historico&ts='+Date.now());
+    if(j && j.ok && Array.isArray(j.data)){
+      HIST = j.data;
+      document.getElementById('hFallback').style.display='none';
+      return;
+    }
+  }catch(_){}
+  try{
+    const j2 = await apiGet('?action=historico_link&ts='+Date.now());
+    if(j2 && j2.ok && j2.url){
+      HIST_LINK = j2.url;
+      document.getElementById('hFallback').style.display='block';
+      document.getElementById('hAbrirPlanilha').onclick = ()=> window.open(HIST_LINK,'_blank');
+      document.getElementById('hInfo').textContent = 'Exibindo fallback: abra o histórico completo no Google Sheets.';
+      return;
+    }
+  }catch(_){}
+  document.getElementById('hInfo').textContent = 'Não foi possível carregar o histórico.';
+  document.getElementById('hFallback').style.display='none';
+}
+function aplicarFiltroHistorico(){
+  const tbody = document.getElementById('hTbody');
+  tbody.innerHTML = '';
+  if(!HIST.length){
+    if(HIST_LINK){ /* só fallback */ }
+    return;
+  }
+  const vDe  = document.getElementById('hDe').value ? new Date(document.getElementById('hDe').value) : null;
+  const vAte = document.getElementById('hAte').value ? new Date(document.getElementById('hAte').value) : null;
+  if(vAte) vAte.setHours(23,59,59,999);
+  const vEmp = norm(document.getElementById('hEmpresa').value);
+  const vBus = norm(document.getElementById('hBusca').value);
+
+  const arr = HIST.filter(r=>{
+    const d = parseBRDateTime(r.Timestamp||r.timestamp||'');
+    if(vDe && d && d < vDe) return false;
+    if(vAte && d && d > vAte) return false;
+    const empOk = !vEmp || norm(r.Empresa||r.empresa||'')===vEmp || norm(String(r.Chave||'')).startsWith(vEmp+'::');
+
+    const bOk = !vBus || [
+      r.Chave, r.Usuario, r.Acao, r.Entidade,
+      (r['Depois(JSON)']||r.Depois||r.DepoisJSON||''),
+      (r['Antes(JSON)'] ||r.Antes ||r.AntesJSON ||''),
+      (r['Diff(JSON)']  ||r.diff   ||r.diffJson   ||'')
+    ].some(v=> String(v||'').toLowerCase().includes(vBus));
+
+    return empOk && bOk;
+  });
+
+  arr.forEach(r=>{
+    const d = r.Timestamp || r.timestamp || '';
+
+    const diffStr   = (r['Diff(JSON)']  || r.diff   || r.diffJson   || '').toString();
+    const depoisStr = (r['Depois(JSON)']|| r.Depois || r.DepoisJSON || '').toString();
+    const antesStr  = (r['Antes(JSON)'] || r.Antes  || r.AntesJSON  || '').toString();
+
+    const diffObj   = hTryParseJSON(diffStr);
+    const depoisObj = hTryParseJSON(depoisStr);
+    const antesObj  = hTryParseJSON(antesStr);
+
+    const resumoHTML = hResumoAlteracoes(diffObj, antesObj, depoisObj);
+
+    const detalhesHTML = `
+      <details>
+        <summary>ver</summary>
+        ${resumoHTML}
+        <div style="display:grid;gap:8px;margin-top:6px">
+          <div>
+            <div class="small muted">Depois (JSON)</div>
+            <pre style="white-space:pre-wrap;font-size:.8rem">${hEsc(depoisObj ? hPretty(depoisObj) : depoisStr)}</pre>
+          </div>
+          <div>
+            <div class="small muted">Antes (JSON)</div>
+            <pre style="white-space:pre-wrap;font-size:.8rem">${hEsc(antesObj ? hPretty(antesObj) : antesStr)}</pre>
+          </div>
+        </div>
+      </details>
+    `;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d}</td>
+      <td>${r.Usuario||r.usuario||''}</td>
+      <td>${r.Entidade||r.entidade||''}</td>
+      <td>${r.Acao||r.acao||''}</td>
+      <td>${r.Chave||r.chave||''}</td>
+      <td>${detalhesHTML}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('hInfo').textContent = `${arr.length} registros encontrados`;
+}
+['hDe','hAte','hEmpresa','hBusca'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', aplicarFiltroHistorico);
+});
+
+/* ===== BOOT ===== */
+async function boot(){
+  const btn = document.getElementById('btnAtualizar');
+  btn.disabled = true; btn.textContent = 'Carregando...';
+  await carregarEmpresas();
+  await carregarDados();
+  renderEmpresasSelect();
+  renderTabela();
+  btn.disabled = false; btn.textContent = 'Atualizar';
+}
+document.getElementById('btnAtualizar').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnAtualizar');
+  btn.disabled = true; btn.textContent = 'Atualizando...';
+  await carregarEmpresas();
+  await carregarDados();
+  renderEmpresasSelect();
+  renderTabela();
+  btn.disabled = false; btn.textContent = 'Atualizar';
+});
+document.getElementById('fEmpresa').addEventListener('change', renderTabela);
+document.getElementById('fBusca').addEventListener('input', renderTabela);
+boot();
+</script>
+</body>
+</html>
