@@ -153,6 +153,7 @@
           <div class="m-actions">
             <label class="small" for="mCompare" style="margin-right:6px">Empresas</label>
             <select id="mCompare" class="ctrl w"></select>
+            <button class="btn danger ctrl" id="mExcluir">Excluir Receita</button>
             <button class="btn primary ctrl" id="mEditar">Editar Receita</button>
             <button class="btn ghost ctrl" id="mFechar">Fechar</button>
           </div>
@@ -399,7 +400,6 @@ async function apiGet(path){
 async function apiPost(path, data){
   const r = await fetch(WEBAPP_URL+path, {
     method:'POST',
-    // <<< AJUSTE CRÍTICO: usa text/plain para evitar preflight/CORS no Apps Script
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(data||{})
   });
@@ -678,10 +678,8 @@ async function abrirModal(prod){
       const comp = comps[idxI];
       const {qtd, um} = qtyUmFrom(r);
       const porEmpresa = (comp?.empresas||[]).filter(x=> empresasToShow.includes(x.empresa));
-
       const validos = porEmpresa.filter(x=> x.subtotal!=null);
       const minVal = validos.length ? Math.min(...validos.map(x=>x.subtotal)) : null;
-
       const anyComp = porEmpresa.some(x=> x.tipo==='composto');
 
       const tr = document.createElement('tr');
@@ -691,7 +689,6 @@ async function abrirModal(prod){
         <td class="right">${Number(qtd||0)}</td>
         <td>${(um||'').toUpperCase()}</td>
       `;
-
       empresasToShow.forEach(emp=>{
         const x = porEmpresa.find(e=> e.empresa===emp);
         const td = document.createElement('td'); td.className='right';
@@ -711,27 +708,6 @@ async function abrirModal(prod){
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
-
-      if(anyComp){
-        const trComp = document.createElement('tr');
-        const tdComp = document.createElement('td');
-        tdComp.colSpan = thCols.length;
-        const blocks = empresasToShow.map(emp=>{
-          const x = porEmpresa.find(e=> e.empresa===emp);
-          if(!(x && x.tipo==='composto')) return '';
-          return `
-            <div style="margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px">
-              <div class="pill" style="display:inline-block;margin-bottom:6px">
-                Empresa: <strong>${emp}</strong> • Total do composto (1 ${(x.compUm||x.umPreco||'U.M.').toUpperCase()}): <strong>${fmtBRL(x.compTotal||0)}</strong>
-              </div>
-              ${renderCompTable(x)}
-            </div>
-          `;
-        }).join('');
-        tdComp.innerHTML = `<div class="small muted">Composição por empresa (valor por 1 U.M. do composto):</div>${blocks}`;
-        trComp.appendChild(tdComp);
-        tbody.appendChild(trComp);
-      }
     });
 
     const totalsWrap = document.getElementById('mTotals');
@@ -747,7 +723,7 @@ async function abrirModal(prod){
       `Rendimento: ${prod.rendimento||''} ${(prod.unidadeRend||'').toUpperCase()} • Itens: ${Array.isArray(prod.receita)?prod.receita.length:0}`;
 
     document.getElementById('mExplain').textContent =
-      'Os preços vêm do cadastro de ingredientes. A quantidade da receita é convertida para a U.M. do preço (kg↔g, L↔ml, un 1:1). Para ingredientes compostos, o painel calcula o custo por 1 U.M. somando os itens filhos (com conversões) por empresa. A célula 💚 indica o menor subtotal por ingrediente.';
+      'Os preços vêm do cadastro de ingredientes. A quantidade da receita é convertida para a U.M. do preço (kg↔g, L↔ml, un 1:1).';
   }
 
   await renderView();
@@ -758,7 +734,7 @@ async function abrirModal(prod){
   setEditMode(false);
 }
 
-/* ====== EDIT MODE + AUTOCOMPLETE DE INGREDIENTES ====== */
+/* ====== EDIT MODE + AUTOCOMPLETE ====== */
 const viewBlk = document.getElementById('viewBlk');
 const editBlk = document.getElementById('editBlk');
 document.getElementById('mEditar').addEventListener('click', ()=> {
@@ -789,7 +765,7 @@ function rebuildIngDatalist(empresa){
   }).join('');
 }
 
-/* tenta achar ingrediente por nome (com possível " — COD") ou por código */
+/* tenta achar ingrediente por nome ou por código */
 function lookupIng(empresa, textNome, textCodigo){
   const nomeRaw = String(textNome||'').split('—')[0].trim();
   const codigo  = String(textCodigo||'').trim();
@@ -833,7 +809,7 @@ function fillEditForm(prod){
   }));
 }
 
-/* constrói uma linha de ingrediente (com autocomplete) */
+/* constrói linha de ingrediente */
 function addIngRow(tbody, r={item:'', codigo:'', qtd:0, um:'un'}){
   const tr = document.createElement('tr');
   tr.innerHTML = `
@@ -946,8 +922,12 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
   btn.disabled = true; btn.textContent = 'Salvando...';
 
   try{
-    // envia no formato esperado pelo GAS
-    const res = await apiPost('', { type:'produto', payload, usuario: payload.usuario || '' });
+    const res = await apiPost('?action=salvar_receita', { receita: payload, usuario: payload.usuario || '', original: {
+      empresa: CURRENT_PROD.empresa || '',
+      codigoSistema: CURRENT_PROD.codigoSistema || '',
+      numero: CURRENT_PROD.numero || '',
+      item: CURRENT_PROD.item || ''
+    }});
     if(!res || res.ok===false) throw new Error(res?.error || 'Falha ao salvar');
 
     const idx = (PRODUTOS||[]).findIndex(p =>
@@ -967,6 +947,53 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
   }catch(err){
     console.error(err);
     alert('Não foi possível salvar: '+ err.message);
+  }finally{
+    btn.disabled = false; btn.textContent = old;
+  }
+});
+
+/* ====== EXCLUIR RECEITA (com senha) ====== */
+document.getElementById('mExcluir').addEventListener('click', async ()=>{
+  if(!CURRENT_PROD) return;
+  const k = CURRENT_PROD;
+  const msg = `Tem certeza que deseja EXCLUIR a receita?\n\nEmpresa: ${k.empresa}\nItem: ${k.item}\nCódigo: ${k.codigoSistema||'-'} • Nº: ${k.numero||'-'}`;
+  if(!confirm(msg)) return;
+
+  const senha = prompt('Digite a senha de exclusão:');
+  if(senha===null) return; // cancelou
+  const usuario = prompt('Informe seu nome (para registrar no histórico):') || '';
+
+  const btn = document.getElementById('mExcluir');
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Excluindo...';
+
+  try{
+    const res = await apiPost('?action=excluir_produto', {
+      empresa: k.empresa || '',
+      codigoSistema: k.codigoSistema || '',
+      numero: k.numero || '',
+      item: k.item || '',
+      senha,
+      usuario
+    });
+    if(!res || !res.ok) throw new Error(res?.error || 'Falha ao excluir');
+
+    // remove localmente
+    PRODUTOS = (PRODUTOS||[]).filter(p=>{
+      const sameEmp = norm(p.empresa)===norm(k.empresa);
+      const byCod = k.codigoSistema && p.codigoSistema===k.codigoSistema;
+      const byNum = k.numero && p.numero===k.numero;
+      const byItem= k.item && norm(p.item)===norm(k.item);
+      return !(sameEmp && (byCod || byNum || byItem));
+    });
+
+    modal.style.display='none';
+    setEditMode(false);
+    renderTabela();
+    alert('Receita excluída com sucesso 🗑️');
+  }catch(err){
+    console.error(err);
+    alert('Não foi possível excluir: '+ err.message);
   }finally{
     btn.disabled = false; btn.textContent = old;
   }
