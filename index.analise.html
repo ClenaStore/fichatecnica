@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
-    --brand:#2563eb; --ghost:#374151; --accent:#b75507;
+    --brand:#2563eb; --ghost:#374151; --accent:#b75507; --danger:#ef4444; --ok:#16a34a;
     --foto-size: 200px;
   }
   *{box-sizing:border-box}
@@ -27,12 +27,15 @@
   .btn.secondary{background:#334155; color:#fff;}
   .btn.ghost{background:transparent; border:1px solid var(--ghost); color:var(--text);}
   .btn.back{background:var(--accent); color:#fff;}
+  .btn.danger{background:var(--danger); color:#fff;}
+  .btn.ok{background:var(--ok); color:#fff;}
 
   /* cartões e layout */
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
   .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
   label{font-size:.85rem;color:var(--muted)}
-  input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
+  textarea{min-height:72px}
   .right{text-align:right}
   .muted{opacity:.85}
   .small{font-size:.9rem}
@@ -47,23 +50,18 @@
   /* tabela principal */
   .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
-  /* força rolagem no mobile sem amassar colunas */
   #tblReceitas{ min-width: 980px; }
   th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
-  th{
-    background:#fff; color:#000; font-weight:600; border:1px solid var(--line);
-  }
-
+  th{ background:#fff; color:#000; font-weight:600; border:1px solid var(--line); }
   .best{outline:2px solid #16a34a; background:rgba(22,163,74,.12)}
   .best::after{content:" 💚"}
 
   /* badge de composto no detalhamento */
   .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
 
-  /* ===== MODAL DETALHE ===== */
+  /* ===== MODAL DETALHE / EDIÇÃO ===== */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
   .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
-
   .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
   .m-title{display:flex;flex-direction:column;gap:4px}
   .m-title .name{font-size:1.4rem;font-weight:700;margin:0;line-height:1.1}
@@ -77,11 +75,18 @@
     object-fit:cover; border-radius:12px; border:1px solid var(--line);
     box-shadow:0 6px 20px rgba(0,0,0,.35);
   }
-
-  /* tabela do detalhe (scroll horizontal garantido) */
   #tblDet{ min-width: 900px; }
 
-  /* ===== MODAL HISTÓRICO ===== */
+  /* bloco de edição */
+  .edit-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+  .edit-grid .c3{grid-column:span 3}
+  .edit-grid .c4{grid-column:span 4}
+  .edit-grid .c6{grid-column:span 6}
+  .edit-grid .c8{grid-column:span 8}
+  .edit-grid .c12{grid-column:span 12}
+  .help{font-size:.8rem;color:var(--muted)}
+
+  /* ===== HISTÓRICO ===== */
   .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52;padding:8px}
   .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
   .h-filtros{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
@@ -91,38 +96,24 @@
   .h-table{border:1px solid var(--line);border-radius:12px;overflow:auto}
   .h-table table{ min-width: 760px; }
 
-  /* ===== ACESSIBILIDADE EM TELAS TOUCH ===== */
-  @media (hover:none){
-    .btn{ min-height:44px }
-  }
-
-  /* ===== RESPONSIVO ===== */
-  @media (max-width: 1024px){
-    body{ padding:18px }
-  }
-
+  @media (hover:none){ .btn{ min-height:44px } }
+  @media (max-width: 1024px){ body{ padding:18px } }
   @media (max-width: 768px){
     :root{ --foto-size: 140px; }
     body{padding:12px}
     header{flex-direction:column;align-items:flex-start;gap:10px}
     .row{grid-template-columns:1fr;gap:10px}
-
-    /* ações do topo mais fluidas no mobile */
     .actions{ justify-content:stretch }
-    .actions .btn{ flex:1 1 140px } /* quebra em 2–3 por linha conforme espaço */
-
-    /* modal detalhe empilha header e controles */
+    .actions .btn{ flex:1 1 140px }
     .m-head{grid-template-columns: 1fr}
     .m-right{justify-items:start}
     .ctrl.w{width:100%}
-
-    /* filtros histórico em 1 coluna */
     .h-filtros{grid-template-columns:1fr}
     .h-filtros > div{grid-column: span 1}
-
-    /* caixas com menos padding */
     .card{ padding:14px }
-    th,td{ white-space:nowrap } /* mantem rolagem horizontal nas tabelas */
+    th,td{ white-space:nowrap }
+    .edit-grid{grid-template-columns:1fr}
+    .edit-grid > div{grid-column:span 1}
   }
 </style>
 </head>
@@ -167,7 +158,7 @@
     </div>
   </div>
 
-  <!-- Modal Detalhe -->
+  <!-- Modal Detalhe + Edição -->
   <div class="modal" id="modal">
     <div class="box">
       <div class="m-head">
@@ -179,6 +170,7 @@
           <div class="m-actions">
             <label class="small" for="mCompare" style="margin-right:6px">Empresas</label>
             <select id="mCompare" class="ctrl w"></select>
+            <button class="btn primary ctrl" id="mEditar">Editar Receita</button>
             <button class="btn ghost ctrl" id="mFechar">Fechar</button>
           </div>
           <img id="mFoto" class="foto" alt="foto" style="display:none"/>
@@ -187,15 +179,93 @@
 
       <div id="mResumo" class="pill" style="margin-bottom:12px"></div>
 
-      <div class="tbl-wrap">
-        <table id="tblDet">
-          <thead id="theadDet"></thead>
-          <tbody id="tbodyDet"></tbody>
-        </table>
+      <!-- VISUALIZAÇÃO -->
+      <div id="viewBlk">
+        <div class="tbl-wrap">
+          <table id="tblDet">
+            <thead id="theadDet"></thead>
+            <tbody id="tbodyDet"></tbody>
+          </table>
+        </div>
+        <div id="mTotals" class="row" style="margin-top:12px"></div>
+        <div id="mExplain" class="small muted" style="margin-top:6px"></div>
       </div>
 
-      <div id="mTotals" class="row" style="margin-top:12px"></div>
-      <div id="mExplain" class="small muted" style="margin-top:6px"></div>
+      <!-- EDIÇÃO -->
+      <div id="editBlk" style="display:none;margin-top:10px">
+        <div class="pill" style="margin-bottom:10px">Modo de edição</div>
+        <div class="edit-grid">
+          <div class="c8">
+            <label>Item (nome da receita)</label>
+            <input id="eItem" />
+          </div>
+          <div class="c4">
+            <label>Classificação</label>
+            <input id="eClass" />
+          </div>
+          <div class="c3">
+            <label>Código (sistema)</label>
+            <input id="eCodigo" />
+          </div>
+          <div class="c3">
+            <label>Número</label>
+            <input id="eNumero" />
+          </div>
+          <div class="c3">
+            <label>Rendimento</label>
+            <input id="eRend" type="number" step="0.0001" />
+          </div>
+          <div class="c3">
+            <label>U.M. do Rendimento</label>
+            <select id="eRendUM">
+              <option value="un">UN</option>
+              <option value="g">G</option>
+              <option value="kg">KG</option>
+              <option value="ml">ML</option>
+              <option value="l">L</option>
+            </select>
+          </div>
+          <div class="c6">
+            <label>Foto (URL ou ID do Drive)</label>
+            <input id="eFoto" placeholder="https://drive.google.com/..." />
+            <div class="help">Aceita URL/ID do Google Drive. A imagem aparece ao lado.</div>
+          </div>
+          <div class="c6">
+            <label>Usuário (responsável)</label>
+            <input id="eUsuario" />
+          </div>
+
+          <div class="c12">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div style="font-weight:700">Ingredientes da Receita</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn ghost" id="eAddIng">+ Adicionar ingrediente</button>
+                <button class="btn ghost" id="eRecalc">Recalcular custos</button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table id="tblEdit">
+                <thead>
+                  <tr>
+                    <th style="min-width:240px">Item / Nome</th>
+                    <th style="min-width:120px">Código</th>
+                    <th class="right" style="min-width:110px">Qtd</th>
+                    <th style="min-width:90px">U.M.</th>
+                    <th style="min-width:140px">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="eTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="c12" style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+            <button class="btn ghost" id="eCancelar">Cancelar</button>
+            <button class="btn ok" id="eSalvar">💾 Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -204,9 +274,7 @@
     <div class="box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-weight:700;font-size:1.1rem">Histórico</div>
-        <div>
-          <button class="btn ghost" id="hFechar">Fechar</button>
-        </div>
+        <div><button class="btn ghost" id="hFechar">Fechar</button></div>
       </div>
 
       <div class="h-filtros">
@@ -234,12 +302,7 @@
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Usuário</th>
-              <th>Entidade</th>
-              <th>Ação</th>
-              <th>Chave</th>
-              <th>Detalhes</th>
+              <th>Data</th><th>Usuário</th><th>Entidade</th><th>Ação</th><th>Chave</th><th>Detalhes</th>
             </tr>
           </thead>
           <tbody id="hTbody"></tbody>
@@ -346,6 +409,15 @@ function hResumoAlteracoes(diffObj, antesObj, depoisObj){
 async function apiGet(path){
   const r = await fetch(WEBAPP_URL+path, {cache:'no-store'});
   return r.json();
+}
+async function apiPost(path, data){
+  const r = await fetch(WEBAPP_URL+path, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data||{})
+  });
+  let j=null; try{ j=await r.json(); }catch(_){ j=null; }
+  return j || {ok:false,error:'Resposta inválida'};
 }
 
 /* Carrega empresas = união (Produtos ∪ Ingredientes) e ingredientes */
@@ -466,9 +538,14 @@ function detalharComposto(ing, empresa, idx){
   return { umComp, filhos, custoUnitComp: Number(total.toFixed(6)) };
 }
 
-/* ===== MODAL DETALHE ===== */
+/* ===== MODAL DETALHE + EDIÇÃO ===== */
 const modal = document.getElementById('modal');
-document.getElementById('mFechar').addEventListener('click', ()=> modal.style.display='none');
+document.getElementById('mFechar').addEventListener('click', ()=> {
+  modal.style.display='none';
+  setEditMode(false);
+});
+
+let CURRENT_PROD = null; // receita corrente no modal
 
 async function compararViaAPI(rec){
   try{
@@ -562,6 +639,7 @@ function renderCompTable(x){
 }
 
 async function abrirModal(prod){
+  CURRENT_PROD = structuredClone(prod || {});
   const baseEmp = prod.empresa || EMPRESA_ATUAL || '';
 
   const cmpSel = document.getElementById('mCompare');
@@ -575,7 +653,7 @@ async function abrirModal(prod){
     return compararLocal(rec);
   }
 
-  async function render(){
+  async function renderView(){
     const val = cmpSel.value;
     let empresasToShow = val==='__ALL__' ? [...EMPRESAS] : [val];
     if(!empresasToShow.includes(baseEmp)) empresasToShow.unshift(baseEmp);
@@ -688,10 +766,186 @@ async function abrirModal(prod){
       'Os preços vêm do cadastro de ingredientes. A quantidade da receita é convertida para a U.M. do preço (kg↔g, L↔ml, un 1:1). Para ingredientes compostos, o painel calcula o custo por 1 U.M. somando os itens filhos (com conversões) por empresa. A célula 💚 indica o menor subtotal por ingrediente.';
   }
 
-  await render();
-  document.getElementById('mCompare').onchange = render;
+  await renderView();
+  document.getElementById('mCompare').onchange = renderView;
+
+  // Preenche blocos de edição com CURRENT_PROD
+  fillEditForm(CURRENT_PROD);
+
   modal.style.display='flex';
+  setEditMode(false);
 }
+
+/* ====== EDIT MODE ====== */
+const viewBlk = document.getElementById('viewBlk');
+const editBlk = document.getElementById('editBlk');
+document.getElementById('mEditar').addEventListener('click', ()=> {
+  if(!CURRENT_PROD) return;
+  setEditMode(true);
+});
+document.getElementById('eCancelar').addEventListener('click', ()=>{
+  setEditMode(false);
+  // reseta para os dados originais da abertura do modal
+  fillEditForm(CURRENT_PROD);
+});
+
+function setEditMode(on){
+  viewBlk.style.display = on ? 'none' : 'block';
+  editBlk.style.display = on ? 'block' : 'none';
+  document.getElementById('mEditar').style.display = on ? 'none' : 'inline-flex';
+}
+
+function fillEditForm(prod){
+  // campos
+  document.getElementById('eItem').value   = prod.item || '';
+  document.getElementById('eClass').value  = prod.classificacao || '';
+  document.getElementById('eCodigo').value = prod.codigoSistema || '';
+  document.getElementById('eNumero').value = prod.numero || '';
+  document.getElementById('eRend').value   = (prod.rendimento ?? '');
+  document.getElementById('eRendUM').value = (String(prod.unidadeRend||'un').toLowerCase());
+  document.getElementById('eFoto').value   = prod.fotoUrl || prod.fotoId || '';
+  document.getElementById('eUsuario').value = prod.usuario || '';
+
+  // ingredientes
+  const tbody = document.getElementById('eTbody');
+  tbody.innerHTML = '';
+  const rec = Array.isArray(prod.receita) ? prod.receita : [];
+  rec.forEach((r, idx)=> addIngRow(tbody, {
+    item: r.item || '',
+    codigo: r.codigo || '',
+    qtd: Number(r.qtd ?? r.quantidade ?? r.qtdReceita ?? 0),
+    um: String(r.um ?? r.unidade ?? r.unidadeReceita ?? 'un').toLowerCase()
+  }));
+}
+
+/* constrói uma linha de ingrediente na edição */
+function addIngRow(tbody, r={item:'', codigo:'', qtd:0, um:'un'}){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input value="${hEsc(r.item)}" data-k="item" placeholder="Nome do ingrediente" /></td>
+    <td><input value="${hEsc(r.codigo)}" data-k="codigo" placeholder="Código (opcional)" /></td>
+    <td class="right"><input type="number" step="0.0001" value="${Number(r.qtd)||0}" data-k="qtd" style="text-align:right"/></td>
+    <td>
+      <select data-k="um">
+        <option value="un"${r.um==='un'?' selected':''}>UN</option>
+        <option value="g"${r.um==='g'?' selected':''}>G</option>
+        <option value="kg"${r.um==='kg'?' selected':''}>KG</option>
+        <option value="ml"${r.um==='ml'?' selected':''}>ML</option>
+        <option value="l"${r.um==='l'?' selected':''}>L</option>
+      </select>
+    </td>
+    <td>
+      <button class="btn ghost eUp">⬆</button>
+      <button class="btn ghost eDown">⬇</button>
+      <button class="btn danger eDel">Excluir</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+
+  tr.querySelector('.eDel').onclick = ()=> tr.remove();
+  tr.querySelector('.eUp').onclick = ()=>{
+    const prev = tr.previousElementSibling;
+    if(prev) tbody.insertBefore(tr, prev);
+  };
+  tr.querySelector('.eDown').onclick = ()=>{
+    const next = tr.nextElementSibling;
+    if(next) tbody.insertBefore(next, tr);
+  };
+}
+
+document.getElementById('eAddIng').addEventListener('click', ()=>{
+  addIngRow(document.getElementById('eTbody'));
+});
+
+document.getElementById('eRecalc').addEventListener('click', ()=>{
+  // Apenas re-render do bloco de visualização com base nos dados atuais em memória (não salva)
+  const preview = collectEditData(CURRENT_PROD);
+  // Atualiza cabeçalho e foto para visualizar alterações
+  document.getElementById('mTitulo').textContent = preview.item || '';
+  document.getElementById('mSub').textContent = `${preview.classificacao||''} • Empresa base: ${preview.empresa||CURRENT_PROD.empresa||''} • Nº ${preview.numero||''}`;
+  const fotoEl = document.getElementById('mFoto');
+  const fotoSrc = driveImgSrc(preview.fotoUrl || preview.fotoId, 800);
+  if(fotoSrc){ fotoEl.onerror=()=>{fotoEl.style.display='none'}; fotoEl.src=fotoSrc; fotoEl.style.display='block'; }
+  // Mantemos em modo edição; somente preview parcial
+  alert('Recalcular: alterações refletidas no cabeçalho/miniatura. Os custos detalhados são recalculados após salvar ou reabrir a visualização.');
+});
+
+function collectEditData(orig){
+  const e = (id)=> document.getElementById(id);
+  const data = {
+    empresa: orig.empresa || EMPRESA_ATUAL || '',
+    codigoSistema: e('eCodigo').value.trim(),
+    numero: e('eNumero').value.trim(),
+    item: e('eItem').value.trim(),
+    classificacao: e('eClass').value.trim(),
+    rendimento: Number(e('eRend').value||0),
+    unidadeRend: e('eRendUM').value,
+    usuario: e('eUsuario').value.trim(),
+    fotoUrl: e('eFoto').value.trim(),
+    receita: []
+  };
+  const rows = Array.from(document.querySelectorAll('#eTbody tr'));
+  rows.forEach(tr=>{
+    const get = (sel)=> tr.querySelector(sel);
+    const item = (get('input[data-k="item"]').value||'').trim();
+    const codigo = (get('input[data-k="codigo"]').value||'').trim();
+    const qtd = Number(get('input[data-k="qtd"]').value||0);
+    const um = get('select[data-k="um"]').value;
+    if(item || codigo){
+      data.receita.push({ item, codigo, qtd, um });
+    }
+  });
+  // Mantém chaves auxiliares do objeto original
+  data.data = orig.data || '';
+  data.custoReceita = orig.custoReceita || 0;
+  data.custoPorKgOuL = orig.custoPorKgOuL || 0;
+  data.fotoId = data.fotoUrl; // compat
+  return data;
+}
+
+/* SALVAR */
+document.getElementById('eSalvar').addEventListener('click', async ()=>{
+  if(!CURRENT_PROD) return;
+  const payload = collectEditData(CURRENT_PROD);
+
+  // validações simples
+  if(!payload.item){ alert('Informe o nome da receita.'); return; }
+  if(!payload.empresa){ alert('Defina a empresa (use o filtro antes de abrir).'); return; }
+
+  const btn = document.getElementById('eSalvar');
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  try{
+    const res = await apiPost('?action=salvar_receita', { receita: payload });
+    if(!res || res.ok===false){
+      throw new Error(res?.error || 'Falha ao salvar');
+    }
+
+    // Atualiza cache local (otimista)
+    const idx = (PRODUTOS||[]).findIndex(p =>
+      (payload.codigoSistema && p.codigoSistema===payload.codigoSistema) ||
+      (p.numero && payload.numero && p.numero===payload.numero) ||
+      (p.item && payload.item && norm(p.item)===norm(payload.item) && norm(p.empresa)===norm(payload.empresa))
+    );
+    const novo = {...CURRENT_PROD, ...payload};
+    if(idx>=0) PRODUTOS[idx] = novo; else PRODUTOS.unshift(novo);
+    CURRENT_PROD = structuredClone(novo);
+
+    // volta pra visualização com re-render
+    setEditMode(false);
+    // Força re-render da tabela principal e do modal (visual)
+    renderTabela();
+    await abrirModal(novo); // reabre sobre o mesmo item (aplica custos/comp)
+
+    alert('Receita salva com sucesso ✅');
+  }catch(err){
+    console.error(err);
+    alert('Não foi possível salvar: '+ err.message);
+  }finally{
+    btn.disabled = false; btn.textContent = old;
+  }
+});
 
 /* ===== HISTÓRICO ===== */
 const histModal = document.getElementById('histModal');
