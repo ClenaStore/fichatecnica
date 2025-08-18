@@ -2,7 +2,9 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!-- impede zoom + melhora viewport em celular -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="format-detection" content="telephone=no" />
 <title>Relatórios e Análises</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,57 +14,79 @@
   :root{
     --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
     --brand:#2563eb; --accent:#b75507; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
+    --radius:14px;
   }
+
+  /* Base */
   *{ box-sizing:border-box }
+  html, body{ height:100% }
   body{
-    font-family:'Inter',sans-serif;
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     background:var(--bg); color:var(--text);
     margin:0; padding:24px;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    -webkit-text-size-adjust:100%;      /* evita zoom de texto no iOS */
+    touch-action:manipulation;          /* evita double-tap zoom */
   }
+  a, button{ -webkit-tap-highlight-color: transparent; }
+
+  /* Header fixo no topo em mobile */
   header{
-    display:flex;justify-content:space-between;align-items:center;
-    gap:12px; margin-bottom:24px;
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, rgba(15,15,16,.98), rgba(15,15,16,.88));
+    backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid rgba(255,255,255,.06);
+    margin:-24px -24px 24px; padding:14px 24px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
   }
-  h1{margin:0;font-size:1.5rem;line-height:1.1}
+  h1{margin:0;font-size:clamp(1.05rem, 0.9rem + 1vw, 1.5rem);line-height:1.15;font-weight:700}
+
+  /* Botões */
   .btn{
-    padding:10px 16px;border:none;border-radius:12px;cursor:pointer;font-weight:600;
-    transition:transform .15s ease, opacity .15s ease;
+    padding:12px 16px;border:none;border-radius:12px;cursor:pointer;font-weight:700;
+    transition:transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+    box-shadow:0 6px 14px rgba(0,0,0,.25);
+    font-size:16px; /* evita zoom ao focar no iOS */
   }
   .btn:active{ transform:scale(.98) }
   .btn.back{background:var(--accent);color:#fff}
 
-  /* GRID */
+  /* Grid */
   .grid{
     display:grid;
     grid-template-columns:repeat(12,1fr);
     gap:20px;
+    max-width:1200px;
+    margin:0 auto;
   }
   .span-6{ grid-column: span 6 }
   .span-4{ grid-column: span 4 }
-  .span-8{ grid-column: span 8 }   /* ✅ faltava essa classe */
+  .span-8{ grid-column: span 8 }
   .span-12{ grid-column: span 12 }
 
+  /* Cards */
   .card{
     background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.3);
+    border-radius:var(--radius);padding:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
-  .card h2{font-size:1.1rem;margin:0 0 10px}
+  .card h2{font-size:1.05rem;margin:0 0 10px}
   .muted{ color:var(--muted) }
-  .pill{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.8rem }
+  .pill{ display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.84rem }
 
-  /* Chart wrapper garante altura responsiva */
-  .chart-box{ position:relative; width:100%; height:220px }
-  .chart-box.tall{ height:260px }
+  /* Gráficos responsivos */
+  .chart-box{ position:relative; width:100%; height:260px }
+  .chart-box.tall{ height:300px }
 
-  /* tabelas */
+  /* Tabelas */
   .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:10px }
   table{min-width:600px; width:100%; border-collapse:collapse}
-  th,td{padding:8px 10px;border:1px solid var(--line);font-size:.92rem;text-align:left}
-  th{background:#fff;color:#000;font-weight:600}
+  th,td{padding:10px 12px;border:1px solid var(--line);font-size:.95rem;text-align:left}
+  th{background:#fff;color:#000;font-weight:700}
   tr.is-high td{ background: rgba(239,68,68,.12) }
-  tr.is-mid td{ background: rgba(245,158,11,.12) }
+  tr.is-mid  td{ background: rgba(245,158,11,.12) }
 
-  /* responsivo */
+  /* Responsivo */
   @media (max-width: 1200px){
     .grid{ grid-template-columns:repeat(8,1fr) }
     .span-6{ grid-column: span 8 }
@@ -71,26 +95,31 @@
   }
   @media (max-width: 1024px){
     body{ padding:18px }
+    header{ margin:-18px -18px 18px; padding:12px 18px }
     .grid{ grid-template-columns:repeat(6,1fr) }
-    .span-6{ grid-column: span 6 }
+    .span-6, .span-8{ grid-column: span 6 }
     .span-4{ grid-column: span 6 }
-    .span-8{ grid-column: span 6 }
     .btn{ min-height:44px }
+    .chart-box{ height:260px }
   }
   @media (max-width: 768px){
-    body{ padding:12px }
-    header{ flex-direction:column; align-items:flex-start }
-    h1{ font-size:1.25rem }
+    body{ padding:12px; padding-bottom: max(12px, env(safe-area-inset-bottom)) }
+    header{ margin:-12px -12px 12px; padding:10px 12px; gap:10px; }
     .grid{ grid-template-columns:1fr; gap:14px }
     .span-6, .span-4, .span-8, .span-12{ grid-column: span 1 }
-    .card{ padding:14px }
-    th,td{ white-space:nowrap }
-    .btn{ width:100% }
-    .chart-box{ height:200px }
+    .card{ padding:14px; border-radius:16px }
+    .btn{ width:100%; border-radius:14px }
+    th,td{ white-space:nowrap; font-size:.98rem }
+    .chart-box{ height:280px }
   }
-  @media (hover: none){
-    .btn{ min-height:44px }
-  }
+
+  /* Inputs (evita zoom no foco em iOS) */
+  input, select, textarea, button{ font-size:16px }
+
+  /* Scrollbar sutil (Android/desktop) */
+  ::-webkit-scrollbar{ height:8px; width:8px }
+  ::-webkit-scrollbar-thumb{ background:#2b2b2b; border-radius:8px }
+  ::-webkit-scrollbar-track{ background:#141414 }
 </style>
 </head>
 <body>
@@ -106,9 +135,9 @@
   <div class="card span-6">
     <h2>📌 Custo das Receitas</h2>
     <div class="chart-box">
-      <canvas id="chartReceitas"></canvas>
+      <canvas id="chartReceitas" aria-label="Gráfico de custos das receitas" role="img"></canvas>
     </div>
-    <div id="resumoReceitas" style="margin-top:10px;font-size:.9rem">
+    <div id="resumoReceitas" style="margin-top:10px;font-size:.95rem">
       <span class="pill">Total de receitas: <b id="totalReceitas">0</b></span>
     </div>
   </div>
@@ -116,7 +145,7 @@
   <!-- 2. Produtos com custos diferentes -->
   <div class="card span-6">
     <h2>💰 Produtos com Custos Muito Diferentes</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" role="region" aria-label="Tabela de variação de custos">
       <table>
         <thead>
           <tr>
@@ -138,14 +167,14 @@
   <div class="card span-4">
     <h2>🥗 Diferença de Custo por Ingrediente</h2>
     <div class="chart-box tall">
-      <canvas id="chartIngredientes"></canvas>
+      <canvas id="chartIngredientes" aria-label="Gráfico de pizza com diferenças por ingrediente" role="img"></canvas>
     </div>
   </div>
 
   <!-- 4. Análise Detalhada -->
   <div class="card span-8">
     <h2>🔎 Análise Detalhada</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" role="region" aria-label="Tabela de análise detalhada">
       <table>
         <thead>
           <tr>
@@ -166,7 +195,7 @@
 /* ========= Helpers ========= */
 const fmtBRL = n => (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-/* ========= Dados mockados (substituir por Apps Script depois) ========= */
+/* ========= Dados mockados (trocar pelo Apps Script quando quiser) ========= */
 const receitas = [
   {nome:"Bolo Chocolate", qtdIng:5, custo:45},
   {nome:"Pão Francês",    qtdIng:3, custo:25},
@@ -180,7 +209,7 @@ const produtos = [
   {nome:"Ovo",     min:0.4, max:0.9},
 ];
 
-/* ========= 1. Custo das Receitas (bar) ========= */
+/* ========= 1. Custo das Receitas (bar + linha) ========= */
 document.getElementById("totalReceitas").innerText = receitas.length;
 
 const ctx1 = document.getElementById("chartReceitas");
@@ -209,14 +238,14 @@ new Chart(ctx1, {
   options:{
     responsive:true,
     maintainAspectRatio:false,
+    layout:{ padding:{ top:0, right:6, bottom:0, left:0 } },
     plugins:{
       legend:{ labels:{ color:"#e5e7eb" } },
       tooltip:{
         callbacks:{
-          label:(c)=>{
-            if(c.datasetIndex===0) return `${c.label}: ${fmtBRL(c.parsed.y)}`;
-            return `${c.label}: ${c.parsed.y}`;
-          }
+          label:(c)=> c.datasetIndex===0
+            ? `${c.label}: ${fmtBRL(c.parsed.y)}`
+            : `${c.label}: ${c.parsed.y}`
         }
       }
     },
@@ -237,7 +266,7 @@ new Chart(ctx1, {
   }
 });
 
-/* ========= 2. Produtos com custos diferentes (tabela com destaque) ========= */
+/* ========= 2. Produtos com custos diferentes ========= */
 const tbodyP = document.getElementById("tblProdutos");
 const limiteAbs = 2.0;   // R$
 const limitePerc = 0.35; // 35%
@@ -260,11 +289,9 @@ produtosOrdenados.forEach(p=>{
   tbodyP.appendChild(tr);
 });
 
-/* ========= 3. Diferença por Ingrediente (pie) ========= */
+/* ========= 3. Diferença por Ingrediente (pizza) ========= */
 const diffs = produtos.map(p=>Math.max(0,(p.max-p.min)));
 const labelsIng = produtos.map(p=>p.nome);
-
-// gera paleta segura (repete se precisar)
 const palette = ["#2563eb","#f59e0b","#ef4444","#10b981","#a78bfa","#f97316","#22c55e","#eab308","#3b82f6","#f43f5e"];
 const colors = labelsIng.map((_,i)=>palette[i % palette.length]);
 
@@ -290,7 +317,7 @@ new Chart(ctx2, {
   }
 });
 
-/* ========= 4. Análise detalhada (tabela) ========= */
+/* ========= 4. Análise detalhada ========= */
 const tbodyD = document.getElementById("tblDetalhada");
 receitas.forEach(r=>{
   const custoMedio = r.qtdIng>0 ? (r.custo/r.qtdIng) : 0;
@@ -303,12 +330,6 @@ receitas.forEach(r=>{
   `;
   tbodyD.appendChild(tr);
 });
-
-/* ========= (Hook futuro) carregar via Apps Script =========
-fetch(WEBAPP_URL+'?action=relatorios')
-  .then(r=>r.json())
-  .then(j=>{ ...atualizar charts e tabelas... });
-*/
 </script>
 
 </body>
