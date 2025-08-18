@@ -13,14 +13,9 @@
   *{box-sizing:border-box}
   body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
 
-  /* topo / header */
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:12px; margin-bottom:20px;
-  }
+  header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px;}
   h1{margin:0; font-size:1.6rem; font-weight:700}
 
-  /* botões */
   .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 16px;font-size:.95rem;transition:.2s}
   .btn:hover{opacity:.92}
   .btn.primary{background:var(--brand); color:#fff;}
@@ -30,7 +25,6 @@
   .btn.danger{background:var(--danger); color:#fff;}
   .btn.ok{background:var(--ok); color:#fff;}
 
-  /* cartões e layout */
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
   .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
   label{font-size:.85rem;color:var(--muted)}
@@ -42,12 +36,9 @@
   .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);font-size:.8rem;background:#111}
   .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;font-size:.75rem}
   .link{cursor:pointer;color:#93c5fd}
-
-  /* grupo de ações (Histórico/Relatórios/Atualizar) */
   .actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
   .actions .btn{ flex:0 0 auto }
 
-  /* tabela principal */
   .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
   #tblReceitas{ min-width: 980px; }
@@ -56,10 +47,8 @@
   .best{outline:2px solid #16a34a; background:rgba(22,163,74,.12)}
   .best::after{content:" 💚"}
 
-  /* badge de composto no detalhamento */
   .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
 
-  /* ===== MODAL DETALHE / EDIÇÃO ===== */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
   .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
   .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
@@ -70,14 +59,9 @@
   .m-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .ctrl{height:40px; padding:10px 14px; border-radius:12px}
   .ctrl.w{width:220px}
-  .foto{
-    width:var(--foto-size); height:var(--foto-size);
-    object-fit:cover; border-radius:12px; border:1px solid var(--line);
-    box-shadow:0 6px 20px rgba(0,0,0,.35);
-  }
+  .foto{ width:var(--foto-size); height:var(--foto-size); object-fit:cover; border-radius:12px; border:1px solid var(--line); box-shadow:0 6px 20px rgba(0,0,0,.35); }
   #tblDet{ min-width: 900px; }
 
-  /* bloco de edição */
   .edit-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
   .edit-grid .c3{grid-column:span 3}
   .edit-grid .c4{grid-column:span 4}
@@ -86,7 +70,6 @@
   .edit-grid .c12{grid-column:span 12}
   .help{font-size:.8rem;color:var(--muted)}
 
-  /* ===== HISTÓRICO ===== */
   .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52;padding:8px}
   .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
   .h-filtros{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
@@ -315,6 +298,9 @@
     </div>
   </div>
 
+  <!-- DATALIST com ingredientes cadastrados -->
+  <datalist id="dlIng"></datalist>
+
 <script>
 /* ===== CONFIG ===== */
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx0ofovABeAIpUR8BgR0NyPSLFxetxYyJIp5I8PbPo6nYeQcwKxOzcSqKmzoBydKjbG/exec'; /* ⬅️ SUBSTITUA */
@@ -362,7 +348,7 @@ function parseBRDateTime(ts){
   return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), Number(m[4]), Number(m[5]));
 }
 
-/* ==== helpers p/ histórico (pretty JSON + diff resumido) ==== */
+/* ==== helpers histórico ==== */
 function hEsc(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
 function hTryParseJSON(s){ if(!s) return null; try{ return JSON.parse(String(s)); }catch(_){ return null; } }
 function hPretty(v){ try{ return JSON.stringify(v, null, 2); }catch(_){ return String(v); } }
@@ -420,7 +406,7 @@ async function apiPost(path, data){
   return j || {ok:false,error:'Resposta inválida'};
 }
 
-/* Carrega empresas = união (Produtos ∪ Ingredientes) e ingredientes */
+/* Carrega empresas e ingredientes */
 async function carregarEmpresas(){
   try{
     const [p,i] = await Promise.all([
@@ -492,7 +478,7 @@ function renderTabela(){
   document.getElementById('metaInfo').textContent = `${arr.length} receitas exibidas${emp?` • Empresa: ${emp}`:''}`;
 }
 
-/* ===== ÍNDICE DE INGREDIENTES (cliente) ===== */
+/* ===== ÍNDICE DE INGREDIENTES ===== */
 function buildIngIndex(){
   const map = {};
   (ING_TODOS||[]).forEach(x=>{
@@ -511,7 +497,7 @@ function acharIng(map, empresa, recItem){
   return (keyCod && m[keyCod]) || m[keyNome] || null;
 }
 
-/* ======= Compostos: cálculo local por empresa ======= */
+/* ======= Compostos: cálculo local ======= */
 function detalharComposto(ing, empresa, idx){
   if(!(ing && ing.tipo==='composto' && Array.isArray(ing.ingredientes))) return null;
   const umComp = String(ing.um||'').toLowerCase();
@@ -545,7 +531,7 @@ document.getElementById('mFechar').addEventListener('click', ()=> {
   setEditMode(false);
 });
 
-let CURRENT_PROD = null; // receita corrente no modal
+let CURRENT_PROD = null;
 
 async function compararViaAPI(rec){
   try{
@@ -565,7 +551,6 @@ function compararLocal(rec){
     const ing = acharIng(idxAll, emp, rec);
     if(!ing) return null;
 
-    // composto
     if(ing.tipo==='composto' && Array.isArray(ing.ingredientes)){
       const det = detalharComposto(ing, emp, idxAll);
       const umPreco = String(ing.um||'').toLowerCase();
@@ -587,7 +572,6 @@ function compararLocal(rec){
       };
     }
 
-    // simples
     const umPreco = String(ing.um||'').toLowerCase();
     const conv = (qtd>0 && um) ? convertQty(qtd, um, umPreco) : null;
     const custo = Number(ing.custoUnit||0);
@@ -727,7 +711,6 @@ async function abrirModal(prod){
       });
       tbody.appendChild(tr);
 
-      // composição
       if(anyComp){
         const trComp = document.createElement('tr');
         const tdComp = document.createElement('td');
@@ -769,23 +752,21 @@ async function abrirModal(prod){
   await renderView();
   document.getElementById('mCompare').onchange = renderView;
 
-  // Preenche blocos de edição com CURRENT_PROD
   fillEditForm(CURRENT_PROD);
-
   modal.style.display='flex';
   setEditMode(false);
 }
 
-/* ====== EDIT MODE ====== */
+/* ====== EDIT MODE + AUTOCOMPLETE DE INGREDIENTES ====== */
 const viewBlk = document.getElementById('viewBlk');
 const editBlk = document.getElementById('editBlk');
 document.getElementById('mEditar').addEventListener('click', ()=> {
   if(!CURRENT_PROD) return;
   setEditMode(true);
+  rebuildIngDatalist(CURRENT_PROD.empresa || EMPRESA_ATUAL || '');
 });
 document.getElementById('eCancelar').addEventListener('click', ()=>{
   setEditMode(false);
-  // reseta para os dados originais da abertura do modal
   fillEditForm(CURRENT_PROD);
 });
 
@@ -795,8 +776,44 @@ function setEditMode(on){
   document.getElementById('mEditar').style.display = on ? 'none' : 'inline-flex';
 }
 
+/* monta a lista do datalist para a empresa */
+function rebuildIngDatalist(empresa){
+  const dl = document.getElementById('dlIng');
+  const lista = (ING_TODOS||[]).filter(x=> !empresa || norm(x.empresa)===norm(empresa));
+  dl.innerHTML = lista.map(x=>{
+    const cod = x.codigo ? String(x.codigo) : '';
+    const um  = (x.um||'').toUpperCase();
+    const preco = fmtBRL(Number(x.custoUnit||0));
+    // value é o nome para facilitar o preenchimento; mostramos código e preço na label
+    return `<option value="${hEsc(x.nome)} — ${hEsc(cod)}">${hEsc(x.nome)} • ${hEsc(cod)} • ${um} • ${preco}</option>`;
+  }).join('');
+}
+
+/* tenta achar ingrediente por nome (com possível " — COD") ou por código */
+function lookupIng(empresa, textNome, textCodigo){
+  const nomeRaw = String(textNome||'').split('—')[0].trim(); // remove sufixo "— COD"
+  const codigo  = String(textCodigo||'').trim();
+  const cand = (ING_TODOS||[]).filter(x=> !empresa || norm(x.empresa)===norm(empresa));
+  // prioridade: código exato
+  if(codigo){
+    const byCode = cand.find(x=> String(x.codigo||'').trim()===codigo);
+    if(byCode) return byCode;
+  }
+  // depois nome (normalizado)
+  if(nomeRaw){
+    const byName = cand.find(x=> norm(x.nome)===norm(nomeRaw));
+    if(byName) return byName;
+  }
+  // se veio no campo nome " NOME — COD", tenta pelo COD extraído
+  const codInNome = (String(textNome||'').includes('—')) ? String(textNome).split('—')[1].trim() : '';
+  if(codInNome){
+    const byCodeInName = cand.find(x=> String(x.codigo||'').trim()===codInNome);
+    if(byCodeInName) return byCodeInName;
+  }
+  return null;
+}
+
 function fillEditForm(prod){
-  // campos
   document.getElementById('eItem').value   = prod.item || '';
   document.getElementById('eClass').value  = prod.classificacao || '';
   document.getElementById('eCodigo').value = prod.codigoSistema || '';
@@ -806,11 +823,13 @@ function fillEditForm(prod){
   document.getElementById('eFoto').value   = prod.fotoUrl || prod.fotoId || '';
   document.getElementById('eUsuario').value = prod.usuario || '';
 
-  // ingredientes
+  // rebuild datalist para a empresa da receita
+  rebuildIngDatalist(prod.empresa || EMPRESA_ATUAL || '');
+
   const tbody = document.getElementById('eTbody');
   tbody.innerHTML = '';
   const rec = Array.isArray(prod.receita) ? prod.receita : [];
-  rec.forEach((r, idx)=> addIngRow(tbody, {
+  rec.forEach(r=> addIngRow(tbody, {
     item: r.item || '',
     codigo: r.codigo || '',
     qtd: Number(r.qtd ?? r.quantidade ?? r.qtdReceita ?? 0),
@@ -818,11 +837,11 @@ function fillEditForm(prod){
   }));
 }
 
-/* constrói uma linha de ingrediente na edição */
+/* constrói uma linha de ingrediente (com autocomplete) */
 function addIngRow(tbody, r={item:'', codigo:'', qtd:0, um:'un'}){
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input value="${hEsc(r.item)}" data-k="item" placeholder="Nome do ingrediente" /></td>
+    <td><input list="dlIng" value="${hEsc(r.item)}${r.codigo?(' — '+hEsc(r.codigo)) : ''}" data-k="item" placeholder="Nome do ingrediente" /></td>
     <td><input value="${hEsc(r.codigo)}" data-k="codigo" placeholder="Código (opcional)" /></td>
     <td class="right"><input type="number" step="0.0001" value="${Number(r.qtd)||0}" data-k="qtd" style="text-align:right"/></td>
     <td>
@@ -842,6 +861,24 @@ function addIngRow(tbody, r={item:'', codigo:'', qtd:0, um:'un'}){
   `;
   tbody.appendChild(tr);
 
+  const empresaRef = CURRENT_PROD?.empresa || EMPRESA_ATUAL || '';
+  const iNome = tr.querySelector('input[data-k="item"]');
+  const iCod  = tr.querySelector('input[data-k="codigo"]');
+  const iUM   = tr.querySelector('select[data-k="um"]');
+
+  function autoFill(){
+    const found = lookupIng(empresaRef, iNome.value, iCod.value);
+    if(found){
+      iNome.value = found.nome + (found.codigo ? ' — ' + found.codigo : '');
+      iCod.value  = found.codigo || '';
+      if(found.um){ iUM.value = String(found.um).toLowerCase(); }
+    }
+  }
+  iNome.addEventListener('change', autoFill);
+  iNome.addEventListener('blur', autoFill);
+  iCod.addEventListener('change', autoFill);
+  iCod.addEventListener('blur', autoFill);
+
   tr.querySelector('.eDel').onclick = ()=> tr.remove();
   tr.querySelector('.eUp').onclick = ()=>{
     const prev = tr.previousElementSibling;
@@ -858,16 +895,13 @@ document.getElementById('eAddIng').addEventListener('click', ()=>{
 });
 
 document.getElementById('eRecalc').addEventListener('click', ()=>{
-  // Apenas re-render do bloco de visualização com base nos dados atuais em memória (não salva)
   const preview = collectEditData(CURRENT_PROD);
-  // Atualiza cabeçalho e foto para visualizar alterações
   document.getElementById('mTitulo').textContent = preview.item || '';
   document.getElementById('mSub').textContent = `${preview.classificacao||''} • Empresa base: ${preview.empresa||CURRENT_PROD.empresa||''} • Nº ${preview.numero||''}`;
   const fotoEl = document.getElementById('mFoto');
   const fotoSrc = driveImgSrc(preview.fotoUrl || preview.fotoId, 800);
   if(fotoSrc){ fotoEl.onerror=()=>{fotoEl.style.display='none'}; fotoEl.src=fotoSrc; fotoEl.style.display='block'; }
-  // Mantemos em modo edição; somente preview parcial
-  alert('Recalcular: alterações refletidas no cabeçalho/miniatura. Os custos detalhados são recalculados após salvar ou reabrir a visualização.');
+  alert('Recalcular: cabeçalho/miniatura atualizados. Custos detalhados são recalculados ao salvar ou reabrir.');
 });
 
 function collectEditData(orig){
@@ -887,19 +921,20 @@ function collectEditData(orig){
   const rows = Array.from(document.querySelectorAll('#eTbody tr'));
   rows.forEach(tr=>{
     const get = (sel)=> tr.querySelector(sel);
-    const item = (get('input[data-k="item"]').value||'').trim();
+    let itemRaw = (get('input[data-k="item"]').value||'').trim();
     const codigo = (get('input[data-k="codigo"]').value||'').trim();
+    // se "Nome — COD", extrai o nome puro
+    if(itemRaw.includes('—')) itemRaw = itemRaw.split('—')[0].trim();
     const qtd = Number(get('input[data-k="qtd"]').value||0);
     const um = get('select[data-k="um"]').value;
-    if(item || codigo){
-      data.receita.push({ item, codigo, qtd, um });
+    if(itemRaw || codigo){
+      data.receita.push({ item: itemRaw, codigo, qtd, um });
     }
   });
-  // Mantém chaves auxiliares do objeto original
   data.data = orig.data || '';
   data.custoReceita = orig.custoReceita || 0;
   data.custoPorKgOuL = orig.custoPorKgOuL || 0;
-  data.fotoId = data.fotoUrl; // compat
+  data.fotoId = data.fotoUrl;
   return data;
 }
 
@@ -908,7 +943,6 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
   if(!CURRENT_PROD) return;
   const payload = collectEditData(CURRENT_PROD);
 
-  // validações simples
   if(!payload.item){ alert('Informe o nome da receita.'); return; }
   if(!payload.empresa){ alert('Defina a empresa (use o filtro antes de abrir).'); return; }
 
@@ -918,11 +952,8 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
 
   try{
     const res = await apiPost('?action=salvar_receita', { receita: payload });
-    if(!res || res.ok===false){
-      throw new Error(res?.error || 'Falha ao salvar');
-    }
+    if(!res || res.ok===false) throw new Error(res?.error || 'Falha ao salvar');
 
-    // Atualiza cache local (otimista)
     const idx = (PRODUTOS||[]).findIndex(p =>
       (payload.codigoSistema && p.codigoSistema===payload.codigoSistema) ||
       (p.numero && payload.numero && p.numero===payload.numero) ||
@@ -932,11 +963,9 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
     if(idx>=0) PRODUTOS[idx] = novo; else PRODUTOS.unshift(novo);
     CURRENT_PROD = structuredClone(novo);
 
-    // volta pra visualização com re-render
     setEditMode(false);
-    // Força re-render da tabela principal e do modal (visual)
     renderTabela();
-    await abrirModal(novo); // reabre sobre o mesmo item (aplica custos/comp)
+    await abrirModal(novo);
 
     alert('Receita salva com sucesso ✅');
   }catch(err){
@@ -1085,7 +1114,13 @@ document.getElementById('btnAtualizar').addEventListener('click', async ()=>{
   renderTabela();
   btn.disabled = false; btn.textContent = 'Atualizar';
 });
-document.getElementById('fEmpresa').addEventListener('change', renderTabela);
+document.getElementById('fEmpresa').addEventListener('change', ()=>{
+  renderTabela();
+  // se estiver editando, atualiza lista da empresa escolhida
+  if(editBlk.style.display==='block'){
+    rebuildIngDatalist(document.getElementById('fEmpresa').value || (CURRENT_PROD?.empresa||''));
+  }
+});
 document.getElementById('fBusca').addEventListener('input', renderTabela);
 boot();
 </script>
