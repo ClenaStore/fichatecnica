@@ -2,7 +2,6 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8" />
-<!-- impede zoom + melhora viewport em celular -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="format-detection" content="telephone=no" />
 <title>Relatórios e Análises</title>
@@ -22,42 +21,38 @@
   html, body{ height:100% }
   body{
     font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background:var(--bg); color:var(--text);
-    margin:0; padding:24px;
+    background:var(--bg); color:var(--text); margin:0; padding:20px;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    -webkit-text-size-adjust:100%;      /* evita zoom de texto no iOS */
-    touch-action:manipulation;          /* evita double-tap zoom */
+    -webkit-text-size-adjust:100%; touch-action:manipulation;
   }
   a, button{ -webkit-tap-highlight-color: transparent; }
 
-  /* Header fixo no topo em mobile */
+  /* Header fixo no topo */
   header{
     position:sticky; top:0; z-index:20;
     background:linear-gradient(180deg, rgba(15,15,16,.98), rgba(15,15,16,.88));
     backdrop-filter:saturate(140%) blur(6px);
-    border-bottom:1px solid rgba(255,255,255,.06);
-    margin:-24px -24px 24px; padding:14px 24px;
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    border:1px solid rgba(255,255,255,.06);
+    margin:-20px -20px 20px; padding:12px 16px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border-radius:0 0 14px 14px;
   }
-  h1{margin:0;font-size:clamp(1.05rem, 0.9rem + 1vw, 1.5rem);line-height:1.15;font-weight:700}
+  h1{margin:0;font-size:clamp(1.05rem, 0.9rem + 1vw, 1.4rem);line-height:1.15;font-weight:700}
 
   /* Botões */
   .btn{
-    padding:12px 16px;border:none;border-radius:12px;cursor:pointer;font-weight:700;
+    padding:12px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:700;
     transition:transform .15s ease, opacity .15s ease, box-shadow .15s ease;
     box-shadow:0 6px 14px rgba(0,0,0,.25);
-    font-size:16px; /* evita zoom ao focar no iOS */
+    font-size:16px;
   }
   .btn:active{ transform:scale(.98) }
   .btn.back{background:var(--accent);color:#fff}
 
   /* Grid */
   .grid{
-    display:grid;
-    grid-template-columns:repeat(12,1fr);
-    gap:20px;
-    max-width:1200px;
-    margin:0 auto;
+    display:grid; grid-template-columns:repeat(12,1fr); gap:16px;
+    max-width:1080px; margin:0 auto;
   }
   .span-6{ grid-column: span 6 }
   .span-4{ grid-column: span 4 }
@@ -70,47 +65,50 @@
     border-radius:var(--radius);padding:16px;
     box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
-  .card h2{font-size:1.05rem;margin:0 0 10px}
+  .card h2{font-size:1.02rem;margin:0 0 10px}
   .muted{ color:var(--muted) }
-  .pill{ display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.84rem }
+  .pill{ display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#0d0d0e; font-size:.86rem }
 
   /* Gráficos responsivos */
   .chart-box{ position:relative; width:100%; height:260px }
   .chart-box.tall{ height:300px }
 
-  /* Tabelas */
-  .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:10px }
+  /* Tabelas (desktop) */
+  .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px }
   table{min-width:600px; width:100%; border-collapse:collapse}
   th,td{padding:10px 12px;border:1px solid var(--line);font-size:.95rem;text-align:left}
   th{background:#fff;color:#000;font-weight:700}
   tr.is-high td{ background: rgba(239,68,68,.12) }
   tr.is-mid  td{ background: rgba(245,158,11,.12) }
 
-  /* Responsivo */
-  @media (max-width: 1200px){
-    .grid{ grid-template-columns:repeat(8,1fr) }
-    .span-6{ grid-column: span 8 }
-    .span-4{ grid-column: span 4 }
-    .span-8{ grid-column: span 8 }
-  }
-  @media (max-width: 1024px){
-    body{ padding:18px }
-    header{ margin:-18px -18px 18px; padding:12px 18px }
-    .grid{ grid-template-columns:repeat(6,1fr) }
-    .span-6, .span-8{ grid-column: span 6 }
-    .span-4{ grid-column: span 6 }
-    .btn{ min-height:44px }
-    .chart-box{ height:260px }
-  }
+  /* ===== Mobile “table to cards” ===== */
   @media (max-width: 768px){
     body{ padding:12px; padding-bottom: max(12px, env(safe-area-inset-bottom)) }
-    header{ margin:-12px -12px 12px; padding:10px 12px; gap:10px; }
-    .grid{ grid-template-columns:1fr; gap:14px }
+    header{ margin:-12px -12px 12px; padding:10px 12px; gap:10px; border-radius:0 0 12px 12px }
+    .grid{ grid-template-columns:1fr; gap:12px }
     .span-6, .span-4, .span-8, .span-12{ grid-column: span 1 }
-    .card{ padding:14px; border-radius:16px }
+    .card{ padding:12px; border-radius:14px }
     .btn{ width:100%; border-radius:14px }
-    th,td{ white-space:nowrap; font-size:.98rem }
-    .chart-box{ height:280px }
+    .chart-box{ height:220px }
+    .chart-box.tall{ height:240px }
+
+    /* converte tabela em lista de cards */
+    .table-wrap{ border:none; }
+    table.responsive{ border-collapse:separate; border-spacing:0 10px; min-width:0 }
+    table.responsive thead{ display:none }
+    table.responsive tr{
+      display:block; background:#111215; border:1px solid var(--line); border-radius:12px;
+      box-shadow:0 8px 20px rgba(0,0,0,.25); padding:10px; margin:0 0 10px;
+    }
+    table.responsive td{
+      display:grid; grid-template-columns: 110px 1fr; gap:8px;
+      border:none; border-bottom:1px dashed #242424; padding:6px 2px;
+      font-size:0.98rem; white-space:normal;
+    }
+    table.responsive td:last-child{ border-bottom:none; padding-bottom:2px }
+    table.responsive td .label{
+      color:#a9b0b8; font-weight:600; letter-spacing:.2px;
+    }
   }
 
   /* Inputs (evita zoom no foco em iOS) */
@@ -146,7 +144,7 @@
   <div class="card span-6">
     <h2>💰 Produtos com Custos Muito Diferentes</h2>
     <div class="table-wrap" role="region" aria-label="Tabela de variação de custos">
-      <table>
+      <table class="responsive" id="tblProdutosWrap">
         <thead>
           <tr>
             <th>Produto</th>
@@ -175,7 +173,7 @@
   <div class="card span-8">
     <h2>🔎 Análise Detalhada</h2>
     <div class="table-wrap" role="region" aria-label="Tabela de análise detalhada">
-      <table>
+      <table class="responsive" id="tblDetalhadaWrap">
         <thead>
           <tr>
             <th>Receita</th>
@@ -195,7 +193,7 @@
 /* ========= Helpers ========= */
 const fmtBRL = n => (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-/* ========= Dados mockados (trocar pelo Apps Script quando quiser) ========= */
+/* ========= Dados mockados ========= */
 const receitas = [
   {nome:"Bolo Chocolate", qtdIng:5, custo:45},
   {nome:"Pão Francês",    qtdIng:3, custo:25},
@@ -209,7 +207,7 @@ const produtos = [
   {nome:"Ovo",     min:0.4, max:0.9},
 ];
 
-/* ========= 1. Custo das Receitas (bar + linha) ========= */
+/* ========= 1. Custo das Receitas ========= */
 document.getElementById("totalReceitas").innerText = receitas.length;
 
 const ctx1 = document.getElementById("chartReceitas");
@@ -218,50 +216,21 @@ new Chart(ctx1, {
   data:{
     labels:receitas.map(r=>r.nome),
     datasets:[
-      {
-        label:"Custo (R$)",
-        data:receitas.map(r=>r.custo),
-        backgroundColor:"#2563eb"
-      },
-      {
-        label:"Qtd. ingredientes",
-        data:receitas.map(r=>r.qtdIng),
-        type:"line",
-        borderColor:"#f59e0b",
-        borderWidth:2,
-        pointRadius:3,
-        fill:false,
-        yAxisID:'y2'
-      }
+      { label:"Custo (R$)", data:receitas.map(r=>r.custo), backgroundColor:"#2563eb" },
+      { label:"Qtd. ingredientes", data:receitas.map(r=>r.qtdIng), type:"line",
+        borderColor:"#f59e0b", borderWidth:2, pointRadius:3, fill:false, yAxisID:'y2' }
     ]
   },
   options:{
-    responsive:true,
-    maintainAspectRatio:false,
+    responsive:true, maintainAspectRatio:false,
     layout:{ padding:{ top:0, right:6, bottom:0, left:0 } },
-    plugins:{
-      legend:{ labels:{ color:"#e5e7eb" } },
-      tooltip:{
-        callbacks:{
-          label:(c)=> c.datasetIndex===0
-            ? `${c.label}: ${fmtBRL(c.parsed.y)}`
-            : `${c.label}: ${c.parsed.y}`
-        }
-      }
+    plugins:{ legend:{ labels:{ color:"#e5e7eb" } },
+      tooltip:{ callbacks:{ label:(c)=> c.datasetIndex===0 ? `${c.label}: ${fmtBRL(c.parsed.y)}` : `${c.label}: ${c.parsed.y}` } }
     },
     scales:{
       x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" } },
-      y:{
-        ticks:{ color:"#cbd5e1" },
-        grid:{ color:"rgba(255,255,255,.06)" },
-        title:{ display:true, text:"Custo (R$)", color:"#cbd5e1" }
-      },
-      y2:{
-        position:'right',
-        grid:{ display:false },
-        ticks:{ color:"#fbbf24" },
-        title:{ display:true, text:"Qtd. ingredientes", color:"#fbbf24" }
-      }
+      y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"rgba(255,255,255,.06)" }, title:{ display:true, text:"Custo (R$)", color:"#cbd5e1" } },
+      y2:{ position:'right', grid:{ display:false }, ticks:{ color:"#fbbf24" }, title:{ display:true, text:"Qtd. ingredientes", color:"#fbbf24" } }
     }
   }
 });
@@ -270,8 +239,8 @@ new Chart(ctx1, {
 const tbodyP = document.getElementById("tblProdutos");
 const limiteAbs = 2.0;   // R$
 const limitePerc = 0.35; // 35%
-
 const produtosOrdenados = [...produtos].sort((a,b)=>(b.max-b.min)-(a.max-a.min));
+
 produtosOrdenados.forEach(p=>{
   const variacaoAbs  = (p.max - p.min);
   const variacaoPerc = p.min>0 ? (variacaoAbs / p.min) : 0;
@@ -281,15 +250,15 @@ produtosOrdenados.forEach(p=>{
   const tr = document.createElement('tr');
   if(cls) tr.classList.add(cls);
   tr.innerHTML = `
-    <td>${p.nome}</td>
-    <td>${fmtBRL(p.min)}</td>
-    <td>${fmtBRL(p.max)}</td>
-    <td>${fmtBRL(variacaoAbs)} (${(variacaoPerc*100).toFixed(0)}%)</td>
+    <td data-th="Produto"><span class="label">Produto</span><span>${p.nome}</span></td>
+    <td data-th="Custo Mín."><span class="label">Custo Mín.</span><span>${fmtBRL(p.min)}</span></td>
+    <td data-th="Custo Máx."><span class="label">Custo Máx.</span><span>${fmtBRL(p.max)}</span></td>
+    <td data-th="Variação"><span class="label">Variação</span><span>${fmtBRL(variacaoAbs)} (${(variacaoPerc*100).toFixed(0)}%)</span></td>
   `;
   tbodyP.appendChild(tr);
 });
 
-/* ========= 3. Diferença por Ingrediente (pizza) ========= */
+/* ========= 3. Diferença por Ingrediente ========= */
 const diffs = produtos.map(p=>Math.max(0,(p.max-p.min)));
 const labelsIng = produtos.map(p=>p.nome);
 const palette = ["#2563eb","#f59e0b","#ef4444","#10b981","#a78bfa","#f97316","#22c55e","#eab308","#3b82f6","#f43f5e"];
@@ -298,22 +267,11 @@ const colors = labelsIng.map((_,i)=>palette[i % palette.length]);
 const ctx2 = document.getElementById("chartIngredientes");
 new Chart(ctx2, {
   type:"pie",
-  data:{
-    labels: labelsIng,
-    datasets:[{
-      data: diffs,
-      backgroundColor: colors,
-      borderColor: "rgba(0,0,0,.25)",
-      borderWidth: 1
-    }]
-  },
+  data:{ labels: labelsIng, datasets:[{ data: diffs, backgroundColor: colors, borderColor:"rgba(0,0,0,.25)", borderWidth:1 }] },
   options:{
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{
-      legend:{ position:'bottom', labels:{ color:"#e5e7eb" } },
-      tooltip:{ callbacks:{ label:(c)=>`${c.label}: ${fmtBRL(c.parsed)}` } }
-    }
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ color:"#e5e7eb" } },
+      tooltip:{ callbacks:{ label:(c)=>`${c.label}: ${fmtBRL(c.parsed)}` } } }
   }
 });
 
@@ -323,10 +281,10 @@ receitas.forEach(r=>{
   const custoMedio = r.qtdIng>0 ? (r.custo/r.qtdIng) : 0;
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td>${r.nome}</td>
-    <td>${r.qtdIng}</td>
-    <td>${fmtBRL(r.custo)}</td>
-    <td>${fmtBRL(custoMedio)}</td>
+    <td data-th="Receita"><span class="label">Receita</span><span>${r.nome}</span></td>
+    <td data-th="Qtd. Ingredientes"><span class="label">Qtd. Ingredientes</span><span>${r.qtdIng}</span></td>
+    <td data-th="Custo Total"><span class="label">Custo Total</span><span>${fmtBRL(r.custo)}</span></td>
+    <td data-th="Custo Médio"><span class="label">Custo Médio</span><span>${fmtBRL(custoMedio)}</span></td>
   `;
   tbodyD.appendChild(tr);
 });
