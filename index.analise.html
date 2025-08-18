@@ -303,7 +303,7 @@
 
 <script>
 /* ===== CONFIG ===== */
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxrUQQDTnkBtJp1KEM5RM90aZyP0zOYKbAfJgT08p8Gj9SLB84b47554rXr811JXJ5Y/exec'; /* ⬅️ SUBSTITUA */
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxrUQQDTnkBtJp1KEM5RM90aZyP0zOYKbAfJgT08p8Gj9SLB84b47554rXr811JXJ5Y/exec'; /* ⬅️ sua implantação */
 
 /* ===== ESTADO ===== */
 let PRODUTOS = [];
@@ -399,7 +399,8 @@ async function apiGet(path){
 async function apiPost(path, data){
   const r = await fetch(WEBAPP_URL+path, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    // <<< AJUSTE CRÍTICO: usa text/plain para evitar preflight/CORS no Apps Script
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(data||{})
   });
   let j=null; try{ j=await r.json(); }catch(_){ j=null; }
@@ -945,7 +946,7 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
   btn.disabled = true; btn.textContent = 'Salvando...';
 
   try{
-    // 🔧 AJUSTE CRÍTICO: enviar no formato que o GAS espera
+    // envia no formato esperado pelo GAS
     const res = await apiPost('', { type:'produto', payload, usuario: payload.usuario || '' });
     if(!res || res.ok===false) throw new Error(res?.error || 'Falha ao salvar');
 
