@@ -784,27 +784,23 @@ function rebuildIngDatalist(empresa){
     const cod = x.codigo ? String(x.codigo) : '';
     const um  = (x.um||'').toUpperCase();
     const preco = fmtBRL(Number(x.custoUnit||0));
-    // value é o nome para facilitar o preenchimento; mostramos código e preço na label
     return `<option value="${hEsc(x.nome)} — ${hEsc(cod)}">${hEsc(x.nome)} • ${hEsc(cod)} • ${um} • ${preco}</option>`;
   }).join('');
 }
 
 /* tenta achar ingrediente por nome (com possível " — COD") ou por código */
 function lookupIng(empresa, textNome, textCodigo){
-  const nomeRaw = String(textNome||'').split('—')[0].trim(); // remove sufixo "— COD"
+  const nomeRaw = String(textNome||'').split('—')[0].trim();
   const codigo  = String(textCodigo||'').trim();
   const cand = (ING_TODOS||[]).filter(x=> !empresa || norm(x.empresa)===norm(empresa));
-  // prioridade: código exato
   if(codigo){
     const byCode = cand.find(x=> String(x.codigo||'').trim()===codigo);
     if(byCode) return byCode;
   }
-  // depois nome (normalizado)
   if(nomeRaw){
     const byName = cand.find(x=> norm(x.nome)===norm(nomeRaw));
     if(byName) return byName;
   }
-  // se veio no campo nome " NOME — COD", tenta pelo COD extraído
   const codInNome = (String(textNome||'').includes('—')) ? String(textNome).split('—')[1].trim() : '';
   if(codInNome){
     const byCodeInName = cand.find(x=> String(x.codigo||'').trim()===codInNome);
@@ -823,7 +819,6 @@ function fillEditForm(prod){
   document.getElementById('eFoto').value   = prod.fotoUrl || prod.fotoId || '';
   document.getElementById('eUsuario').value = prod.usuario || '';
 
-  // rebuild datalist para a empresa da receita
   rebuildIngDatalist(prod.empresa || EMPRESA_ATUAL || '');
 
   const tbody = document.getElementById('eTbody');
@@ -923,7 +918,6 @@ function collectEditData(orig){
     const get = (sel)=> tr.querySelector(sel);
     let itemRaw = (get('input[data-k="item"]').value||'').trim();
     const codigo = (get('input[data-k="codigo"]').value||'').trim();
-    // se "Nome — COD", extrai o nome puro
     if(itemRaw.includes('—')) itemRaw = itemRaw.split('—')[0].trim();
     const qtd = Number(get('input[data-k="qtd"]').value||0);
     const um = get('select[data-k="um"]').value;
@@ -951,7 +945,8 @@ document.getElementById('eSalvar').addEventListener('click', async ()=>{
   btn.disabled = true; btn.textContent = 'Salvando...';
 
   try{
-    const res = await apiPost('?action=salvar_receita', { receita: payload });
+    // 🔧 AJUSTE CRÍTICO: enviar no formato que o GAS espera
+    const res = await apiPost('', { type:'produto', payload, usuario: payload.usuario || '' });
     if(!res || res.ok===false) throw new Error(res?.error || 'Falha ao salvar');
 
     const idx = (PRODUTOS||[]).findIndex(p =>
@@ -1116,7 +1111,6 @@ document.getElementById('btnAtualizar').addEventListener('click', async ()=>{
 });
 document.getElementById('fEmpresa').addEventListener('change', ()=>{
   renderTabela();
-  // se estiver editando, atualiza lista da empresa escolhida
   if(editBlk.style.display==='block'){
     rebuildIngDatalist(document.getElementById('fEmpresa').value || (CURRENT_PROD?.empresa||''));
   }
