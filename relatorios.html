@@ -549,15 +549,15 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
       precoVendaUnit:pvUnit, precoVendaLote:pvLote, markup, margemPerc:Number(MARGEM||0), usuario:user
     };
 
-    const res = await fetchJSON(WEBAPP_URL+'?action=salvar_precificacao', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
-    });
-    if(res.ok){ alert('Salvo no PainelPreco ✓'); }
-    else { alert('Falha ao salvar: '+(res.error||'erro desconhecido')+'\nDica: verifique as permissões do Web App (Execute as: Me / Anyone).'); }
-  }finally{
-    btn.disabled=false; btn.textContent='Salvar no Painel';
-  }
-});
+  - const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
+-   method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+- });
++ const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
++   method: 'POST',
++   // sem headers para não disparar preflight; ou use:
++   // headers: {'Content-Type':'text/plain;charset=utf-8'},
++   body: JSON.stringify(payload)
++ });
 
 /* ===== Boot ===== */
 (async function boot(){
