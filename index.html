@@ -16,10 +16,7 @@
   table{width:100%;border-collapse:collapse;margin-top:8px}
   th,td{border:1px solid var(--line);padding:8px;text-align:left}
   th{
-    background:#fff;   /* fundo branco */
-    color:#000;        /* texto preto */
-    font-weight:600;
-    border:1px solid #ccc; /* destaque leve */
+    background:#fff; color:#000; font-weight:600; border:1px solid #ccc;
   }
 
   .accent{background:var(--accent);color:#fff}
@@ -87,37 +84,19 @@
   .foto-preview img{height:120px;width:auto;border-radius:12px;border:1px solid var(--line)}
 
   /* ===== AJUSTES PEDIDOS ===== */
-  /* Campo "Item" da tabela de RECEITA: branco com letras pretas */
   .inpItem{ background:#fff !important; color:#000 !important; }
-
-  /* Campo "Item" da COMPOSIÇÃO: select branco com letras pretas */
   .comp-table select.compItemSel{
-    width:100%;
-    padding:8px;
-    border-radius:10px;
-    border:1px solid #555;
-    background:#fff;
-    color:#000;
+    width:100%; padding:8px; border-radius:10px; border:1px solid #555; background:#fff; color:#000;
   }
-
-  /* =========================
-     RESPONSIVO (TABLET/CEL)
-     ========================= */
 
   /* ====== TABLET ====== */
   @media (max-width: 1024px){
-    /* grid de 12 → 6 colunas (spans existentes continuam válidos) */
     .row{ grid-template-columns: repeat(6, 1fr); gap: 10px; }
-
-    /* cabeçalhos e cartões mais compactos */
     body{ padding: 16px; }
     .card{ padding: 14px; }
-
-    /* tabela com rolagem quando apertado */
     table{ width: 100%; border-collapse: collapse; }
     th, td{ white-space: nowrap; }
     .card table{ display: block; overflow-x: auto; }
-    
     th{ font-weight:600; }
     .pill{ font-size:.82rem; }
     .totais{ gap:10px; }
@@ -127,31 +106,17 @@
   @media (max-width: 768px){
     body{ padding: 12px; }
     h1{ font-size: 1.25rem; }
-
-    /* uma coluna */
     .row{ grid-template-columns: 1fr; gap: 10px; }
-
-    /* inputs maiores para toque */
     input, select, textarea{ padding: 12px; font-size: 1rem; }
-
-    /* ações “grudadas” no rodapé */
     .sticky-actions{ 
-      position: sticky; bottom: 0;
-      display: flex; gap: 8px; 
+      position: sticky; bottom: 0; display: flex; gap: 8px; 
       background: var(--panel); border: 1px solid var(--line);
-      border-radius: 14px; padding: 10px; 
-      z-index: 5;
+      border-radius: 14px; padding: 10px; z-index: 5;
     }
-
-    /* Tabela “cartão rolável” – não quebra, faz scroll lateral */
     table{ display: block; overflow-x: auto; }
     th, td{ white-space: nowrap; padding: 10px; }
-
-    /* esconder colunas de uso mais “secundário” em telas estreitas */
     .desktop-only{ display: none !important; }
-    th:nth-child(5), td:nth-child(5){ display:none; } /* Observação da receita */
-
-    /* botão "Ver receitas" como FAB no canto */
+    th:nth-child(5), td:nth-child(5){ display:none; }
     .btn-analise{
       position: fixed; right: 12px; bottom: 12px;
       top: auto; transform: none;
@@ -159,13 +124,10 @@
       box-shadow: 0 8px 28px rgba(0,0,0,.45);
       font-size: 0.95rem;
     }
-
-    /* modal ocupa quase toda a tela no mobile */
     .modal .box{ width:calc(100vw - 12px); max-height:calc(100vh - 12px); }
     .tbl-wrap{ max-height:55vh; }
   }
 
-  /* ====== TOUCH/ACESSIBILIDADE ====== */
   @media (hover: none){
     .btn, .btn.ghost, .btn.secondary{ min-height: 44px; }
     .icon{ width: 40px; height: 40px; }
@@ -173,7 +135,6 @@
 </style>
 </head>
 <body>
-  <!-- botão rápido para ir ao painel de análise -->
   <a href="index.analise.html" class="btn-analise">Ver receitas</a>
   <h1>Cadastro de Produto & Receita</h1>
 
@@ -377,12 +338,23 @@ const tbody = document.getElementById('tbody');
 const fmtBRL = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const FACTOR = { g:1, kg:1000, ml:1, l:1000, un:1 };
 const TYPE   = u => (u==='g'||u==='kg')?'mass' : (u==='ml'||u==='l')?'vol' : 'count';
+
+/* ✅ correção: conversão com guarda para mesma U.M. */
 function convertQty(qty, from, to){
-  from = (from||'').toLowerCase(); to = (to||'').toLowerCase();
-  if(!FACTOR[from] || !FACTOR[to]) return qty; if(TYPE(from) !== TYPE(to)) return NaN;
+  from = (from||'').toLowerCase();
+  to   = (to||'').toLowerCase();
+  if(!FACTOR[from] || !FACTOR[to]) return qty;
+  if(TYPE(from) !== TYPE(to)) return NaN;
+  if(from === to) return qty;                 // <-- evita multiplicação desnecessária
   return qty * (FACTOR[from] / FACTOR[to]);
 }
-function toNumberBR(val){ if(typeof val !== 'string') val = String(val||''); val = val.replace(/\./g, '').replace(',', '.'); const n = parseFloat(val); return isNaN(n) ? 0 : n; }
+
+function toNumberBR(val){
+  if(typeof val !== 'string') val = String(val||'');
+  val = val.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(val);
+  return isNaN(n) ? 0 : n;
+}
 
 /* ===== USUÁRIOS ===== */
 const USERS_KEY = 'AUTH_USERS_V1';
@@ -424,10 +396,14 @@ function setIngInfo(tr, ing){
   const info = tr.querySelector('.ingInfo');
   if(!info) return;
   if(!ing){ info.textContent=''; return; }
-  const base = `${(ing.codigo||'')}${ing.empresa?(' • '+ing.empresa):''} • ${fmtBRL(ing.custoUnit||0)} ${(ing.obs?('• '+ing.obs):'')}`;
+
+  const umLabel = (ing.um||'U.M.').toUpperCase();
+  // ✅ mostra preço com unidade
+  const base = `${(ing.codigo||'')}${ing.empresa?(' • '+ing.empresa):''} • ${fmtBRL(ing.custoUnit||0)}/${umLabel} ${(ing.obs?('• '+ing.obs):'')}`;
   const tag = (ing.tipo==='composto') ? ' <span class="badge comp">composto</span>' : '';
   info.innerHTML = base + tag + compListHTML(ing);
 }
+
 function novaLinha(data={}){
   const tr = document.createElement('tr');
   tr.innerHTML = `
@@ -488,6 +464,7 @@ function novaLinha(data={}){
 
   tbody.appendChild(tr); atualizarTotais();
 }
+
 function aplicarIngredienteNaLinha(tr, ing){
   if(!tr || !ing) return;
   tr.querySelector('.inpItem').value   = ing.nome || '';
@@ -556,14 +533,20 @@ function lerTabela(){
     };
   }).filter(x=>x.item);
 }
+
 function atualizarTotais(){
   const itens = lerTabela(); let total = 0;
   [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{ const st = itens[i]?.subtotal || 0; tr.querySelector('.subtotal').textContent = fmtBRL(st); total += st; });
   document.getElementById('custoReceita').textContent = fmtBRL(total);
+
   const rendimento = toNumberBR(document.getElementById('rendimento').value);
   const unidadeRend = document.getElementById('unidadeRend').value.toLowerCase();
   let custoPorGMl = 0, custoPorKgL = 0; const toBase = u => u==='kg' ? 1000 : u==='l' ? 1000 : 1;
-  if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){ const emBase = rendimento * toBase(unidadeRend); custoPorGMl = total / emBase; custoPorKgL = total / (emBase/1000); }
+  if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){
+    const emBase = rendimento * toBase(unidadeRend);
+    custoPorGMl = total / emBase;
+    custoPorKgL = total / (emBase/1000);
+  }
   document.getElementById('custoPorGMl').textContent = isFinite(custoPorGMl) ? 'R$ ' + (custoPorGMl).toFixed(4).replace('.',',') : '—';
   document.getElementById('custoPorKgL').textContent = isFinite(custoPorKgL) ? fmtBRL(custoPorKgL) : '—';
 }
@@ -849,7 +832,6 @@ function renderCompTable(){
   COMP_TEMP.forEach((r, idx)=>{
     const tr = document.createElement('tr');
 
-    // ITEM: agora é um SELECT (barra)
     const tdItem = document.createElement('td');
     const sel = document.createElement('select');
     sel.className = 'compItemSel';
@@ -883,9 +865,7 @@ function renderCompTable(){
       const base = INGREDIENTES[v];
       COMP_TEMP[idx].codigo = base.codigo || null;
       COMP_TEMP[idx].nome   = base.nome || '';
-      // se não tiver U.M., herdamos do cadastro
       if(!COMP_TEMP[idx].um){ COMP_TEMP[idx].um = (base.um||'').toLowerCase(); sUm.value = COMP_TEMP[idx].um||''; }
-      // se custo não foi definido manualmente, puxa do cadastro
       if(!(COMP_TEMP[idx].custoUnit>0)){ COMP_TEMP[idx].custoUnit = Number(base.custoUnit||0); iC.value = (COMP_TEMP[idx].custoUnit||''); }
       computeCompPreview();
     });
@@ -1100,6 +1080,7 @@ const usuarioInput=document.getElementById('usuario'); if(usuarioInput){ usuario
 /* ===== util tests ===== */
 console.assert(convertQty(1,'kg','g')===1000,'convertQty kg→g');
 console.assert(convertQty(1,'l','ml')===1000,'convertQty l→ml');
+console.assert(convertQty(1,'kg','kg')===1,'convertQty mesma U.M.');
 console.assert(toNumberBR('1.234,56')===1234.56,'toNumberBR 1.234,56');
 console.log('Front carregado ✔');
 </script>
