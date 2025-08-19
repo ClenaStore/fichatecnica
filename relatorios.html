@@ -292,14 +292,15 @@
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px">
-        <div class="card" style="background:#fff;border:1px solid #000;color:#000">
-          <div><strong>Custos</strong></div>
-          <div style="margin-top:6px">
-            <div>Custo Receita (lote): <span id="repBase"></span></div>
-            <div>Custos Adicionais: <span id="repAdd"></span></div>
-            <div><strong>Custo Final (lote): <span id="repFinal"></span></strong></div>
-            <div id="repFinalUnitWrap">Custo Final por <span id="repFinalUnitLbl"></span>: <span id="repFinalUnit"></span></div>
-          </div>
+        $1
+        <div style="margin-top:8px">
+          <div style="font-weight:700;margin:6px 0 4px 0">Detalhe dos custos adicionais</div>
+          <table style="width:100%">
+            <thead><tr><th>Tipo</th><th>Modo</th><th>Digitado</th><th class="right">Aplicado (R$)</th></tr></thead>
+            <tbody id="repAddTbody"></tbody>
+          </table>
+        </div>
+      </div>
         </div>
         <div class="card" style="background:#fff;border:1px solid #000;color:#000">
           <div><strong>Preço</strong></div>
@@ -592,6 +593,14 @@ function atualizarCustos(){
   document.getElementById('k_add').textContent  = fmtBRL(add);
   document.getElementById('k_final').textContent= fmtBRL(final);
 
+  // disponibiliza detalhamento de adicionais para o relatório
+  window.__ADD = {
+    imp:{mode: ADD.imp.mode, raw: toNumberBR(document.getElementById('v_imp')), val: impV},
+    fix:{mode: ADD.fix.mode, raw: toNumberBR(document.getElementById('v_fix')), val: fixV},
+    op:{mode: ADD.op.mode,  raw: toNumberBR(document.getElementById('v_op')),  val: opV},
+    total: add
+  };
+
   let perUnit = 0; const u = (BASE.unidade||'').toLowerCase(); const rend = Number(BASE.rendimento||0);
   if (rend > 0) { if (u === 'kg' || u === 'l') perUnit = final / rend; else if (u === 'g' || u === 'ml') perUnit = final / (rend / 1000); else perUnit = final / rend; }
 
@@ -675,6 +684,23 @@ function preencherRelatorio(){
   document.getElementById('repFinalUnit').textContent = document.getElementById('k_final_unit').textContent;
   const u = (BASE.unidade||'').toLowerCase(); let lbl='un'; if(u==='kg'||u==='g') lbl='kg'; else if(u==='l'||u==='ml') lbl='L';
   document.getElementById('repFinalUnitLbl').textContent = lbl;
+
+  // Tabela de detalhamento dos custos adicionais (relatório)
+  const __add = window.__ADD || {};
+  const __rows = [
+    {label:'Impostos', d: __add.imp || {}},
+    {label:'Despesa Fixa', d: __add.fix || {}},
+    {label:'Despesa Operacional', d: __add.op || {}}
+  ];
+  const __tb = document.getElementById('repAddTbody');
+  if(__tb){
+    __tb.innerHTML = __rows.map(({label,d})=>{
+      const mode = d.mode || 'pct';
+      const rawStr = mode==='pct' ? (Number(d.raw||0)).toLocaleString('pt-BR')+' %' : fmtBRL(Number(d.raw||0));
+      const modeStr = mode==='pct' ? '%' : 'R$';
+      return `<tr><td>${label}</td><td>${modeStr}</td><td>${rawStr}</td><td class="right">${fmtBRL(Number(d.val||0))}</td></tr>`;
+    }).join('');
+  }
 
   document.getElementById('repMargem').textContent = (Number(window.__PV_MARGEM||0)).toLocaleString('pt-BR') + ' %';
   document.getElementById('repMarkup').textContent = (Number(window.__PV_MARKUP||0)).toFixed(2) + 'x';
