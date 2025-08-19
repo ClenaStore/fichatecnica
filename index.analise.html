@@ -49,6 +49,7 @@
 
   .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
 
+  /* ===== Modal ===== */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
   .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
   .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
@@ -78,6 +79,16 @@
   .h-filtros .w4{grid-column: span 4}
   .h-table{border:1px solid var(--line);border-radius:12px;overflow:auto}
   .h-table table{ min-width: 760px; }
+
+  /* ===== Caret para compostos ===== */
+  .caret-btn{
+    background:transparent; border:0; cursor:pointer; font-size:1rem;
+    line-height:1; padding:0 6px 0 0; color:var(--text);
+    transform-origin:center; transition:transform .15s ease;
+  }
+  .caret-btn[aria-expanded="true"]{ transform:rotate(90deg); }
+  .comp-row{ background:#0f0f10; }
+  .comp-row td{ padding:10px 12px; border-top:0; }
 
   @media (hover:none){ .btn{ min-height:44px } }
   @media (max-width: 1024px){ body{ padding:18px } }
@@ -674,21 +685,32 @@ async function abrirModal(prod){
 
     const comps = await Promise.all(receita.map(r=>fetchComparativo(r)));
 
+    /* ====== LISTA DE INGREDIENTES (COM CARET) ====== */
     receita.forEach((r, idxI)=>{
       const comp = comps[idxI];
       const {qtd, um} = qtyUmFrom(r);
       const porEmpresa = (comp?.empresas||[]).filter(x=> empresasToShow.includes(x.empresa));
       const validos = porEmpresa.filter(x=> x.subtotal!=null);
       const minVal = validos.length ? Math.min(...validos.map(x=>x.subtotal)) : null;
+
       const anyComp = porEmpresa.some(x=> x.tipo==='composto');
 
+      // === linha principal do ingrediente ===
       const tr = document.createElement('tr');
+
+      // botão caret (aparece só se for composto)
+      const caretHTML = anyComp
+        ? `<button class="caret-btn" aria-expanded="false" title="Ver composição">▶</button>`
+        : '';
+
       const compMark = anyComp ? ' <span class="comp-badge">composto</span>' : '';
       tr.innerHTML = `
-        <td>${r.item||''}${r.codigo?` <span class="small muted">(cod: ${r.codigo})</span>`:''}${!comp?' <span class="small muted">• sem cadastro</span>':''}${compMark}</td>
+        <td>${caretHTML}${r.item||''}${r.codigo?` <span class="small muted">(cod: ${r.codigo})</span>`:''}${!comp?' <span class="small muted">• sem cadastro</span>':''}${compMark}</td>
         <td class="right">${Number(qtd||0)}</td>
         <td>${(um||'').toUpperCase()}</td>
       `;
+
+      // células por empresa (preço / subtotal)
       empresasToShow.forEach(emp=>{
         const x = porEmpresa.find(e=> e.empresa===emp);
         const td = document.createElement('td'); td.className='right';
@@ -707,7 +729,38 @@ async function abrirModal(prod){
         }
         tr.appendChild(td);
       });
+
       tbody.appendChild(tr);
+
+      // === linha expandível com a composição ===
+      let trComp = null;
+      if(anyComp){
+        trComp = document.createElement('tr');
+        trComp.className = 'comp-row';
+        const td = document.createElement('td');
+        td.colSpan = 3 + empresasToShow.length;
+
+        // monta uma seção de composição por empresa que tenha tipo 'composto'
+        const blocos = porEmpresa
+          .filter(x=> x.tipo==='composto')
+          .map(x => `
+            <div class="small muted" style="margin:2px 0 6px">Composição • ${x.empresa}</div>
+            ${renderCompTable(x)}
+          `).join('');
+
+        td.innerHTML = blocos || `<div class="small muted">Sem detalhes de composição.</div>`;
+        trComp.style.display = 'none'; // começa fechado
+        trComp.appendChild(td);
+        tbody.appendChild(trComp);
+
+        // handler do caret
+        const caretBtn = tr.querySelector('.caret-btn');
+        caretBtn.addEventListener('click', () => {
+          const open = caretBtn.getAttribute('aria-expanded') === 'true';
+          caretBtn.setAttribute('aria-expanded', String(!open));
+          trComp.style.display = open ? 'none' : 'table-row';
+        });
+      }
     });
 
     const totalsWrap = document.getElementById('mTotals');
