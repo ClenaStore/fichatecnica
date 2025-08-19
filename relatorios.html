@@ -488,11 +488,20 @@ function atualizarCustos(){
   document.getElementById('k_add').textContent  = fmtBRL(add);
   document.getElementById('k_final').textContent= fmtBRL(final);
 
-  // por unidade de venda
+  // --- corrigido: custo final por unidade de venda ---
   let perUnit = 0;
-  if(TYPE(BASE.unidade)==='mass'){ perUnit = final / ( (BASE.rendimento||0) / 1000 ); } // por kg
-  else if(TYPE(BASE.unidade)==='vol'){ perUnit = final / ( (BASE.rendimento||0) / 1000 ); } // por L
-  else { perUnit = final / (BASE.rendimento||1); } // por un
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+
+  if (rend > 0) {
+    if (u === 'kg' || u === 'l') {
+      perUnit = final / rend;            // já em kg/L
+    } else if (u === 'g' || u === 'ml') {
+      perUnit = final / (rend / 1000);   // g/ml → kg/L
+    } else { // 'un'
+      perUnit = final / rend;
+    }
+  }
 
   document.getElementById('k_final_unit').textContent = fmtBRL(perUnit);
   return perUnit; // devolve p/ preço
@@ -503,13 +512,25 @@ function atualizarPreco(){
   const custoPorUn = atualizarCustos();
   const pvPerUnit = PRECO.perUnit||0;
 
-  let multLote = 1; // p/ converter unitário para lote
-  if(TYPE(BASE.unidade)==='mass'){ multLote = (BASE.rendimento||0) / 1000; } // kg
-  else if(TYPE(BASE.unidade)==='vol'){ multLote = (BASE.rendimento||0) / 1000; } // L
-  else { multLote = (BASE.rendimento||1); } // un
+  // --- corrigido: fator para converter unitário → preço do lote ---
+  let multLote = 1;
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+
+  if (u === 'kg' || u === 'l') {
+    multLote = rend;
+  } else if (u === 'g' || u === 'ml') {
+    multLote = rend / 1000;
+  } else { // un
+    multLote = rend || 1;
+  }
 
   const pvLote = pvPerUnit * multLote;
-  const custoFinalLote = (BASE.total||0) + ( lineValue(ADD.imp.mode,ADD.imp.val,BASE.total) + lineValue(ADD.fix.mode,ADD.fix.val,BASE.total) + lineValue(ADD.op.mode,ADD.op.val,BASE.total) );
+  const custoFinalLote = (BASE.total||0) + (
+    lineValue(ADD.imp.mode,ADD.imp.val,BASE.total) +
+    lineValue(ADD.fix.mode,ADD.fix.val,BASE.total) +
+    lineValue(ADD.op.mode,ADD.op.val,BASE.total)
+  );
 
   const lucro = Math.max(0, pvLote - custoFinalLote);
   const markup = (custoPorUn>0 && pvPerUnit>0) ? (pvPerUnit/custoPorUn) : 0;
@@ -599,9 +620,11 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
 
   let multLote = 1;
   let unidadeUnit = 'un';
-  if(TYPE(BASE.unidade)==='mass'){ multLote = (BASE.rendimento||0)/1000; unidadeUnit='kg'; }
-  else if(TYPE(BASE.unidade)==='vol'){ multLote = (BASE.rendimento||0)/1000; unidadeUnit='L'; }
-  else { multLote = (BASE.rendimento||1); unidadeUnit='un'; }
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+  if (u === 'kg' || u === 'l') { multLote = rend; unidadeUnit = (u==='kg'?'kg':'L'); }
+  else if (u === 'g' || u === 'ml') { multLote = rend/1000; unidadeUnit = (u==='g'?'kg':'L'); }
+  else { multLote = rend || 1; unidadeUnit='un'; }
 
   const pvUnit = PRECO.perUnit||0;
   const pvLote = pvUnit * multLote;
@@ -637,6 +660,26 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(res.ok){ alert('Salvo no PainelPreco ✓'); }
   else { alert('Erro ao salvar: ' + (res.error||'desconhecido')); }
 });
+
+/* ===== CSV Export ===== */
+function exportCSV(){
+  if(!BASE || !Array.isArray(BASE.itens)) return;
+  const head = ['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
+  const rows = BASE.itens.map(r=>[
+    `"${(r.item||'').replace(/"/g,'""')}"`,
+    String(r.qtd||0).replace('.',','),
+    (r.um||'').toUpperCase(),
+    (r.custoUnit||0).toFixed(4).replace('.',','),
+    (r.subtotal||0).toFixed(2).replace('.',',')
+  ]);
+  rows.unshift(head);
+  const csv = rows.map(r=>r.join(';')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`;
+  a.click();
+}
 
 /* ===== BOOT ===== */
 (async function boot(){
