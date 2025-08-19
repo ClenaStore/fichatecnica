@@ -66,13 +66,9 @@
     background:rgba(0,0,0,.18) !important; color:#fff !important; border:1px solid rgba(255,255,255,.35) !important;
   }
   #cardVenda input::placeholder{ color:rgba(255,255,255,.85) }
-  #cardVenda .btn, #cardVenda .btn.ghost, #cardVenda .btn.secondary{
-    color:#fff !important; border-color:rgba(255,255,255,.55) !important;
-  }
-  #cardVenda .btn.ghost:hover{ background:rgba(255,255,255,.12) }
-  #cardVenda strong, #cardVenda .grid-2 > strong{
-    font-size:1.3rem; color:#fff; letter-spacing:.3px
-  }
+  #cardVenda strong, #cardVenda .grid-2 > strong{ font-size:1.3rem; color:#fff; letter-spacing:.3px }
+  /* container final com os botões empilhados (Salvar acima de Limpar) */
+  #pv_actions{ display:flex; flex-direction:column; gap:10px; align-items:flex-end }
   /* ===================================================== */
 
   @media (max-width: 980px){
@@ -216,7 +212,7 @@
   <div class="card" id="cardVenda" style="display:none">
     <div class="grid-2">
       <strong>Formação de preço</strong>
-      <div class="row-actions"><button class="btn" id="btnSalvarPainel">Salvar no Painel</button></div>
+      <div></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div style="grid-column:span 4">
@@ -232,8 +228,12 @@
         </div>
       </div>
     </div>
+
     <div class="warn" id="pv_warn" style="display:none;margin-top:8px">⚠ Valor inválido de margem.</div>
-    <div class="right" style="margin-top:10px">
+
+    <!-- Botões: SALVAR em cima de LIMPAR -->
+    <div id="pv_actions" class="right" style="margin-top:10px">
+      <button class="btn" id="btnSalvarPainel">Salvar no Painel</button>
       <button class="btn ghost" id="btnClear">Limpar valores</button>
     </div>
   </div>
@@ -360,7 +360,7 @@ function selectByIndex(idxInProd){
   const p = PRODUTOS[idxInProd];
   elBusca.value = `${p.item||'(produto)'} — ${p.codigoSistema||'-'}`;
   elTaList.style.display='none';
-  fillProduto(p); // async (não precisamos aguardar)
+  fillProduto(p);
 }
 elTaList.addEventListener('click', e=>{
   const item = e.target.closest('.ta-item');
@@ -373,35 +373,30 @@ function updateActive(){
   if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'});
 }
 
-/* ===== CÁLCULO DA RECEITA ===== */
+/* ===== CÁLCULO: tentar preencher custo de compostos quando vier 0 ===== */
 async function enriquecerComCompostos(prodClonado){
-  // Se algum item vier sem custoUnit (0/NaN), tentamos obter pelo endpoint comparar_ingrediente
   const empresaSel = (prodClonado.empresa || document.getElementById('empresa').value || '').toLowerCase();
   for(const l of (prodClonado.receita||[])){
     const custo = toNumberBR(l.custoUnit);
     if(custo>0) continue;
-
     const nome = l.item || l.nome || '';
     const codigo = l.codigo || '';
     const qtd = toNumberBR(l.qtd) || 1;
     const um  = (l.um||'').toLowerCase();
     if(!nome && !codigo) continue;
-
     try{
       const qs = new URLSearchParams({ action:'comparar_ingrediente', nome, codigo, qtd, um });
       const r  = await fetch(WEBAPP_URL+'?'+qs.toString(), {cache:'no-store'});
       const j  = await r.json();
       if(!(j && j.ok && j.data && Array.isArray(j.data.empresas))) continue;
-
-      // pega preço da mesma empresa, se houver; senão, o menor
       const lista = j.data.empresas;
       let escolha = lista.find(x => (x.empresa||'').toLowerCase() === empresaSel);
       if(!escolha){
         escolha = lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null);
       }
       if(escolha && typeof escolha.custoUnit==='number' && escolha.custoUnit>0){
-        l.custoUnit = escolha.custoUnit;           // custo unitário do ingrediente composto
-        l.priceUm   = (escolha.umPreco || um || 'kg'); // unidade do preço retornado
+        l.custoUnit = escolha.custoUnit;
+        l.priceUm   = (escolha.umPreco || um || 'kg');
       }
     }catch(_){}
   }
@@ -436,7 +431,6 @@ function calcularReceita(prod){
 
 /* ===== ATUALIZA TELAS ===== */
 async function fillProduto(prod){
-  // clona e enriquece (para compostos)
   const prodEnri = JSON.parse(JSON.stringify(prod||{}));
   await enriquecerComCompostos(prodEnri);
 
@@ -530,7 +524,6 @@ function atualizarCustos(){
 function atualizarPreco(){
   const { custoFinalLote, custoUnit } = atualizarCustos();
 
-  // unitário -> lote
   let multLote = 1;
   const u = (BASE.unidade||'').toLowerCase();
   const rend = Number(BASE.rendimento||0);
@@ -622,11 +615,11 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(!PROD){ alert('Selecione um produto na busca.'); return; }
   const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
 
-  atualizarPreco(); // garante cálculo atualizado
+  atualizarPreco();
   const base = BASE.total||0;
-  const impV = lineValue('pct', document.getElementById('v_imp').value, base);
-  const fixV = lineValue('pct', document.getElementById('v_fix').value, base);
-  const opV  = lineValue('pct', document.getElementById('v_op').value,  base);
+  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
   const addTot = impV+fixV+opV;
   const finalLote = base + addTot;
 
@@ -650,11 +643,11 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
     unidadeRend: BASE.unidade||'',
     rendimento: BASE.rendimento||0,
     custoReceitaLote: base,
-    modoImpostos: 'pct',
+    modoImpostos: getRadio('m_imp'),
     valorImpostos: toNumberBR(document.getElementById('v_imp')),
-    modoDespFixa: 'pct',
+    modoDespFixa: getRadio('m_fix'),
     valorDespFixa: toNumberBR(document.getElementById('v_fix')),
-    modoDespOper: 'pct',
+    modoDespOper: getRadio('m_op'),
     valorDespOper: toNumberBR(document.getElementById('v_op')),
     custosAdicionaisLote: addTot,
     custoFinalLote: finalLote,
