@@ -1,274 +1,355 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Análise de Custos & Formação de Preço</title>
 <style>
-:root{
-  --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
-  --brand:#2563eb; --ghost:#374151;
-  --gold:#8b6b00; --gold-2:#6c5200; --gold-border:#b28600;
-}
-*{box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
-h1{margin:0 0 16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-label{font-size:.95rem;color:var(--muted)}
-select,input[type="text"]{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
-.btn{cursor:pointer;border:0;border-radius:12px;padding:10px 16px;background:var(--brand);color:#fff}
-.btn.ghost{background:transparent;border:1px solid var(--ghost)}
-.btn[disabled]{opacity:.6;cursor:default}
-.right{text-align:right}
-.pill{padding:6px 10px;border-radius:999px;border:1px solid var(--ghost);background:#111;font-size:.9rem}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi .box{background:#101014;border:1px solid var(--line);border-radius:12px;padding:12px}
-.kpi .val{font-weight:800;font-size:1.2rem}
-.hr{height:1px;background:var(--line);margin:10px 0}
-.tbl-wrap{overflow:auto;border-radius:10px}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid var(--line);padding:8px;text-align:left;white-space:nowrap}
-th{background:#fff;color:#000;font-weight:700}
-td.right,th.right{text-align:right}
+  :root{
+    --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
+    --brand:#2563eb; --ghost:#374151;
+    --gold-dark:#7a5f00; /* dourado escuro */
+    --gold-edge:#caa43a;
+    --white:#ffffff; --black:#000000;
+  }
+  *{ box-sizing:border-box }
+  body{ font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:24px }
+  h1{ margin:0 0 6px }
+  .muted{ color:var(--muted) }
+  .right{ text-align:right }
 
-/* Typeahead */
-.ta-wrap{position:relative}
-.ta-list{position:absolute;top:100%;left:0;right:0;background:#0f0f10;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.45);max-height:260px;overflow:auto;display:none;z-index:20}
-.ta-item{padding:10px 12px;border-bottom:1px solid #1b1b1b;cursor:pointer}
-.ta-item:last-child{border-bottom:none}
-.ta-item:hover,.ta-item.active{background:#1b1b1b}
-.ta-title{font-weight:700;color:#fff}
-.ta-meta{font-size:.85rem;color:#a3a3a3;margin-left:6px}
+  /* ===== Cabeçalho com LOGO ===== */
+  .app-head{ display:flex; align-items:center; gap:14px; margin-bottom:14px }
+  .logo-wrap{
+    width:160px; height:64px; background:#fff; border:1px dashed #cfcfcf; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .logo-wrap img{ max-width:100%; max-height:100%; display:block }
+  .head-meta{ font-size:.9rem; color:#cfcfcf }
 
-/* bloco dourado */
-#cardVenda{
-  background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%)!important;
-  color:#fff!important;border:1px solid var(--gold-border)!important;
-}
-#cardVenda label,#cardVenda .muted,#cardVenda .warn{color:#fff!important}
-#cardVenda input{background:rgba(0,0,0,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important}
-#cardVenda input::placeholder{color:rgba(255,255,255,.85)}
-#cardVenda .kpi .box{background:rgba(0,0,0,.15)!important;border:1px solid rgba(255,255,255,.25)!important}
-#cardVenda .kpi .val{color:#fff!important;font-size:1.35rem}
-#cardVenda strong{font-size:1.3rem;color:#fff}
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; box-shadow:0 4px 20px rgba(0,0,0,.3) }
+  .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px }
+  label{ font-size:.95rem; color:var(--muted) }
+  select, input[type="text"], input[type="number"]{ width:100%; padding:12px; border-radius:10px; border:1px solid #333; background:#0f0f10; color:#fff }
+  .btn{ cursor:pointer; border:0; border-radius:12px; padding:10px 14px; background:var(--brand); color:#fff }
+  .btn.secondary{ background:#334155 }
+  .btn.ghost{ background:transparent; border:1px solid var(--ghost); color:#fff }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+  .mini{ padding:6px 10px; border-radius:10px }
+  .pill{ padding:6px 10px; border-radius:999px; border:1px solid var(--ghost); background:#111; font-size:.9rem }
+  .stat{ display:flex; gap:10px; flex-wrap:wrap }
+  .stat .pill strong{ color:#fff }
 
-/* detalhes de composto */
-.comp-details{background:#0e0e0e;border:1px solid #2b2b2b;border-radius:10px;padding:8px;margin-top:6px}
-.comp-details summary{cursor:pointer;color:#e5e5e5;font-weight:700}
-.comp-details table{margin-top:6px}
-.comp-details td,.comp-details th{border-color:#2b2b2b}
-.comp-badge{display:inline-block;padding:2px 8px;border:1px solid #555;border-radius:999px;font-size:.75rem;background:#111;color:#ddd;margin-left:6px}
+  table{ width:100%; border-collapse:collapse }
+  th,td{ border:1px solid var(--line); padding:8px; text-align:left; white-space:nowrap }
+  th{ background:#fff; color:#000; font-weight:700 }
+  td.right, th.right{ text-align:right }
+  .tbl-wrap{ overflow:auto; border-radius:10px; }
 
-@media (max-width:980px){
-  .row{grid-template-columns:1fr 1fr}
-  .kpi{grid-template-columns:1fr 1fr}
-}
-@media (max-width:640px){
-  body{padding:14px}
-  .row{grid-template-columns:1fr}
-  .kpi{grid-template-columns:1fr}
-}
+  .kpi{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px }
+  .kpi .box{ background:#101014; border:1px solid var(--line); border-radius:12px; padding:12px }
+  .kpi .val{ font-weight:800; font-size:1.2rem }
+
+  .cost-row{ display:grid; grid-template-columns:150px 130px 1fr 180px; gap:10px; align-items:center }
+  .cost-row .mode{ display:flex; gap:6px; }
+  .hr{ height:1px; background:var(--line); margin:10px 0 }
+  .warn{ color:#ffd78a; font-size:.9rem }
+
+  /* Typeahead */
+  .ta-wrap{ position:relative; }
+  .ta-list{
+    position:absolute; top:100%; left:0; right:0;
+    background:#0f0f10; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    max-height:260px; overflow:auto; display:none; z-index:20;
+  }
+  .ta-item{ padding:10px 12px; border-bottom:1px solid #1b1b1b; cursor:pointer; }
+  .ta-item:last-child{ border-bottom:none }
+  .ta-item:hover, .ta-item.active{ background:#1b1b1b }
+  .ta-title{ font-weight:700; color:#fff }
+  .ta-meta{ font-size:.85rem; color:#a3a3a3; margin-left:6px }
+
+  /* ===== BLOCO "Formação de preço" — dourado escuro com letras brancas GRANDES ===== */
+  #cardVenda{
+    background:linear-gradient(180deg, var(--gold-dark) 0%, #5d4500 100%) !important;
+    color:#fff !important; border:1px solid var(--gold-edge) !important;
+  }
+  #cardVenda label, #cardVenda .muted, #cardVenda .warn{ color:#fff !important; }
+  #cardVenda .kpi .box{
+    background:rgba(0,0,0,.18) !important; border:1px solid rgba(255,255,255,.28) !important;
+  }
+  #cardVenda .kpi .val{ color:#fff !important; font-size:1.45rem; letter-spacing:.2px }
+  #cardVenda input{
+    background:rgba(0,0,0,.22) !important; color:#fff !important; border:1px solid rgba(255,255,255,.45) !important;
+  }
+  #cardVenda input::placeholder{ color:rgba(255,255,255,.9) }
+  #cardVenda strong, #cardVenda .grid-2 > strong{
+    font-size:1.35rem; color:#fff; letter-spacing:.3px
+  }
+  #actionsWrap{ display:flex; gap:10px; justify-content:flex-end; align-items:flex-end; flex-direction:column; }
+  #btnSalvarPainel{ align-self:flex-end; }
+
+  /* ===== Detalhes de compostos ===== */
+  .comp-badge{ display:inline-block; padding:1px 8px; border:1px solid #555; border-radius:999px; font-size:.72rem; background:#111; color:#ddd; margin-left:6px }
+  .det-row td{ background:#0f0f10; border-top:none; }
+  .comp-details{ background:#0e0e0e; border:1px solid #2b2b2b; border-radius:10px; padding:8px; }
+  .comp-details summary{ cursor:pointer; color:#e5e5e5; font-weight:700 }
+  .comp-details table{ margin-top:6px; width:100%; border-collapse:collapse }
+  .comp-details th,.comp-details td{ border:1px solid #2b2b2b; padding:6px; white-space:nowrap }
+  .comp-details .right{ text-align:right }
+
+  /* ===== Impressão em 1 folha ===== */
+  @media print{
+    @page{ size:A4 portrait; margin:10mm }
+    html,body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+    body{ padding:0 }
+    .card{ box-shadow:none; break-inside:avoid; page-break-inside:avoid; margin:8px 0; }
+    .tbl-wrap{ overflow:visible }
+    .no-print{ display:none !important }
+    /* Ajustes para caber melhor */
+    .kpi .val{ font-size:1.05rem }
+    #cardVenda .kpi .val{ font-size:1.15rem }
+  }
+
+  @media (max-width: 980px){
+    .row{ grid-template-columns:1fr 1fr }
+    .kpi{ grid-template-columns:1fr 1fr }
+    .cost-row{ grid-template-columns:1fr 120px 1fr 150px }
+    #cardVenda .kpi .val{ font-size:1.25rem }
+    #actionsWrap{ align-items:stretch }
+  }
+  @media (max-width: 640px){
+    body{ padding:14px }
+    .row{ grid-template-columns:1fr }
+    .kpi{ grid-template-columns:1fr }
+    .cost-row{ grid-template-columns:1fr 1fr }
+  }
 </style>
 </head>
 <body>
-<h1>Análise de Custos & Formação de Preço</h1>
 
-<!-- Filtros -->
-<div class="card">
-  <div class="row">
-    <div style="grid-column:span 3">
-      <label>Empresa</label>
-      <select id="empresa"></select>
-      <div class="muted" id="infoEmpresa"></div>
-    </div>
-
-    <div style="grid-column:span 9" class="ta-wrap">
-      <label>Produto (busca por nome/código)</label>
-      <input id="busca" type="text" placeholder="Ex.: Bolo, 102, P-001..." autocomplete="off">
-      <div id="ta_list" class="ta-list"></div>
-    </div>
-
-    <div style="grid-column:span 4">
-      <label>Usuário (opcional)</label>
-      <input id="usuario" type="text" placeholder="Seu nome/login">
+  <!-- Cabeçalho com LOGO -->
+  <div class="app-head">
+    <!-- Substitua o src abaixo pela sua logo -->
+    <div class="logo-wrap"><img id="logo" src="" alt="Logo"></div>
+    <div>
+      <h1>Análise de Custos & Formação de Preço</h1>
+      <div class="head-meta">Relatório organizado em folha única</div>
     </div>
   </div>
-  <div class="right" style="margin-top:10px">
-    <button class="btn ghost" id="btnReload">Recarregar</button>
-    <a class="btn ghost" href="./">← Cadastro</a>
-  </div>
-</div>
 
-<!-- Cabeçalho -->
-<div class="card" id="cardProd" style="display:none">
-  <div class="row">
-    <div style="grid-column:span 6">
-      <div class="muted">Produto</div>
-      <div id="p_nome" style="font-size:1.1rem;font-weight:700">—</div>
-      <div class="muted" id="p_meta">—</div>
+  <!-- Filtros -->
+  <div class="card no-print">
+    <div class="row">
+      <div style="grid-column:span 3">
+        <label>Empresa</label>
+        <select id="empresa"></select>
+        <div class="muted" id="infoEmpresa"></div>
+      </div>
+
+      <!-- Busca única (nome/código) com autocomplete -->
+      <div style="grid-column:span 9" class="ta-wrap">
+        <label>Produto (busca por nome/código)</label>
+        <input id="busca" type="text" placeholder="Ex.: Bolo, 102, P-001..." autocomplete="off">
+        <div id="ta_list" class="ta-list"></div>
+      </div>
+
+      <div style="grid-column:span 4">
+        <label>Usuário (opcional)</label>
+        <input id="usuario" type="text" placeholder="Seu nome/login">
+      </div>
     </div>
-    <div style="grid-column:span 6">
-      <div class="kpi">
-        <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
-        <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
-        <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
-        <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
+    <div class="row-actions" style="margin-top:10px">
+      <button class="btn secondary" id="btnReload">Recarregar</button>
+      <a class="btn ghost" href="./">← Cadastro</a>
+    </div>
+  </div>
+
+  <!-- Cabeçalho do produto -->
+  <div class="card" id="cardProd" style="display:none">
+    <div class="row">
+      <div style="grid-column:span 6">
+        <div class="muted">Produto</div>
+        <div id="p_nome" style="font-size:1.1rem;font-weight:700">—</div>
+        <div class="muted" id="p_meta">—</div>
+      </div>
+      <div style="grid-column:span 6">
+        <div class="kpi">
+          <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
+          <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
+          <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
+          <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Receita -->
-<div class="card" id="cardRec" style="display:none">
-  <div class="row">
-    <div><strong>Composição da receita</strong> <span class="muted">(subtotais recalculados)</span></div>
-    <div class="right">
-      <button class="btn ghost" id="btnCSV">Exportar CSV</button>
-      <button class="btn ghost" onclick="window.print()">Imprimir</button>
-    </div>
-  </div>
-  <div class="tbl-wrap" style="margin-top:8px">
-    <table>
-      <thead>
-        <tr>
-          <th>Item</th><th class="right">Qtd</th><th>U.M.</th><th class="right">Custo Unit. (R$)</th><th class="right">Subtotal (R$)</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-  <div class="pill" style="margin-top:8px">Itens: <strong id="s_itens">0</strong></div>
-  <div class="pill">Custo da Receita: <strong id="s_total">R$ 0,00</strong></div>
-  <div class="pill">Custo por g/ml: <strong id="s_gml">R$ 0,0000</strong></div>
-  <div class="pill">Custo por kg/L: <strong id="s_kgl">R$ 0,00</strong></div>
-</div>
-
-<!-- Custos adicionais -->
-<div class="card" id="cardCusto" style="display:none">
-  <div class="row"><strong>Custos adicionais</strong><div class="right"><span class="muted">(% aplicados sobre o custo da receita)</span></div></div>
-  <div class="hr"></div>
-  <div class="row">
-    <div style="grid-column:span 6">
-      <label>Impostos</label><br>
-      <label><input type="radio" name="m_imp" value="pct" checked> %</label> &nbsp;
-      <label><input type="radio" name="m_imp" value="abs"> R$</label>
-      <input id="v_imp" type="text" placeholder="Ex.: 12,5 ou 100,00" style="margin-top:6px">
-    </div>
-    <div style="grid-column:span 6" class="right"><span class="muted">Valor:</span> <strong id="r_imp">R$ 0,00</strong></div>
-
-    <div style="grid-column:span 6;margin-top:10px">
-      <label>Despesa Fixa</label><br>
-      <label><input type="radio" name="m_fix" value="pct" checked> %</label> &nbsp;
-      <label><input type="radio" name="m_fix" value="abs"> R$</label>
-      <input id="v_fix" type="text" placeholder="Ex.: 5 ou 80,00" style="margin-top:6px">
-    </div>
-    <div style="grid-column:span 6;margin-top:10px" class="right"><span class="muted">Valor:</span> <strong id="r_fix">R$ 0,00</strong></div>
-
-    <div style="grid-column:span 6;margin-top:10px">
-      <label>Despesa Operacional</label><br>
-      <label><input type="radio" name="m_op" value="pct" checked> %</label> &nbsp;
-      <label><input type="radio" name="m_op" value="abs"> R$</label>
-      <input id="v_op" type="text" placeholder="Ex.: 7,5 ou 50,00" style="margin-top:6px">
-    </div>
-    <div style="grid-column:span 6;margin-top:10px" class="right"><span class="muted">Valor:</span> <strong id="r_op">R$ 0,00</strong></div>
-  </div>
-
-  <div class="hr"></div>
-  <div class="kpi">
-    <div class="box"><div class="muted">Custo da Receita (lote)</div><div class="val" id="k_base">—</div></div>
-    <div class="box"><div class="muted">Custos Adicionais</div><div class="val" id="k_add">—</div></div>
-    <div class="box"><div class="muted">Custo Final (lote)</div><div class="val" id="k_final">—</div></div>
-    <div class="box"><div class="muted" id="kf_label">Custo Final por —</div><div class="val" id="k_final_unit">—</div></div>
-  </div>
-</div>
-
-<!-- Formação de preço -->
-<div class="card" id="cardVenda" style="display:none">
-  <div class="row">
-    <strong>Formação de preço</strong>
-  </div>
-  <div class="row" style="margin-top:10px">
-    <div style="grid-column:span 4">
-      <label>Margem de lucro (%)</label>
-      <input id="pv_input" type="text" placeholder="Ex.: 40">
-      <div class="muted" id="pv_hint">Base: —</div>
-    </div>
-    <div style="grid-column:span 8">
-      <div class="kpi">
-        <div class="box"><div class="muted">Preço de venda (lote)</div><div class="val" id="pv_lote">—</div></div>
-        <div class="box"><div class="muted">Markup</div><div class="val" id="pv_markup">—</div></div>
-        <div class="box"><div class="muted">Lucro (lote)</div><div class="val" id="pv_lucro">—</div></div>
+  <!-- Receita -->
+  <div class="card" id="cardRec" style="display:none">
+    <div class="grid-2">
+      <div><strong>Composição da receita</strong> <span class="muted">(subtotais recalculados)</span></div>
+      <div class="right no-print">
+        <button class="btn ghost mini" id="btnCSV">Exportar CSV</button>
+        <button class="btn ghost mini" onclick="window.print()">Imprimir</button>
       </div>
     </div>
+    <div class="tbl-wrap" style="margin-top:8px">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>Item</th><th class="right">Qtd</th><th>U.M.</th><th class="right">Custo Unit. (R$)</th><th class="right">Subtotal (R$)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="stat" style="margin-top:8px">
+      <span class="pill">Itens: <strong id="s_itens">0</strong></span>
+      <span class="pill">Custo da Receita: <strong id="s_total">R$ 0,00</strong></span>
+      <span class="pill">Custo por g/ml: <strong id="s_gml">R$ 0,0000</strong></span>
+      <span class="pill">Custo por kg/L: <strong id="s_kgl">R$ 0,00</strong></span>
+    </div>
   </div>
-  <div class="warn" id="pv_warn" style="display:none;margin-top:8px">⚠ Informe uma margem válida (ex.: 30).</div>
-  <div class="right" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-    <button class="btn" id="btnSalvarPainel">Salvar no Painel</button>
-    <button class="btn ghost" id="btnClear">Limpar valores</button>
+
+  <!-- Custos extras -->
+  <div class="card" id="cardCusto" style="display:none">
+    <div class="grid-2">
+      <strong>Custos adicionais</strong>
+      <div class="right"><span class="muted">(% aplicados sobre o custo da receita)</span></div>
+    </div>
+    <div class="hr"></div>
+
+    <div class="cost-row">
+      <div class="muted">Impostos</div>
+      <div class="mode">
+        <label><input type="radio" name="m_imp" value="pct" checked> %</label>
+        <label><input type="radio" name="m_imp" value="abs"> R$</label>
+      </div>
+      <input id="v_imp" type="text" placeholder="Ex.: 12,5 ou 100,00">
+      <div class="right"><span class="muted">Valor:</span> <strong id="r_imp">R$ 0,00</strong></div>
+    </div>
+
+    <div class="cost-row">
+      <div class="muted">Despesa Fixa</div>
+      <div class="mode">
+        <label><input type="radio" name="m_fix" value="pct" checked> %</label>
+        <label><input type="radio" name="m_fix" value="abs"> R$</label>
+      </div>
+      <input id="v_fix" type="text" placeholder="Ex.: 5 ou 80,00">
+      <div class="right"><span class="muted">Valor:</span> <strong id="r_fix">R$ 0,00</strong></div>
+    </div>
+
+    <div class="cost-row">
+      <div class="muted">Despesa Operacional</div>
+      <div class="mode">
+        <label><input type="radio" name="m_op" value="pct" checked> %</label>
+        <label><input type="radio" name="m_op" value="abs"> R$</label>
+      </div>
+      <input id="v_op" type="text" placeholder="Ex.: 7,5 ou 50,00">
+      <div class="right"><span class="muted">Valor:</span> <strong id="r_op">R$ 0,00</strong></div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="kpi">
+      <div class="box"><div class="muted">Custo da Receita (lote)</div><div class="val" id="k_base">—</div></div>
+      <div class="box"><div class="muted">Custos Adicionais</div><div class="val" id="k_add">—</div></div>
+      <div class="box"><div class="muted">Custo Final (lote)</div><div class="val" id="k_final">—</div></div>
+      <div class="box"><div class="muted" id="kf_label">Custo Final por —</div><div class="val" id="k_final_unit">—</div></div>
+    </div>
   </div>
-</div>
+
+  <!-- Formação de preço (por Margem) -->
+  <div class="card" id="cardVenda" style="display:none">
+    <div class="grid-2">
+      <strong>Formação de preço</strong>
+      <div id="actionsWrap" class="no-print">
+        <button class="btn" id="btnSalvarPainel">Salvar no Painel</button>
+        <button class="btn ghost" id="btnClear">Limpar valores</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div style="grid-column:span 4">
+        <label id="pv_label">Margem de lucro (%)</label>
+        <input id="pv_input" type="text" placeholder="Ex.: 40">
+        <div class="muted small" id="pv_hint">Base: —</div>
+      </div>
+      <div style="grid-column:span 8">
+        <div class="kpi">
+          <div class="box"><div class="muted">Preço de venda (lote)</div><div class="val" id="pv_lote">—</div></div>
+          <div class="box"><div class="muted">Markup</div><div class="val" id="pv_markup">—</div></div>
+          <div class="box"><div class="muted">Lucro (lote)</div><div class="val" id="pv_lucro">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="warn" id="pv_warn" style="display:none;margin-top:8px">⚠ Valor inválido de margem.</div>
+  </div>
 
 <script>
-/* ====== CONFIG ====== */
+/* ===== CONFIG ===== */
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwe_QlzOzFM7jExmSF0ftci2aL_Lw8xw73-0UdyCTi8KAQF4uwAjRopbx2dbkgXfXr6/exec';
 const DEFAULT_EMPRESAS = ['Mercatto','Padaria'];
 
-/* ====== Helpers ====== */
+/* ===== FORMATOS ===== */
 const fmtBRL = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const FACTOR = { g:1, kg:1000, ml:1, l:1000, un:1 };
 const TYPE   = u => (u==='g'||u==='kg')?'mass' : (u==='ml'||u==='l')?'vol' : 'count';
 function convertQty(qty, from, to){
   from = (from||'').toLowerCase(); to = (to||'').toLowerCase();
-  if(!FACTOR[from] || !FACTOR[to]) return qty;
-  if(TYPE(from)!==TYPE(to)) return NaN;
-  return qty*(FACTOR[from]/FACTOR[to]);
+  if(!FACTOR[from] || !FACTOR[to]) return qty; if(TYPE(from) !== TYPE(to)) return NaN;
+  return qty * (FACTOR[from] / FACTOR[to]);
 }
 function toNumberBR(val){
-  if(typeof val==='number') return Number.isFinite(val)?val:0;
-  if(val && val.nodeType===1 && typeof val.value!=='undefined') val = val.value;
+  if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+  if (val && val.nodeType === 1 && typeof val.value !== 'undefined') val = val.value;
   val = String(val ?? '').trim();
   const hasC = val.includes(','), hasD = val.includes('.');
-  if(hasC && hasD) val = val.replace(/\./g,'').replace(',', '.');
-  else if(hasC)    val = val.replace(',', '.');
+  if (hasC && hasD) val = val.replace(/\./g,'').replace(',', '.');
+  else if (hasC)    val = val.replace(',', '.');
   const n = parseFloat(val);
-  return Number.isFinite(n)?n:0;
+  return Number.isFinite(n) ? n : 0;
 }
 const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 
-/* ====== Estado ====== */
+/* ===== ESTADO ===== */
 let EMPRESAS=[], PRODUTOS=[], PROD=null;
 let BASE = { total:0, gml:0, kgl:0, rendimento:0, unidade:'', itens:[] };
 let ADD = { imp:{mode:'pct', val:0}, fix:{mode:'pct', val:0}, op:{mode:'pct', val:0} };
-let MARGEM = 0;
+let MARGEM = 0; // % desejada
 
-/* ====== DOM ====== */
+/* ===== ELEMENTOS ===== */
 const elEmpresa = document.getElementById('empresa');
 const elBusca   = document.getElementById('busca');
 const elTaList  = document.getElementById('ta_list');
 const elTbody   = document.getElementById('tbody');
 
-/* ====== Backend ====== */
+/* ===== BACKEND ===== */
 async function fetchEmpresas(){
   try{
-    const r = await fetch(WEBAPP_URL+'?action=empresas'); const j = await r.json();
+    const r = await fetch(WEBAPP_URL+'?action=empresas');
+    const j = await r.json();
     EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : DEFAULT_EMPRESAS.slice();
   }catch{ EMPRESAS = DEFAULT_EMPRESAS.slice(); }
   elEmpresa.innerHTML = '';
   const o0 = document.createElement('option'); o0.value=''; o0.textContent='— selecione —'; elEmpresa.appendChild(o0);
   EMPRESAS.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; elEmpresa.appendChild(o); });
 }
+
 async function fetchProdutos(empresa){
   const url = WEBAPP_URL+'?action=produtos&empresa='+encodeURIComponent(empresa||'')+'&ts='+Date.now();
   try{
-    const r = await fetch(url,{cache:'no-store'}); const j = await r.json();
-    if(!j.ok) throw new Error(j.error||'erro'); PRODUTOS = Array.isArray(j.data)?j.data:[];
+    const r = await fetch(url, {cache:'no-store'});
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'erro');
+    PRODUTOS = Array.isArray(j.data) ? j.data : [];
     document.getElementById('infoEmpresa').textContent = `Produtos: ${PRODUTOS.length}`;
   }catch(e){
-    PRODUTOS=[]; document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.'; console.warn(e);
+    PRODUTOS = [];
+    document.getElementById('infoEmpresa').textContent = 'Não foi possível carregar produtos.';
+    console.warn('fetchProdutos:', e);
   }
   renderSugestoes();
 }
+
 async function fetchPrecoSalvo(prod){
   const params = new URLSearchParams({
     action:'preco_get',
@@ -278,106 +359,165 @@ async function fetchPrecoSalvo(prod){
     item:    prod.item||''
   });
   try{
-    const r = await fetch(WEBAPP_URL+'?'+params.toString(),{cache:'no-store'});
-    const j = await r.json(); if(!j.ok || !j.data) return null; return j.data;
+    const r = await fetch(WEBAPP_URL+'?'+params.toString(), {cache:'no-store'});
+    const j = await r.json();
+    if(!j.ok || !j.data) return null;
+    return j.data;
   }catch{ return null; }
 }
 
-/* ====== Busca / typeahead ====== */
-let taActive=-1;
+async function salvarPrecoPainel(payload){
+  const r = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const txt = await r.text();
+  try{ return JSON.parse(txt); }catch{ return {ok:false, error:'Resposta não-JSON: '+txt}; }
+}
+
+/* ===== BUSCA / TYPEAHEAD ===== */
+let taActive = -1;
 function buscar(q){
-  const s = norm(q); if(!s) return [];
+  const s = norm(q);
+  if(!s) return [];
   return PRODUTOS.filter(p=>{
-    const n = norm(p.item); const c1 = String(p.codigoSistema||'').toLowerCase(); const c2 = String(p.numero||'').toLowerCase();
-    return n.includes(s)||c1.includes(s)||c2.includes(s);
+    const n = norm(p.item);
+    const c1 = String(p.codigoSistema||'').toLowerCase();
+    const c2 = String(p.numero||'').toLowerCase();
+    return n.includes(s) || c1.includes(s) || c2.includes(s);
   }).slice(0,50);
 }
 function renderSugestoes(){
-  const q=elBusca.value.trim(); const list=buscar(q);
-  if(!q||!list.length){ elTaList.style.display='none'; elTaList.innerHTML=''; taActive=-1; return; }
-  elTaList.innerHTML=list.map(p=>{
-    const idx=PRODUTOS.indexOf(p); const meta=[p.codigoSistema||'-', (p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
+  const q = elBusca.value.trim();
+  const list = buscar(q);
+  if(!q || !list.length){ elTaList.style.display='none'; elTaList.innerHTML=''; taActive=-1; return; }
+
+  elTaList.innerHTML = list.map(p=>{
+    const idx = PRODUTOS.indexOf(p);
+    const meta = [p.codigoSistema||'-', (p.numero ? ('Nº '+p.numero) : '')].filter(Boolean).join(' • ');
     return `<div class="ta-item" data-idx="${idx}"><span class="ta-title">${p.item||'(produto)'}</span><span class="ta-meta">— ${meta}</span></div>`;
   }).join('');
-  elTaList.style.display='block'; taActive=-1;
+  elTaList.style.display='block';
+  taActive = -1;
 }
-function selectByIndex(idx){ if(isNaN(idx)||idx<0||!PRODUTOS[idx]) return; const p=PRODUTOS[idx]; elBusca.value=`${p.item} — ${p.codigoSistema||'-'}`; elTaList.style.display='none'; fillProduto(p); }
-elTaList.addEventListener('click',e=>{const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));});
-function updateActive(){ const items=[...elTaList.querySelectorAll('.ta-item')]; items.forEach((el,i)=>el.classList.toggle('active',i===taActive)); if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'}); }
+function selectByIndex(idxInProd){
+  if(isNaN(idxInProd) || idxInProd<0 || !PRODUTOS[idxInProd]) return;
+  const p = PRODUTOS[idxInProd];
+  elBusca.value = `${p.item||'(produto)'} — ${p.codigoSistema||'-'}`;
+  elTaList.style.display='none';
+  fillProduto(p);
+}
+elTaList.addEventListener('click', e=>{
+  const item = e.target.closest('.ta-item');
+  if(!item) return;
+  selectByIndex(Number(item.dataset.idx));
+});
+function updateActive(){
+  const items = [...elTaList.querySelectorAll('.ta-item')];
+  items.forEach((el,i)=> el.classList.toggle('active', i===taActive));
+  if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'});
+}
 
-/* ====== Compostos: enriquecer linhas sem custo ====== */
-async function enriquecerComCompostos(prod){
-  const emp = (prod.empresa||elEmpresa.value||'').toLowerCase();
-  for(const l of (prod.receita||[])){
+/* ===== CÁLCULO DA RECEITA (com custo e DETALHES de compostos) ===== */
+async function enriquecerComCompostos(prodClonado){
+  const empresaSel = (prodClonado.empresa || document.getElementById('empresa').value || '').toLowerCase();
+  for(const l of (prodClonado.receita||[])){
     const custo = toNumberBR(l.custoUnit);
-    if(custo>0) continue;
-    const nome = l.item||l.nome||''; const codigo = l.codigo||''; const qtd = toNumberBR(l.qtd)||1; const um = (l.um||'').toLowerCase();
-    if(!nome && !codigo) continue;
-    try{
-      const qs = new URLSearchParams({action:'comparar_ingrediente',nome,codigo,qtd,um});
-      const r = await fetch(WEBAPP_URL+'?'+qs.toString(),{cache:'no-store'}); const j = await r.json();
-      if(!(j?.ok && j.data?.empresas)) continue;
-      const lista = j.data.empresas;
-      let esc = lista.find(x => (x.empresa||'').toLowerCase()===emp) || null;
-      if(!esc){ esc = lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null); }
-      if(esc && typeof esc.custoUnit==='number' && esc.custoUnit>0){
-        l.custoUnit = esc.custoUnit;
-        l.priceUm   = (esc.umPreco || l.um || 'kg');
-        l._compInfo = { tipo: esc.tipo, total: esc.compTotal ?? esc.custoUnit, umPreco: esc.umPreco, filhos: esc.comp||[] };
-      }
-    }catch(_){}
+    const nome  = l.item || l.nome || '';
+    const codigo= l.codigo || '';
+    const qtd   = toNumberBR(l.qtd) || 1;
+    const um    = (l.um||'').toLowerCase();
+    if((!custo || custo<=0) && (nome || codigo)){
+      try{
+        const qs = new URLSearchParams({ action:'comparar_ingrediente', nome, codigo, qtd, um });
+        const r  = await fetch(WEBAPP_URL+'?'+qs.toString(), {cache:'no-store'});
+        const j  = await r.json();
+        if(!(j && j.ok && j.data && Array.isArray(j.data.empresas))) continue;
+        const lista = j.data.empresas;
+        let escolha = lista.find(x => (x.empresa||'').toLowerCase() === empresaSel);
+        if(!escolha){
+          escolha = lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null);
+        }
+        if(escolha && typeof escolha.custoUnit==='number' && escolha.custoUnit>0){
+          l.custoUnit = escolha.custoUnit;
+          l.priceUm   = (escolha.umPreco || um || 'kg');
+          // guarda detalhes se composto
+          if(String(escolha.tipo||'')==='composto' && Array.isArray(escolha.comp)){
+            l._compInfo = {
+              tipo:'composto',
+              total: Number(escolha.compTotal ?? escolha.custoUnit || 0),
+              umPreco: String(escolha.umPreco||'').toLowerCase(),
+              filhos: escolha.comp.map(f=>({
+                nome: f.nome||'',
+                qtdComp: Number(f.qtdComp||0),
+                umComp: String(f.umComp||'').toLowerCase(),
+                qtdConvertida: (f.qtdConvertida==null?null:Number(f.qtdConvertida)),
+                umPreco: String(f.umPreco||'').toLowerCase(),
+                custoUnit: Number(f.custoUnit||0),
+                valor: Number(f.valor||0)
+              }))
+            };
+          }
+        }
+      }catch(_){}
+    }
   }
 }
 
-/* ====== Calcular receita ====== */
 function calcularReceita(prod){
   const linhas = Array.isArray(prod?.receita)? prod.receita : [];
-  const itens=[]; let total=0;
+  const itens = [];
+  let total = 0;
   linhas.forEach(l=>{
     const qtd = toNumberBR(l.qtd);
-    const umLinha=(l.um||'').toLowerCase();
-    const umPreco=(l.priceUm||l.um||'').toLowerCase();
+    const umLinha = (l.um||'').toLowerCase();
+    const umPreco = (l.priceUm||l.um||'').toLowerCase();
     const custo = toNumberBR(l.custoUnit);
     const conv = convertQty(qtd, umLinha, umPreco);
     const subtotal = (isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
     itens.push({
       item:l.item||l.nome||l.codigo||'(ing.)',
       qtd, um:umLinha, custoUnit:custo, subtotal,
-      comp: (l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)? l._compInfo : null
+      comp: (l._compInfo && l._compInfo.tipo==='composto' && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)? l._compInfo : null
     });
     total += subtotal;
   });
 
   const rend = toNumberBR(prod?.rendimento);
-  const u    = (prod?.unidadeRend||'').toLowerCase();
-  let gml=0,kgl=0;
-  const toBase = uu => uu==='kg'?1000 : uu==='l'?1000 : 1;
+  const u = (prod?.unidadeRend||'').toLowerCase();
+  let custoGml=0, custoKgL=0;
+  const toBase = uu => uu==='kg' ? 1000 : uu==='l' ? 1000 : 1;
   if(['g','kg','ml','l'].includes(u) && rend>0){
-    const emBase = rend*toBase(u); gml = total/emBase; kgl= total/(emBase/1000);
+    const emBase = rend * toBase(u);
+    custoGml = total / emBase;
+    custoKgL = total / (emBase/1000);
   }
-  return { itens, total, gml, kgl, rendimento:rend, unidade:u };
+
+  return { itens, total, gml:custoGml, kgl:custoKgL, rendimento:rend, unidade:u };
 }
 
-/* ====== Preenche telas ====== */
-async function fillProduto(raw){
-  const prod = JSON.parse(JSON.stringify(raw||{}));
-  await enriquecerComCompostos(prod);
+/* ===== ATUALIZA TELAS ===== */
+async function fillProduto(prod){
+  // clona e enriquece (para compostos sem custo) e com DETALHES
+  const prodEnri = JSON.parse(JSON.stringify(prod||{}));
+  await enriquecerComCompostos(prodEnri);
 
-  PROD = prod;
-  const calc = calcularReceita(prod); BASE=calc;
+  PROD = prodEnri;
+  const calc = calcularReceita(prodEnri);
+  BASE = calc;
 
-  // header
-  document.getElementById('p_nome').textContent = prod.item||'(produto)';
-  document.getElementById('p_meta').textContent = `${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+  document.getElementById('p_nome').textContent = prodEnri.item || '(produto)';
+  document.getElementById('p_meta').textContent =
+    `${prodEnri.codigoSistema||'-'} • Nº ${prodEnri.numero||'-'} • ${prodEnri.classificacao||'-'}`;
   document.getElementById('k_rend').textContent = `${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
   document.getElementById('k_custoRec').textContent = fmtBRL(calc.total);
-  document.getElementById('k_custoGml').textContent = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('k_custoGml').textContent = 'R$ ' + (calc.gml||0).toFixed(4).replace('.',',');
   document.getElementById('k_custoKgL').textContent = fmtBRL(calc.kgl);
 
-  // tabela de receita + detalhes de compostos
-  elTbody.innerHTML='';
+  elTbody.innerHTML = '';
   calc.itens.forEach(r=>{
-    const tr=document.createElement('tr');
+    const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
       <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
@@ -386,30 +526,40 @@ async function fillProduto(raw){
       <td class="right">${fmtBRL(r.subtotal)}</td>`;
     elTbody.appendChild(tr);
 
+    // Linha de DETALHES quando composto
     if(r.comp){
-      const det=document.createElement('tr');
+      const det = document.createElement('tr');
+      det.className = 'det-row';
       det.innerHTML = `<td colspan="5">
         <details class="comp-details">
-          <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
+          <summary>Detalhes do composto (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
           <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th>
-              <th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th>
-            </tr></thead>
-            <tbody>
-              ${r.comp.filhos.map(f=>`
+            <table>
+              <thead>
                 <tr>
-                  <td>${f.nome||''}</td>
-                  <td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umComp||'').toUpperCase()}</td>
-                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umPreco||'').toUpperCase()}</td>
-                  <td class="right">${fmtBRL(f.custoUnit||0)}</td>
-                  <td class="right">${fmtBRL(f.valor||0)}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
+                  <th>Ingrediente</th>
+                  <th class="right">Qtd (comp.)</th>
+                  <th>U.M.</th>
+                  <th class="right">Conv. → preço</th>
+                  <th>U.M. preço</th>
+                  <th class="right">Custo unit.</th>
+                  <th class="right">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${r.comp.filhos.map(f=>`
+                  <tr>
+                    <td>${f.nome||''}</td>
+                    <td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td>
+                    <td>${(f.umComp||'').toUpperCase()}</td>
+                    <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td>
+                    <td>${(f.umPreco||'').toUpperCase()}</td>
+                    <td class="right">${fmtBRL(f.custoUnit||0)}</td>
+                    <td class="right">${fmtBRL(f.valor||0)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
         </details>
       </td>`;
@@ -418,113 +568,141 @@ async function fillProduto(raw){
   });
   document.getElementById('s_itens').textContent = calc.itens.length;
   document.getElementById('s_total').textContent = fmtBRL(calc.total);
-  document.getElementById('s_gml').textContent  = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('s_kgl').textContent  = fmtBRL(calc.kgl);
+  document.getElementById('s_gml').textContent = 'R$ ' + (calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('s_kgl').textContent = fmtBRL(calc.kgl);
 
-  let unidadeVenda='un';
-  if(TYPE(calc.unidade)==='mass') unidadeVenda='kg';
-  else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
+  let unidadeVenda = 'un';
+  if(TYPE(calc.unidade)==='mass') unidadeVenda = 'kg';
+  else if(TYPE(calc.unidade)==='vol') unidadeVenda = 'L';
   document.getElementById('kf_label').textContent = `Custo Final por ${unidadeVenda}`;
   document.getElementById('pv_hint').textContent  = `Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
 
-  MARGEM=0; document.getElementById('pv_input').value='';
+  MARGEM = 0;
+  document.getElementById('pv_input').value = '';
 
-  // mostrar cards
-  document.getElementById('cardProd').style.display='block';
-  document.getElementById('cardRec').style.display='block';
-  document.getElementById('cardCusto').style.display='block';
-  document.getElementById('cardVenda').style.display='block';
+  document.getElementById('cardProd').style.display = 'block';
+  document.getElementById('cardRec').style.display  = 'block';
+  document.getElementById('cardCusto').style.display= 'block';
+  document.getElementById('cardVenda').style.display= 'block';
 
-  // carregar preço salvo (se houver)
   (async ()=>{
-    const saved = await fetchPrecoSalvo(prod);
-    if(saved && typeof saved.margemPerc==='number'){ MARGEM=saved.margemPerc; document.getElementById('pv_input').value=String(MARGEM).replace('.',','); }
+    const saved = await fetchPrecoSalvo(prodEnri);
+    if(saved && typeof saved.margemPerc==='number'){
+      MARGEM = saved.margemPerc;
+      document.getElementById('pv_input').value = String(MARGEM).replace('.',',');
+    }
     atualizarPreco();
   })();
 }
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
-function lineValue(mode, rawVal, base){ const v=toNumberBR(rawVal); return mode==='pct' ? base*(v/100) : v; }
+function lineValue(mode, rawVal, base){
+  const v = toNumberBR(rawVal);
+  if(mode==='pct') return base * (v/100);
+  return v;
+}
 
-/* ====== Custos + Preço ====== */
 function atualizarCustos(){
   const base = BASE.total||0;
 
-  ADD.imp.mode = getRadio('m_imp'); ADD.fix.mode=getRadio('m_fix'); ADD.op.mode=getRadio('m_op');
-  const impV = lineValue(ADD.imp.mode, document.getElementById('v_imp').value, base);
-  const fixV = lineValue(ADD.fix.mode, document.getElementById('v_fix').value, base);
-  const opV  = lineValue(ADD.op.mode,  document.getElementById('v_op').value,  base);
-  const add  = impV+fixV+opV;
-  const final= base+add;
+  ADD.imp.mode = getRadio('m_imp'); ADD.imp.val = document.getElementById('v_imp').value;
+  ADD.fix.mode = getRadio('m_fix'); ADD.fix.val = document.getElementById('v_fix').value;
+  ADD.op.mode  = getRadio('m_op');  ADD.op.val  = document.getElementById('v_op').value;
 
-  document.getElementById('r_imp').textContent=fmtBRL(impV);
-  document.getElementById('r_fix').textContent=fmtBRL(fixV);
-  document.getElementById('r_op').textContent =fmtBRL(opV);
+  const impV = lineValue(ADD.imp.mode, ADD.imp.val, base);
+  const fixV = lineValue(ADD.fix.mode, ADD.fix.val, base);
+  const opV  = lineValue(ADD.op.mode,  ADD.op.val,  base);
+  const add  = impV + fixV + opV;
+  const final= base + add;
 
+  document.getElementById('r_imp').textContent = fmtBRL(impV);
+  document.getElementById('r_fix').textContent = fmtBRL(fixV);
+  document.getElementById('r_op').textContent  = fmtBRL(opV);
   document.getElementById('k_base').textContent = fmtBRL(base);
   document.getElementById('k_add').textContent  = fmtBRL(add);
   document.getElementById('k_final').textContent= fmtBRL(final);
 
-  let perUnit=0; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-  if(rend>0){
-    if(u==='kg'||u==='l') perUnit = final/rend;
-    else if(u==='g'||u==='ml') perUnit = final/(rend/1000);
-    else perUnit = final/rend;
+  let perUnit = 0;
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+  if (rend > 0) {
+    if (u === 'kg' || u === 'l') perUnit = final / rend;
+    else if (u === 'g' || u === 'ml') perUnit = final / (rend / 1000);
+    else perUnit = final / rend;
   }
+
   document.getElementById('k_final_unit').textContent = fmtBRL(perUnit);
   return { custoFinalLote: final, custoUnit: perUnit };
 }
 
 function atualizarPreco(){
-  const {custoFinalLote,custoUnit} = atualizarCustos();
+  const { custoFinalLote, custoUnit } = atualizarCustos();
 
-  // unitário -> lote
-  let multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-  if(u==='kg'||u==='l') multLote=rend; else if(u==='g'||u==='ml') multLote=rend/1000; else multLote=rend||1;
+  // fator para converter unitário -> lote
+  let multLote = 1;
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+  if (u === 'kg' || u === 'l') multLote = rend;
+  else if (u === 'g' || u === 'ml') multLote = rend / 1000;
+  else multLote = rend || 1;
 
-  let m = Number(MARGEM)||0; const warn=document.getElementById('pv_warn');
-  if(m<0){ m=0; } warn.style.display = (!isFinite(m) || m<0) ? 'block':'none';
+  // MARGEM modo "custo + % aplicada"
+  let m = Number(MARGEM)||0;
+  const warn = document.getElementById('pv_warn');
+  if(m < 0){ m = 0; warn.style.display='block'; }
+  else { warn.style.display='none'; }
 
-  // *** Margem no seu formato: Preço = Custo × (1 + m/100)
-  const pvLote = custoFinalLote * (1 + m/100);
-  const pvPerUnit = pvLote / (multLote||1);
+  // Preço = custoFinalLote * (1 + m/100)
+  const fator = 1 + (m/100);
+  const pvLote = custoFinalLote * fator;
+  const pvPerUnit = pvLote / (multLote || 1);
 
-  const markup = (custoUnit>0 && pvPerUnit>0) ? (pvPerUnit/custoUnit) : (1 + m/100);
+  const markup = fator;               // 1 + margem
   const lucro  = Math.max(0, pvLote - custoFinalLote);
 
   document.getElementById('pv_lote').textContent   = fmtBRL(pvLote||0);
-  document.getElementById('pv_markup').textContent = (markup||0).toFixed(2)+'x';
+  document.getElementById('pv_markup').textContent = markup ? (markup.toFixed(2)+'x') : '—';
   document.getElementById('pv_lucro').textContent  = fmtBRL(lucro||0);
 
   window.__PV_PER_UNIT = pvPerUnit;
   window.__PV_LOTE     = pvLote;
 }
 
-/* ====== CSV ====== */
+/* ===== CSV ===== */
 function exportCSV(){
   if(!BASE || !Array.isArray(BASE.itens)) return;
-  const head=['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
-  const rows=BASE.itens.map(r=>[
+  const head = ['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
+  const rows = BASE.itens.map(r=>[
     `"${(r.item||'').replace(/"/g,'""')}"`,
     String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(),
-    (r.custoUnit||0).toFixed(4).replace('.',','), (r.subtotal||0).toFixed(2).replace('.',',')
+    (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace('.',',')
   ]);
-  rows.unshift(head); const csv=rows.map(r=>r.join(';')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=`receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`; a.click();
+  rows.unshift(head);
+  const csv = rows.map(r=>r.join(';')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`;
+  a.click();
 }
 
-/* ====== Eventos ====== */
-elEmpresa.addEventListener('change', async ()=>{ const emp=elEmpresa.value; if(!emp){PRODUTOS=[];renderSugestoes();return;} await fetchProdutos(emp); });
-document.getElementById('btnReload').addEventListener('click', async ()=>{ const emp=elEmpresa.value; if(emp) await fetchProdutos(emp); });
+/* ===== EVENTOS ===== */
+elEmpresa.addEventListener('change', async ()=>{
+  const emp = elEmpresa.value;
+  if(!emp){ PRODUTOS=[]; renderSugestoes(); return; }
+  await fetchProdutos(emp);
+});
+document.getElementById('btnReload').addEventListener('click', async ()=>{
+  const emp = elEmpresa.value; if(emp) await fetchProdutos(emp);
+});
 
 elBusca.addEventListener('input', renderSugestoes);
 elBusca.addEventListener('focus', renderSugestoes);
-elBusca.addEventListener('blur', ()=> setTimeout(()=> elTaList.style.display='none',150));
-elBusca.addEventListener('keydown',e=>{
-  const items=[...elTaList.querySelectorAll('.ta-item')];
-  if(e.key==='ArrowDown'&&items.length){e.preventDefault();taActive=(taActive+1)%items.length;updateActive();}
-  else if(e.key==='ArrowUp'&&items.length){e.preventDefault();taActive=(taActive-1+items.length)%items.length;updateActive();}
+elBusca.addEventListener('blur', ()=> setTimeout(()=> elTaList.style.display='none', 150));
+elBusca.addEventListener('keydown', e=>{
+  const items = [...elTaList.querySelectorAll('.ta-item')];
+  if(e.key==='ArrowDown' && items.length){ e.preventDefault(); taActive=(taActive+1)%items.length; updateActive(); }
+  else if(e.key==='ArrowUp' && items.length){ e.preventDefault(); taActive=(taActive-1+items.length)%items.length; updateActive(); }
   else if(e.key==='Enter'){
     if(items.length===1) selectByIndex(Number(items[0].dataset.idx));
     else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx));
@@ -533,77 +711,82 @@ elBusca.addEventListener('keydown',e=>{
 });
 
 ['m_imp','m_fix','m_op'].forEach(name=>{
-  document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', ()=> atualizarPreco()));
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r=>{
+    r.addEventListener('change', ()=> atualizarPreco());
+  });
 });
-['v_imp','v_fix','v_op'].forEach(id=> document.getElementById(id).addEventListener('input', ()=> atualizarPreco()));
+document.getElementById('v_imp').addEventListener('input', ()=> atualizarPreco());
+document.getElementById('v_fix').addEventListener('input', ()=> atualizarPreco());
+document.getElementById('v_op').addEventListener('input',  ()=> atualizarPreco());
 
-document.getElementById('pv_input').addEventListener('input', e=>{ MARGEM = toNumberBR(e.target.value); atualizarPreco(); });
+document.getElementById('pv_input').addEventListener('input', e=>{
+  MARGEM = toNumberBR(e.target.value);
+  atualizarPreco();
+});
 document.getElementById('btnCSV').addEventListener('click', exportCSV);
-document.getElementById('btnClear').addEventListener('click', ()=>{ ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value=''); MARGEM=0; atualizarPreco(); });
-
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value='');
+  MARGEM = 0; atualizarPreco();
+});
 document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(!PROD){ alert('Selecione um produto na busca.'); return; }
-  const btn = document.getElementById('btnSalvarPainel'); btn.disabled=true; btn.textContent='Salvando...';
+  const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
 
-  try{
-    atualizarPreco();
-    const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
+  atualizarPreco(); // garante cálculo atualizado
+  const base = BASE.total||0;
+  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+  const addTot = impV+fixV+opV;
+  const finalLote = base + addTot;
 
-    const base = BASE.total||0;
-    const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
-    const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
-    const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
-    const addTot = impV+fixV+opV;
-    const finalLote = base+addTot;
+  let unidadeUnit = 'un';
+  const u = (BASE.unidade||'').toLowerCase();
+  const rend = Number(BASE.rendimento||0);
+  let multLote = 1;
+  if (u === 'kg' || u === 'l'){ multLote = rend; unidadeUnit = (u==='kg'?'kg':'L'); }
+  else if (u === 'g' || u === 'ml'){ multLote = rend/1000; unidadeUnit = (u==='g'?'kg':'L'); }
+  else { multLote = rend || 1; unidadeUnit='un'; }
 
-    let unidadeUnit='un', multLote=1;
-    const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-    if(u==='kg'||u==='l'){ multLote=rend; unidadeUnit=(u==='kg'?'kg':'L'); }
-    else if(u==='g'||u==='ml'){ multLote=rend/1000; unidadeUnit=(u==='g'?'kg':'L'); }
-    else { multLote=rend||1; unidadeUnit='un'; }
+  const pvUnit = Number(window.__PV_PER_UNIT||0);
+  const pvLote = Number(window.__PV_LOTE||0);
+  const markup = 1 + (Number(MARGEM||0)/100);
 
-    const pvUnit = Number(window.__PV_PER_UNIT||0);
-    const pvLote = Number(window.__PV_LOTE||0);
-    const markup = (pvUnit>0 && (finalLote/(multLote||1))>0) ? (pvUnit / (finalLote/(multLote||1))) : (1 + (Number(MARGEM)||0)/100);
+  const payload = {
+    empresa: PROD.empresa||elEmpresa.value||'',
+    codigoSistema: PROD.codigoSistema||'',
+    numero: PROD.numero||'',
+    item: PROD.item||'',
+    unidadeRend: BASE.unidade||'',
+    rendimento: BASE.rendimento||0,
+    custoReceitaLote: base,
+    modoImpostos: getRadio('m_imp'),
+    valorImpostos: toNumberBR(document.getElementById('v_imp')),
+    modoDespFixa: getRadio('m_fix'),
+    valorDespFixa: toNumberBR(document.getElementById('v_fix')),
+    modoDespOper: getRadio('m_op'),
+    valorDespOper: toNumberBR(document.getElementById('v_op')),
+    custosAdicionaisLote: addTot,
+    custoFinalLote: finalLote,
+    custoFinalUnit: (finalLote/(multLote||1)),
+    unidadeUnit,
+    precoVendaUnit: pvUnit,
+    precoVendaLote: pvLote,
+    markup,
+    margemPerc: Number(MARGEM||0),
+    usuario: user
+  };
 
-    const payload = {
-      empresa: PROD.empresa||elEmpresa.value||'',
-      codigoSistema: PROD.codigoSistema||'',
-      numero: PROD.numero||'',
-      item: PROD.item||'',
-      unidadeRend: BASE.unidade||'',
-      rendimento: BASE.rendimento||0,
-      custoReceitaLote: base,
-      modoImpostos: getRadio('m_imp'), valorImpostos: toNumberBR(document.getElementById('v_imp')),
-      modoDespFixa:  getRadio('m_fix'), valorDespFixa: toNumberBR(document.getElementById('v_fix')),
-      modoDespOper:  getRadio('m_op'),  valorDespOper:  toNumberBR(document.getElementById('v_op')),
-      custosAdicionaisLote: addTot,
-      custoFinalLote: finalLote,
-      custoFinalUnit: (finalLote/(multLote||1)),
-      unidadeUnit,
-      precoVendaUnit: pvUnit,
-      precoVendaLote: pvLote,
-      markup,
-      margemPerc: Number(MARGEM||0),
-      usuario: user
-    };
-
-    const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-    });
-    const txt = await res.text(); let j;
-    try{ j = JSON.parse(txt); }catch(_){ j={ok:false,error:'Resposta não-JSON: '+txt}; }
-    if(j.ok){ alert('Salvo no PainelPreco ✓'); }
-    else    { alert('Erro ao salvar: '+(j.error||'desconhecido')); }
-  }catch(err){ alert('Falha ao salvar: '+err); }
-  finally{ btn.disabled=false; btn.textContent='Salvar no Painel'; }
+  const res = await salvarPrecoPainel(payload);
+  if(res.ok){ alert('Salvo no PainelPreco ✓'); }
+  else { alert('Erro ao salvar: ' + (res.error||'desconhecido')); }
 });
 
-/* ====== Boot ====== */
+/* ===== BOOT ===== */
 (async function boot(){
   await fetchEmpresas();
-  try{ const saved=localStorage.getItem('AUTH_USER'); if(saved) document.getElementById('usuario').value=saved; }catch(_){}
-  if(EMPRESAS.length){ elEmpresa.value=EMPRESAS[0]; await fetchProdutos(EMPRESAS[0]); }
+  try{ const savedUser = localStorage.getItem('AUTH_USER'); if(savedUser){ document.getElementById('usuario').value = savedUser; } }catch(_){}
+  if(EMPRESAS.length){ elEmpresa.value = EMPRESAS[0]; await fetchProdutos(EMPRESAS[0]); }
 })();
 </script>
 </body>
