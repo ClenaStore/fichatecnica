@@ -6,165 +6,113 @@
 <title>Análise de Custos & Formação de Preço</title>
 <style>
 :root{
-  --bg:#0b0c10; --panel:#121318; --line:#25272f; --text:#f5f7fb; --muted:#c9ced9;
-  --brand:#2563eb; --brand-2:#1e40af; --ghost:#3a3f4b;
+  --bg:#0e1116; --panel:#141923; --line:#2b3040; --text:#f5f7fb; --muted:#c9ced9;
+  --brand:#2563eb; --ghost:#3b4254;
   --gold:#8b6b00; --gold-2:#6c5200; --gold-border:#b28600;
-  --ok:#16a34a; --warn:#f59e0b;
+  --chip-bg:#ffffff; --chip-text:#0b0c10; --chip-line:#e5e7eb;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
-body{
-  font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", Helvetica, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-  background:linear-gradient(180deg,#0b0c10, #0e1016);
-  color:var(--text); margin:0; padding:24px;
-}
-h1{margin:0 0 16px; font-size:1.35rem; letter-spacing:.2px}
-.card{
-  background:radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.03), transparent 40%) , var(--panel);
-  border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px;
-  box-shadow:0 6px 26px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.02);
-}
-.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-label{font-size:.92rem;color:var(--muted);display:block;margin-bottom:6px}
-select,input[type="text"]{
-  width:100%; padding:11px 12px; border-radius:10px; border:1px solid #2a2d36; background:#0d0f14; color:#fff;
-  outline:none; transition:border-color .15s, box-shadow .15s;
-}
-select:focus,input[type="text"]:focus{border-color:#405075; box-shadow:0 0 0 3px rgba(64,80,117,.25)}
-input::placeholder{color:#9096a4}
-.btn{
-  cursor:pointer; border:0; border-radius:12px; padding:10px 16px; background:var(--brand); color:#fff;
-  box-shadow:0 6px 16px rgba(37,99,235,.35); transition:transform .06s, filter .2s, background .2s;
-}
-.btn:hover{filter:brightness(1.06)}
-.btn:active{transform:translateY(1px)}
+body{margin:0;padding:20px;background:linear-gradient(#0c0f14,#0e1116);color:var(--text);
+     font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial,Helvetica}
+h1{margin:0 0 14px;font-size:1.25rem}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;
+      box-shadow:0 8px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.02)}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+label{font-size:.9rem;color:var(--muted);display:block;margin:0 0 6px}
+select,input[type="text"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2a2f3b;background:#0e1118;color:#fff}
+select:focus,input:focus{outline:none;border-color:#405075;box-shadow:0 0 0 3px rgba(64,80,117,.25)}
+.btn{cursor:pointer;border:0;border-radius:10px;padding:9px 14px;background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.35)}
 .btn.ghost{background:transparent;border:1px solid var(--ghost);box-shadow:none}
 .btn[disabled]{opacity:.6;cursor:default}
 .right{text-align:right}
-.pill{
-  padding:6px 10px; border-radius:999px; border:1px solid var(--ghost); background:#0e1118; font-size:.9rem; display:inline-block; margin:6px 6px 0 0
-}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi .box{
-  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
-  border:1px solid var(--line); border-radius:12px; padding:12px; min-height:70px
-}
-.kpi .val{font-weight:800;font-size:1.15rem}
-.hr{height:1px;background:var(--line);margin:10px 0}
+.muted{color:var(--muted)}
+
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi .box{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+          border:1px solid var(--line);border-radius:10px;padding:10px}
+.kpi .val{font-weight:800}
+.pill{padding:5px 8px;border-radius:999px;border:1px solid var(--ghost);background:#0f131c;font-size:.86rem;display:inline-block;margin:6px 6px 0 0}
 .tbl-wrap{overflow:auto;border-radius:10px}
 table{width:100%;border-collapse:collapse}
-th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;white-space:nowrap}
-th{background:#f8fafc;color:#0b0c10;font-weight:700;position:sticky;top:0}
+th,td{border:1px solid var(--line);padding:7px 8px;white-space:nowrap;text-align:left}
+th{background:#f8fafc;color:#0b0c10;font-weight:700}
 td.right,th.right{text-align:right}
 
-/* Typeahead */
+/* typeahead */
 .ta-wrap{position:relative}
-.ta-list{
-  position:absolute;top:100%;left:0;right:0;background:#0f1218;border:1px solid var(--line);border-radius:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.45);max-height:260px;overflow:auto;display:none;z-index:40
-}
+.ta-list{position:absolute;top:100%;left:0;right:0;background:#0f1218;border:1px solid var(--line);
+         border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.45);max-height:260px;overflow:auto;display:none;z-index:40}
 .ta-item{padding:10px 12px;border-bottom:1px solid #1b1e25;cursor:pointer}
 .ta-item:last-child{border-bottom:none}
-.ta-item:hover,.ta-item.active{background:#151925}
-.ta-title{font-weight:700;color:#fff}
-.ta-meta{font-size:.85rem;color:#a3a9b8;margin-left:6px}
+.ta-item:hover,.ta-item.active{background:#151a24}
+.ta-title{font-weight:700}
 
 /* bloco dourado */
-#cardVenda{
-  background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%)!important;
-  color:#fff!important;border:1px solid var(--gold-border)!important;
-}
-#cardVenda label,#cardVenda .muted,#cardVenda .warn{color:#fff!important}
+#cardVenda{background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%)!important;color:#fff!important;
+           border:1px solid var(--gold-border)!important}
 #cardVenda input{background:rgba(0,0,0,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important}
-#cardVenda input::placeholder{color:rgba(255,255,255,.85)}
-#cardVenda .kpi .box{background:rgba(0,0,0,.15)!important;border:1px solid rgba(255,255,255,.25)!important}
-#cardVenda .kpi .val{color:#fff!important;font-size:1.25rem}
-#cardVenda strong{font-size:1.1rem;color:#fff}
 
-/* detalhes de composto */
-.comp-details{background:#0e1118;border:1px solid #2b2f3b;border-radius:10px;padding:8px;margin-top:6px}
-.comp-details summary{cursor:pointer;color:#e5e8ef;font-weight:700}
-.comp-details table{margin-top:6px}
-.comp-details td,.comp-details th{border-color:#2b2f3b}
+/* ===== Custos adicionais: compacto ===== */
+.cost-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
+.cost-item{grid-column:span 6;background:rgba(255,255,255,.03);border:1px dashed var(--line);
+           border-radius:10px;padding:8px}
+.cost-head{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:6px}
+.cost-options{display:flex;gap:10px;font-size:.86rem;color:var(--muted)}
+.cost-input input{padding:9px 10px}
+.value-chip{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-line);
+  border-radius:12px; padding:8px 10px; font-weight:700; min-height:40px
+}
+.value-chip small{font-weight:600;opacity:.7;margin-right:6px}
+
+/* detalhes composto */
+.comp-details{background:#0f141d;border:1px solid #2b3040;border-radius:10px;padding:8px;margin-top:6px}
+.comp-details summary{cursor:pointer;color:#e6eaf2;font-weight:700}
 .comp-badge{display:inline-block;padding:2px 8px;border:1px solid #555;border-radius:999px;font-size:.75rem;background:#111523;color:#ddd;margin-left:6px}
 
-/* cabeçalho de impressão */
-.print-header{display:none; margin-bottom:10px}
-.print-title{font-weight:800;font-size:1rem}
-.print-sub{color:#333; font-size:.88rem}
-
-/* util */
-.muted{color:var(--muted)}
-.no-print{display:block}
+/* impressão */
 .print-only{display:none}
-
-/* responsivo */
-@media (max-width:980px){
-  .row{grid-template-columns:1fr 1fr}
-  .kpi{grid-template-columns:1fr 1fr}
-}
-@media (max-width:640px){
-  body{padding:14px}
-  .row{grid-template-columns:1fr}
-  .kpi{grid-template-columns:1fr}
-}
-
-/* ===== Impressão ===== */
-@media print {
-  :root{--line:#d7d9df}
+@media print{
   @page{size:A4 portrait;margin:10mm}
   body{background:#fff!important;color:#000!important;padding:0;font-size:11px}
-  h1{display:none}
-  .no-print{display:none!important}
+  h1,.no-print{display:none!important}
   .print-only{display:block!important}
-  .card{
-    background:#fff!important;border:1px solid #cfd3da;box-shadow:none;margin:0 0 8px;border-radius:8px;padding:8px
-  }
-  .kpi .box{min-height:auto;padding:8px}
-  .kpi .val{font-size:1rem}
-  .pill{border-color:#cfd3da;background:#fff;font-size:.85rem;padding:4px 8px}
-  table{font-size:10px}
-  th,td{padding:6px 6px}
-  .comp-details{border:none;padding:0;margin:0}
-  .comp-details > summary{display:list-item; list-style:'▶ '; font-size:10px}
-  .comp-details[open] > summary{list-style:'▼ '}
-  /* evita quebra feia */
-  .card,.tbl-wrap,table,tr,td,th{page-break-inside:avoid}
-  .print-header{display:block}
+  .card{background:#fff;border:1px solid #cfd3da;box-shadow:none;padding:8px;margin:0 0 8px;border-radius:8px}
   .kpi{grid-template-columns:repeat(4,1fr)}
+  table{font-size:10px}
+  th,td{padding:5px}
 }
+
+/* responsivo */
+@media (max-width:980px){ .row{grid-template-columns:1fr 1fr} .kpi{grid-template-columns:1fr 1fr} }
+@media (max-width:640px){ body{padding:12px} .row{grid-template-columns:1fr} .kpi{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
-<h1 class="no-print">Análise de Custos & Formação de Preço</h1>
-
-<!-- Cabeçalho para impressão -->
-<div class="print-only print-header">
-  <div class="print-title">Análise de Custos & Formação de Preço</div>
-  <div class="print-sub" id="ph_info">—</div>
-</div>
+<h1>Análise de Custos & Formação de Preço</h1>
+<div class="print-only" id="ph_info" style="margin:0 0 8px;font-weight:700;color:#333">—</div>
 
 <!-- Filtros -->
 <div class="card no-print">
   <div class="row">
     <div style="grid-column:span 3">
       <label>Empresa</label>
-      <select id="empresa" aria-label="Empresa"></select>
+      <select id="empresa"></select>
       <div class="muted" id="infoEmpresa"></div>
     </div>
-
     <div style="grid-column:span 6" class="ta-wrap">
       <label for="busca">Produto (busca por nome/código)</label>
-      <input id="busca" type="text" placeholder="Ex.: Bolo, 102, P-001..." autocomplete="off" aria-autocomplete="list" aria-haspopup="listbox">
+      <input id="busca" type="text" placeholder="Ex.: Bolo, 102, P-001..." autocomplete="off">
       <div id="ta_list" class="ta-list" role="listbox"></div>
     </div>
-
     <div style="grid-column:span 3">
       <label>Usuário (opcional)</label>
       <input id="usuario" type="text" placeholder="Seu nome/login" autocomplete="name">
     </div>
   </div>
-  <div class="right" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap">
+  <div class="right" style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
     <button class="btn ghost" id="btnReload" type="button">Recarregar</button>
     <a class="btn ghost" href="./">← Cadastro</a>
   </div>
@@ -175,7 +123,7 @@ td.right,th.right{text-align:right}
   <div class="row">
     <div style="grid-column:span 6">
       <div class="muted">Produto</div>
-      <div id="p_nome" style="font-size:1.1rem;font-weight:700">—</div>
+      <div id="p_nome" style="font-size:1.05rem;font-weight:800">—</div>
       <div class="muted" id="p_meta">—</div>
     </div>
     <div style="grid-column:span 6">
@@ -200,15 +148,13 @@ td.right,th.right{text-align:right}
   </div>
   <div class="tbl-wrap" style="margin-top:8px">
     <table>
-      <thead>
-        <tr>
-          <th>Item</th><th class="right">Qtd</th><th>U.M.</th><th class="right">Custo Unit. (R$)</th><th class="right">Subtotal (R$)</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>Item</th><th class="right">Qtd</th><th>U.M.</th><th class="right">Custo Unit. (R$)</th><th class="right">Subtotal (R$)</th>
+      </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
-  <div style="margin-top:8px">
+  <div style="margin-top:6px">
     <div class="pill">Itens: <strong id="s_itens">0</strong></div>
     <div class="pill">Custo da Receita: <strong id="s_total">R$ 0,00</strong></div>
     <div class="pill">Custo por g/ml: <strong id="s_gml">R$ 0,0000</strong></div>
@@ -216,58 +162,74 @@ td.right,th.right{text-align:right}
   </div>
 </div>
 
-<!-- Custos adicionais -->
+<!-- Custos adicionais (compacto + valores brancos) -->
 <div class="card" id="cardCusto" style="display:none">
-  <div class="row" style="align-items:center">
+  <div class="row" style="align-items:center;margin-bottom:6px">
     <div style="grid-column:span 6"><strong>Custos adicionais</strong></div>
-    <div class="right" style="grid-column:span 6"><span class="muted">(% aplicados sobre o custo da receita)</span></div>
-  </div>
-  <div class="hr"></div>
-  <div class="row">
-    <div style="grid-column:span 6">
-      <label>Impostos</label>
-      <div class="muted" style="margin-bottom:4px">
-        <label><input type="radio" name="m_imp" value="pct" checked> %</label> &nbsp;
-        <label><input type="radio" name="m_imp" value="abs"> R$</label>
-      </div>
-      <input id="v_imp" type="text" inputmode="decimal" placeholder="Ex.: 12,5 ou 100,00">
-    </div>
-    <div style="grid-column:span 6" class="right"><span class="muted">Valor:</span> <strong id="r_imp">R$ 0,00</strong></div>
-
-    <div style="grid-column:span 6;margin-top:10px">
-      <label>Despesa Fixa</label>
-      <div class="muted" style="margin-bottom:4px">
-        <label><input type="radio" name="m_fix" value="pct" checked> %</label> &nbsp;
-        <label><input type="radio" name="m_fix" value="abs"> R$</label>
-      </div>
-      <input id="v_fix" type="text" inputmode="decimal" placeholder="Ex.: 5 ou 80,00">
-    </div>
-    <div style="grid-column:span 6;margin-top:10px" class="right"><span class="muted">Valor:</span> <strong id="r_fix">R$ 0,00</strong></div>
-
-    <div style="grid-column:span 6;margin-top:10px">
-      <label>Despesa Operacional</label>
-      <div class="muted" style="margin-bottom:4px">
-        <label><input type="radio" name="m_op" value="pct" checked> %</label> &nbsp;
-        <label><input type="radio" name="m_op" value="abs"> R$</label>
-      </div>
-      <input id="v_op" type="text" inputmode="decimal" placeholder="Ex.: 7,5 ou 50,00">
-    </div>
-    <div style="grid-column:span 6;margin-top:10px" class="right"><span class="muted">Valor:</span> <strong id="r_op">R$ 0,00</strong></div>
+    <div class="right" style="grid-column:span 6"><span class="muted">(% sobre o custo da receita)</span></div>
   </div>
 
-  <div class="hr"></div>
-  <div class="kpi">
-    <div class="box"><div class="muted">Custo da Receita (lote)</div><div class="val" id="k_base">—</div></div>
-    <div class="box"><div class="muted">Custos Adicionais</div><div class="val" id="k_add">—</div></div>
-    <div class="box"><div class="muted">Custo Final (lote)</div><div class="val" id="k_final">—</div></div>
-    <div class="box"><div class="muted" id="kf_label">Custo Final por —</div><div class="val" id="k_final_unit">—</div></div>
+  <div class="cost-grid">
+    <!-- Impostos -->
+    <div class="cost-item" style="grid-column:span 8">
+      <div class="cost-head">
+        <label style="margin:0">Impostos</label>
+        <div class="cost-options">
+          <label><input type="radio" name="m_imp" value="pct" checked> %</label>
+          <label><input type="radio" name="m_imp" value="abs"> R$</label>
+        </div>
+      </div>
+      <div class="cost-input"><input id="v_imp" type="text" inputmode="decimal" placeholder="Ex.: 12,5 ou 100,00"></div>
+    </div>
+    <div style="grid-column:span 4;display:flex;align-items:end">
+      <div class="value-chip" style="width:100%"><small>Valor</small><span id="r_imp">R$ 0,00</span></div>
+    </div>
+
+    <!-- Despesa fixa -->
+    <div class="cost-item" style="grid-column:span 8">
+      <div class="cost-head">
+        <label style="margin:0">Despesa Fixa</label>
+        <div class="cost-options">
+          <label><input type="radio" name="m_fix" value="pct" checked> %</label>
+          <label><input type="radio" name="m_fix" value="abs"> R$</label>
+        </div>
+      </div>
+      <div class="cost-input"><input id="v_fix" type="text" inputmode="decimal" placeholder="Ex.: 5 ou 80,00"></div>
+    </div>
+    <div style="grid-column:span 4;display:flex;align-items:end">
+      <div class="value-chip" style="width:100%"><small>Valor</small><span id="r_fix">R$ 0,00</span></div>
+    </div>
+
+    <!-- Despesa operacional -->
+    <div class="cost-item" style="grid-column:span 8">
+      <div class="cost-head">
+        <label style="margin:0">Despesa Operacional</label>
+        <div class="cost-options">
+          <label><input type="radio" name="m_op" value="pct" checked> %</label>
+          <label><input type="radio" name="m_op" value="abs"> R$</label>
+        </div>
+      </div>
+      <div class="cost-input"><input id="v_op" type="text" inputmode="decimal" placeholder="Ex.: 7,5 ou 50,00"></div>
+    </div>
+    <div style="grid-column:span 4;display:flex;align-items:end">
+      <div class="value-chip" style="width:100%"><small>Valor</small><span id="r_op">R$ 0,00</span></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:8px">
+    <div class="kpi" style="grid-column:span 12">
+      <div class="box"><div class="muted">Custo da Receita (lote)</div><div class="val" id="k_base">—</div></div>
+      <div class="box"><div class="muted">Custos Adicionais</div><div class="val" id="k_add">—</div></div>
+      <div class="box"><div class="muted">Custo Final (lote)</div><div class="val" id="k_final">—</div></div>
+      <div class="box"><div class="muted" id="kf_label">Custo Final por —</div><div class="val" id="k_final_unit">—</div></div>
+    </div>
   </div>
 </div>
 
 <!-- Formação de preço -->
 <div class="card" id="cardVenda" style="display:none">
   <div class="row"><strong style="grid-column:span 12">Formação de preço</strong></div>
-  <div class="row" style="margin-top:10px">
+  <div class="row" style="margin-top:8px">
     <div style="grid-column:span 4">
       <label>Margem de lucro (%)</label>
       <input id="pv_input" type="text" inputmode="decimal" placeholder="Ex.: 40">
@@ -281,8 +243,7 @@ td.right,th.right{text-align:right}
       </div>
     </div>
   </div>
-  <div class="warn" id="pv_warn" style="display:none;margin-top:8px">⚠ Informe uma margem válida (ex.: 30).</div>
-  <div class="right no-print" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+  <div class="right no-print" style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
     <button class="btn" id="btnSalvarPainel" type="button">Salvar no Painel</button>
     <button class="btn ghost" id="btnClear" type="button">Limpar valores</button>
   </div>
@@ -293,87 +254,82 @@ td.right,th.right{text-align:right}
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoTTtr9JP7IZQT1F8tceXzsw5bpuVw33wggOPyiLPhAfEKnSjfTE-Dfavt3DDbYr28/exec';
 const DEFAULT_EMPRESAS = ['Mercatto','Padaria'];
 
-/* ====== Helpers ====== */
+/* ===== Helpers ===== */
 const fmtBRL = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const FACTOR = { g:1, kg:1000, ml:1, l:1000, un:1 };
-const TYPE   = u => { u=(u||'').toLowerCase(); return (u==='g'||u==='kg')?'mass' : (u==='ml'||u==='l')?'vol' : 'count'; };
+const TYPE   = u => (String(u||'').toLowerCase()==='g'||String(u||'').toLowerCase()==='kg')?'mass'
+                   : (String(u||'').toLowerCase()==='ml'||String(u||'').toLowerCase()==='l')?'vol' : 'count';
 function convertQty(qty, from, to){
-  from = (from||'').toLowerCase(); to = (to||'').toLowerCase();
-  if(!FACTOR[from] || !FACTOR[to]) return qty;
+  from=(from||'').toLowerCase(); to=(to||'').toLowerCase();
+  if(!FACTOR[from]||!FACTOR[to]) return qty;
   if(TYPE(from)!==TYPE(to)) return NaN;
   return qty*(FACTOR[from]/FACTOR[to]);
 }
 function toNumberBR(val){
   if(typeof val==='number') return Number.isFinite(val)?val:0;
-  if(val && val.nodeType===1 && typeof val.value!=='undefined') val = val.value;
-  val = String(val ?? '').trim();
-  if(!val) return 0;
-  const hasC = val.includes(','), hasD = val.includes('.');
-  if(hasC && hasD) val = val.replace(/\./g,'').replace(',', '.');
-  else if(hasC)    val = val.replace(',', '.');
-  const n = parseFloat(val);
-  return Number.isFinite(n)?n:0;
+  if(val && val.nodeType===1 && typeof val.value!=='undefined') val=val.value;
+  val=String(val??'').trim(); if(!val) return 0;
+  const hasC=val.includes(','), hasD=val.includes('.');
+  if(hasC&&hasD) val=val.replace(/\./g,'').replace(',', '.'); else if(hasC) val=val.replace(',', '.');
+  const n=parseFloat(val); return Number.isFinite(n)?n:0;
 }
 const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 
-/* ====== Estado ====== */
+/* ===== Estado ===== */
 let EMPRESAS=[], PRODUTOS=[], PROD=null;
-let BASE = { total:0, gml:0, kgl:0, rendimento:0, unidade:'', itens:[] };
-let ADD = { imp:{mode:'pct', val:0}, fix:{mode:'pct', val:0}, op:{mode:'pct', val:0} };
-let MARGEM = 0;
+let BASE = { total:0,gml:0,kgl:0,rendimento:0,unidade:'',itens:[] };
+let ADD = { imp:{mode:'pct',val:0}, fix:{mode:'pct',val:0}, op:{mode:'pct',val:0} };
+let MARGEM=0;
 
-/* ====== DOM ====== */
-const elEmpresa = document.getElementById('empresa');
-const elBusca   = document.getElementById('busca');
-const elTaList  = document.getElementById('ta_list');
-const elTbody   = document.getElementById('tbody');
+/* ===== DOM ===== */
+const elEmpresa=document.getElementById('empresa');
+const elBusca  =document.getElementById('busca');
+const elTaList =document.getElementById('ta_list');
+const elTbody  =document.getElementById('tbody');
 
-/* ====== Backend ====== */
-async function fetchEmpresas(){
+/* ===== Fetch util (melhor mensagem) ===== */
+async function fetchJSON(url, options={}, timeoutMs=20000){
+  const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort('timeout'), timeoutMs);
   try{
-    const r = await fetch(WEBAPP_URL+'?action=empresas'); 
-    const j = await r.json();
-    EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : DEFAULT_EMPRESAS.slice();
-  }catch{ EMPRESAS = DEFAULT_EMPRESAS.slice(); }
-  elEmpresa.innerHTML = '';
-  const o0 = document.createElement('option'); o0.value=''; o0.textContent='— selecione —'; elEmpresa.appendChild(o0);
-  EMPRESAS.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; elEmpresa.appendChild(o); });
+    const res=await fetch(url, {...options, signal:ctrl.signal, cache:'no-store', redirect:'follow'});
+    const text=await res.text();
+    let json;
+    try{ json=JSON.parse(text); }catch{ json={ok:false,error:'Resposta não-JSON: '+text.slice(0,200)}; }
+    if(!res.ok) return {ok:false,error:`HTTP ${res.status} ${res.statusText}`};
+    return json;
+  }catch(err){
+    return {ok:false,error:`${err?.name||'Erro'}: ${err?.message||String(err)}`};
+  }finally{ clearTimeout(t); }
+}
+
+/* ===== Backend ===== */
+async function fetchEmpresas(){
+  const j = await fetchJSON(WEBAPP_URL+'?action=empresas');
+  EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : DEFAULT_EMPRESAS.slice();
+  elEmpresa.innerHTML='';
+  const o0=document.createElement('option'); o0.value=''; o0.textContent='— selecione —'; elEmpresa.appendChild(o0);
+  EMPRESAS.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;elEmpresa.appendChild(o);});
 }
 async function fetchProdutos(empresa){
-  const url = WEBAPP_URL+'?action=produtos&empresa='+encodeURIComponent(empresa||'')+'&ts='+Date.now();
-  try{
-    const r = await fetch(url,{cache:'no-store'}); 
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error||'erro'); 
-    PRODUTOS = Array.isArray(j.data)?j.data:[];
-    document.getElementById('infoEmpresa').textContent = `Produtos: ${PRODUTOS.length}`;
-  }catch(e){
-    PRODUTOS=[]; document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.'; console.warn(e);
+  const j = await fetchJSON(WEBAPP_URL+'?action=produtos&empresa='+encodeURIComponent(empresa||'')+'&ts='+Date.now());
+  if(!(j.ok)) {
+    console.warn(j.error); document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.'; PRODUTOS=[]; renderSugestoes(); return;
   }
+  PRODUTOS = Array.isArray(j.data)?j.data:[]; document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
   renderSugestoes();
 }
 async function fetchPrecoSalvo(prod){
-  const params = new URLSearchParams({
-    action:'preco_get',
-    empresa: prod.empresa||'',
-    codigo:  prod.codigoSistema||'',
-    numero:  prod.numero||'',
-    item:    prod.item||''
-  });
-  try{
-    const r = await fetch(WEBAPP_URL+'?'+params.toString(),{cache:'no-store'});
-    const j = await r.json(); 
-    if(!j.ok || !j.data) return null; 
-    return j.data;
-  }catch{ return null; }
+  const params=new URLSearchParams({action:'preco_get',empresa:prod.empresa||'',codigo:prod.codigoSistema||'',numero:prod.numero||'',item:prod.item||''});
+  const j=await fetchJSON(WEBAPP_URL+'?'+params.toString());
+  return j.ok ? (j.data||null) : null;
 }
 
-/* ====== Busca / typeahead ====== */
+/* ===== Busca ===== */
 let taActive=-1;
 function buscar(q){
-  const s = norm(q); if(!s) return [];
+  const s=norm(q); if(!s) return [];
   return PRODUTOS.filter(p=>{
-    const n = norm(p.item); const c1 = String(p.codigoSistema||'').toLowerCase(); const c2 = String(p.numero||'').toLowerCase();
+    const n=norm(p.item), c1=String(p.codigoSistema||'').toLowerCase(), c2=String(p.numero||'').toLowerCase();
     return n.includes(s)||c1.includes(s)||c2.includes(s);
   }).slice(0,50);
 }
@@ -381,236 +337,166 @@ function renderSugestoes(){
   const q=elBusca.value.trim(); const list=buscar(q);
   if(!q||!list.length){ elTaList.style.display='none'; elTaList.innerHTML=''; taActive=-1; return; }
   elTaList.innerHTML=list.map((p,i)=>{
-    const idx=PRODUTOS.indexOf(p); 
-    const meta=[p.codigoSistema||'-', (p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
-    return `<div class="ta-item" role="option" aria-selected="${i===taActive?'true':'false'}" data-idx="${idx}"><span class="ta-title">${p.item||'(produto)'}</span><span class="ta-meta">— ${meta}</span></div>`;
+    const idx=PRODUTOS.indexOf(p);
+    const meta=[p.codigoSistema||'-',(p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
+    return `<div class="ta-item" data-idx="${idx}"><span class="ta-title">${p.item||'(produto)'}</span><span class="ta-meta"> — ${meta}</span></div>`;
   }).join('');
   elTaList.style.display='block'; taActive=-1;
 }
 function selectByIndex(idx){ if(isNaN(idx)||idx<0||!PRODUTOS[idx]) return; const p=PRODUTOS[idx]; elBusca.value=`${p.item} — ${p.codigoSistema||'-'}`; elTaList.style.display='none'; fillProduto(p); }
-elTaList.addEventListener('mousedown',e=>{ const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));});
+elTaList.addEventListener('mousedown',e=>{const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));});
 function updateActive(){ const items=[...elTaList.querySelectorAll('.ta-item')]; items.forEach((el,i)=>el.classList.toggle('active',i===taActive)); if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'}); }
 
-/* ====== Compostos: enriquecer linhas sem custo ====== */
+/* ===== Compostos ===== */
 async function enriquecerComCompostos(prod){
-  const emp = (prod.empresa||elEmpresa.value||'').toLowerCase();
+  const emp=(prod.empresa||elEmpresa.value||'').toLowerCase();
   for(const l of (prod.receita||[])){
-    const custo = toNumberBR(l.custoUnit);
+    const custo=toNumberBR(l.custoUnit);
     if(custo>0) continue;
-    const nome = l.item||l.nome||''; const codigo = l.codigo||''; const qtd = toNumberBR(l.qtd)||1; const um = (l.um||'').toLowerCase();
+    const nome=l.item||l.nome||''; const codigo=l.codigo||''; const qtd=toNumberBR(l.qtd)||1; const um=(l.um||'').toLowerCase();
     if(!nome && !codigo) continue;
-    try{
-      const qs = new URLSearchParams({action:'comparar_ingrediente',nome,codigo,qtd,um});
-      const r = await fetch(WEBAPP_URL+'?'+qs.toString(),{cache:'no-store'}); const j = await r.json();
-      if(!(j?.ok && j.data?.empresas)) continue;
-      const lista = j.data.empresas;
-      let esc = lista.find(x => (String(x.empresa||'').toLowerCase()===emp)) || null;
-      if(!esc){ esc = lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null); }
-      if(esc && typeof esc.custoUnit==='number' && esc.custoUnit>0){
-        l.custoUnit = esc.custoUnit;
-        l.priceUm   = (esc.umPreco || l.um || 'kg');
-        l._compInfo = { tipo: esc.tipo, total: esc.compTotal ?? esc.custoUnit, umPreco: esc.umPreco, filhos: esc.comp||[] };
-      }
-    }catch(_){}
+    const qs=new URLSearchParams({action:'comparar_ingrediente',nome,codigo,qtd,um});
+    const j = await fetchJSON(WEBAPP_URL+'?'+qs.toString());
+    if(!(j?.ok && j.data?.empresas)) continue;
+    const lista=j.data.empresas;
+    let esc=lista.find(x=>String(x.empresa||'').toLowerCase()===emp) || lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null);
+    if(esc && typeof esc.custoUnit==='number' && esc.custoUnit>0){
+      l.custoUnit=esc.custoUnit; l.priceUm=(esc.umPreco||l.um||'kg'); l._compInfo={tipo:esc.tipo,total:esc.compTotal??esc.custoUnit,umPreco:esc.umPreco,filhos:esc.comp||[]};
+    }
   }
 }
 
-/* ====== Calcular receita ====== */
+/* ===== Calcular ===== */
 function calcularReceita(prod){
-  const linhas = Array.isArray(prod?.receita)? prod.receita : [];
-  const itens=[]; let total=0;
+  const linhas=Array.isArray(prod?.receita)?prod.receita:[]; const itens=[]; let total=0;
   linhas.forEach(l=>{
-    const qtd = toNumberBR(l.qtd);
-    const umLinha=(l.um||'').toLowerCase();
-    const umPreco=(l.priceUm||l.um||'').toLowerCase();
-    const custo = toNumberBR(l.custoUnit);
-    const conv = convertQty(qtd, umLinha, umPreco);
-    const subtotal = (isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
-    itens.push({
-      item:l.item||l.nome||l.codigo||'(ing.)',
-      qtd, um:umLinha, custoUnit:custo, subtotal,
-      comp: (l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)? l._compInfo : null
-    });
-    total += subtotal;
+    const qtd=toNumberBR(l.qtd), umLinha=(l.um||'').toLowerCase(), umPreco=(l.priceUm||l.um||'').toLowerCase(), custo=toNumberBR(l.custoUnit);
+    const conv=convertQty(qtd, umLinha, umPreco); const subtotal=(isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
+    itens.push({item:l.item||l.nome||l.codigo||'(ing.)', qtd, um:umLinha, custoUnit:custo, subtotal,
+                comp:(l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)?l._compInfo:null});
+    total+=subtotal;
   });
-
-  const rend = toNumberBR(prod?.rendimento);
-  const u    = (prod?.unidadeRend||'').toLowerCase();
-  let gml=0,kgl=0;
-  const toBase = uu => (uu==='kg'||uu==='l')?1000:1;
-  if(['g','kg','ml','l'].includes(u) && rend>0){
-    const emBase = rend*toBase(u); gml = total/emBase; kgl= total/(emBase/1000);
-  }
-  return { itens, total, gml:isFinite(gml)?gml:0, kgl:isFinite(kgl)?kgl:0, rendimento:rend||0, unidade:u||'' };
+  const rend=toNumberBR(prod?.rendimento); const u=(prod?.unidadeRend||'').toLowerCase(); let gml=0,kgl=0;
+  const toBase=uu=> (uu==='kg'||uu==='l')?1000:1;
+  if(['g','kg','ml','l'].includes(u) && rend>0){ const emBase=rend*toBase(u); gml=total/emBase; kgl= total/(emBase/1000); }
+  return {itens,total,gml:isFinite(gml)?gml:0,kgl:isFinite(kgl)?kgl:0,rendimento:rend||0,unidade:u||''};
 }
 
-/* ====== Preenche telas ====== */
+/* ===== Preenche ===== */
 async function fillProduto(raw){
-  const prod = JSON.parse(JSON.stringify(raw||{}));
-  await enriquecerComCompostos(prod);
+  const prod=JSON.parse(JSON.stringify(raw||{})); await enriquecerComCompostos(prod);
+  PROD=prod; const calc=calcularReceita(prod); BASE=calc;
 
-  PROD = prod;
-  const calc = calcularReceita(prod); BASE=calc;
+  document.getElementById('p_nome').textContent=prod.item||'(produto)';
+  document.getElementById('p_meta').textContent=`${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+  document.getElementById('k_rend').textContent=`${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
+  document.getElementById('k_custoRec').textContent=fmtBRL(calc.total);
+  document.getElementById('k_custoGml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('k_custoKgL').textContent=fmtBRL(calc.kgl);
 
-  // header
-  document.getElementById('p_nome').textContent = prod.item||'(produto)';
-  document.getElementById('p_meta').textContent = `${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
-  document.getElementById('k_rend').textContent = `${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
-  document.getElementById('k_custoRec').textContent = fmtBRL(calc.total);
-  document.getElementById('k_custoGml').textContent = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('k_custoKgL').textContent = fmtBRL(calc.kgl);
+  // cabeçalho impressão
+  const usuario=(document.getElementById('usuario').value||'').trim();
+  const empresa=elEmpresa.value || (prod.empresa||''); const now=new Date();
+  document.getElementById('ph_info').textContent=`Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
 
-  // info p/ cabeçalho de impressão
-  const usuario = (document.getElementById('usuario').value||'').trim();
-  const empresa = elEmpresa.value || (prod.empresa||'');
-  const now = new Date();
-  document.getElementById('ph_info').textContent =
-    `Empresa: ${empresa || '—'} • Produto: ${prod.item || '—'} • Código: ${prod.codigoSistema || '—'} • Nº: ${prod.numero || '—'} • Usuário: ${usuario || '—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
-
-  // tabela de receita + detalhes de compostos
+  // tabela
   elTbody.innerHTML='';
   calc.itens.forEach(r=>{
     const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
-      <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
-      <td>${(r.um||'').toUpperCase()}</td>
-      <td class="right">${fmtBRL(r.custoUnit)}</td>
-      <td class="right">${fmtBRL(r.subtotal)}</td>`;
+    tr.innerHTML=`<td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
+                  <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
+                  <td>${(r.um||'').toUpperCase()}</td>
+                  <td class="right">${fmtBRL(r.custoUnit)}</td>
+                  <td class="right">${fmtBRL(r.subtotal)}</td>`;
     elTbody.appendChild(tr);
-
     if(r.comp){
       const det=document.createElement('tr');
-      det.innerHTML = `<td colspan="5">
+      det.innerHTML=`<td colspan="5">
         <details class="comp-details">
           <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
-          <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th>
-              <th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th>
-            </tr></thead>
-            <tbody>
-              ${r.comp.filhos.map(f=>`
-                <tr>
-                  <td>${f.nome||''}</td>
-                  <td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umComp||'').toUpperCase()}</td>
-                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umPreco||'').toUpperCase()}</td>
-                  <td class="right">${fmtBRL(f.custoUnit||0)}</td>
-                  <td class="right">${fmtBRL(f.valor||0)}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-          </div>
-        </details>
-      </td>`;
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th><th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr></thead>
+            <tbody>${r.comp.filhos.map(f=>`
+              <tr><td>${f.nome||''}</td><td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td><td>${(f.umComp||'').toUpperCase()}</td>
+                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td><td>${(f.umPreco||'').toUpperCase()}</td>
+                  <td class="right">${fmtBRL(f.custoUnit||0)}</td><td class="right">${fmtBRL(f.valor||0)}</td></tr>`).join('')}
+            </tbody></table></div>
+        </details></td>`;
       elTbody.appendChild(det);
     }
   });
-  document.getElementById('s_itens').textContent = calc.itens.length;
-  document.getElementById('s_total').textContent = fmtBRL(calc.total);
-  document.getElementById('s_gml').textContent  = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('s_kgl').textContent  = fmtBRL(calc.kgl);
+  document.getElementById('s_itens').textContent=calc.itens.length;
+  document.getElementById('s_total').textContent=fmtBRL(calc.total);
+  document.getElementById('s_gml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('s_kgl').textContent=fmtBRL(calc.kgl);
 
-  let unidadeVenda='un';
-  if(TYPE(calc.unidade)==='mass') unidadeVenda='kg';
-  else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
-  document.getElementById('kf_label').textContent = `Custo Final por ${unidadeVenda}`;
-  document.getElementById('pv_hint').textContent  = `Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
+  let unidadeVenda='un'; if(TYPE(calc.unidade)==='mass') unidadeVenda='kg'; else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
+  document.getElementById('kf_label').textContent=`Custo Final por ${unidadeVenda}`;
+  document.getElementById('pv_hint').textContent=`Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
 
   MARGEM=0; document.getElementById('pv_input').value='';
 
-  // mostrar cards
   document.getElementById('cardProd').style.display='block';
   document.getElementById('cardRec').style.display='block';
   document.getElementById('cardCusto').style.display='block';
   document.getElementById('cardVenda').style.display='block';
 
-  // carregar preço salvo (se houver)
   (async ()=>{
-    const saved = await fetchPrecoSalvo(prod);
-    if(saved && typeof saved.margemPerc==='number'){ 
-      MARGEM=saved.margemPerc; 
-      document.getElementById('pv_input').value=String(MARGEM).replace('.',','); 
-    }
+    const saved=await fetchPrecoSalvo(prod);
+    if(saved && typeof saved.margemPerc==='number'){ MARGEM=saved.margemPerc; document.getElementById('pv_input').value=String(MARGEM).replace('.',','); }
     atualizarPreco();
   })();
 }
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
-function lineValue(mode, rawVal, base){ const v=toNumberBR(rawVal); return mode==='pct' ? base*(v/100) : v; }
+function lineValue(mode, raw, base){ const v=toNumberBR(raw); return mode==='pct'? base*(v/100) : v; }
 
-/* ====== Custos + Preço ====== */
+/* ===== Custos + Preço ===== */
 function atualizarCustos(){
-  const base = BASE.total||0;
-
-  ADD.imp.mode = getRadio('m_imp'); ADD.fix.mode=getRadio('m_fix'); ADD.op.mode=getRadio('m_op');
-  const impV = lineValue(ADD.imp.mode, document.getElementById('v_imp').value, base);
-  const fixV = lineValue(ADD.fix.mode, document.getElementById('v_fix').value, base);
-  const opV  = lineValue(ADD.op.mode,  document.getElementById('v_op').value,  base);
-  const add  = impV+fixV+opV;
-  const final= base+add;
+  const base=BASE.total||0;
+  const impV=lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV=lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV =lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+  const add=impV+fixV+opV, final=base+add;
 
   document.getElementById('r_imp').textContent=fmtBRL(impV);
   document.getElementById('r_fix').textContent=fmtBRL(fixV);
   document.getElementById('r_op').textContent =fmtBRL(opV);
-
-  document.getElementById('k_base').textContent = fmtBRL(base);
-  document.getElementById('k_add').textContent  = fmtBRL(add);
-  document.getElementById('k_final').textContent= fmtBRL(final);
+  document.getElementById('k_base').textContent=fmtBRL(base);
+  document.getElementById('k_add').textContent =fmtBRL(add);
+  document.getElementById('k_final').textContent=fmtBRL(final);
 
   let perUnit=0; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-  if(rend>0){
-    if(u==='kg'||u==='l') perUnit = final/rend;
-    else if(u==='g'||u==='ml') perUnit = final/(rend/1000);
-    else perUnit = final/rend;
-  } else { perUnit = 0; }
-  document.getElementById('k_final_unit').textContent = fmtBRL(isFinite(perUnit)?perUnit:0);
-  return { custoFinalLote: final, custoUnit: (isFinite(perUnit)?perUnit:0) };
+  if(rend>0){ if(u==='kg'||u==='l') perUnit=final/rend; else if(u==='g'||u==='ml') perUnit=final/(rend/1000); else perUnit=final/rend; }
+  document.getElementById('k_final_unit').textContent=fmtBRL(isFinite(perUnit)?perUnit:0);
+  return {custoFinalLote:final,custoUnit:(isFinite(perUnit)?perUnit:0)};
 }
-
 function atualizarPreco(){
-  const {custoFinalLote,custoUnit} = atualizarCustos();
-
+  const {custoFinalLote,custoUnit}=atualizarCustos();
   let multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
   if(u==='kg'||u==='l') multLote=rend||1; else if(u==='g'||u==='ml') multLote=(rend||0)/1000; else multLote=rend||1;
-
-  let m = Number(MARGEM);
-  const warn=document.getElementById('pv_warn');
-  const margemInvalida = !Number.isFinite(m) || m<0;
-  if(margemInvalida) m=0; warn.style.display = margemInvalida ? 'block':'none';
-
-  const pvLote = custoFinalLote * (1 + m/100);
-  const pvPerUnit = multLote>0 ? (pvLote / multLote) : 0;
-
-  const markup = (custoUnit>0 && pvPerUnit>0) ? (pvPerUnit/custoUnit) : (1 + m/100);
-  const lucro  = Math.max(0, pvLote - custoFinalLote);
-
-  document.getElementById('pv_lote').textContent   = fmtBRL(pvLote||0);
-  document.getElementById('pv_markup').textContent = (isFinite(markup)?markup:0).toFixed(2)+'x';
-  document.getElementById('pv_lucro').textContent  = fmtBRL(lucro||0);
-
-  window.__PV_PER_UNIT = pvPerUnit||0;
-  window.__PV_LOTE     = pvLote||0;
+  let m=Number(MARGEM); if(!Number.isFinite(m)||m<0) m=0;
+  const pvLote=custoFinalLote*(1+m/100);
+  const pvPerUnit=multLote>0 ? (pvLote/multLote) : 0;
+  const markup=(custoUnit>0 && pvPerUnit>0) ? (pvPerUnit/custoUnit) : (1+m/100);
+  const lucro=Math.max(0, pvLote-custoFinalLote);
+  document.getElementById('pv_lote').textContent=fmtBRL(pvLote||0);
+  document.getElementById('pv_markup').textContent=(isFinite(markup)?markup:0).toFixed(2)+'x';
+  document.getElementById('pv_lucro').textContent=fmtBRL(lucro||0);
+  window.__PV_PER_UNIT=pvPerUnit||0; window.__PV_LOTE=pvLote||0;
 }
 
-/* ====== CSV ====== */
+/* ===== CSV ===== */
 function exportCSV(){
-  if(!BASE || !Array.isArray(BASE.itens)) return;
+  if(!BASE||!Array.isArray(BASE.itens)) return;
   const head=['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
-  const rows=BASE.itens.map(r=>[
-    `"${(r.item||'').replace(/"/g,'""')}"`,
-    String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(),
-    (r.custoUnit||0).toFixed(4).replace('.',','), (r.subtotal||0).toFixed(2).replace('.',',')
-  ]);
+  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace('.',',')]);
   rows.unshift(head); const csv=rows.map(r=>r.join(';')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=`receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`; a.click();
 }
 
-/* ====== Eventos ====== */
+/* ===== Eventos ===== */
 elEmpresa.addEventListener('change', async ()=>{ const emp=elEmpresa.value; if(!emp){PRODUTOS=[];renderSugestoes();return;} await fetchProdutos(emp); });
 document.getElementById('btnReload').addEventListener('click', async ()=>{ const emp=elEmpresa.value; if(emp) await fetchProdutos(emp); });
 
@@ -620,84 +506,60 @@ elBusca.addEventListener('keydown',e=>{
   const items=[...elTaList.querySelectorAll('.ta-item')];
   if(e.key==='ArrowDown'&&items.length){e.preventDefault();taActive=(taActive+1)%items.length;updateActive();}
   else if(e.key==='ArrowUp'&&items.length){e.preventDefault();taActive=(taActive-1+items.length)%items.length;updateActive();}
-  else if(e.key==='Enter'){
-    e.preventDefault();
-    if(items.length===1) selectByIndex(Number(items[0].dataset.idx));
-    else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx));
-    else if(items.length>0) selectByIndex(Number(items[0].dataset.idx));
-  }else if(e.key==='Escape'){ elTaList.style.display='none'; }
+  else if(e.key==='Enter'){e.preventDefault(); if(items.length===1) selectByIndex(Number(items[0].dataset.idx)); else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx)); else if(items.length>0) selectByIndex(Number(items[0].dataset.idx));}
+  else if(e.key==='Escape'){ elTaList.style.display='none'; }
 });
-document.addEventListener('click', (ev)=>{ if(!elTaList.contains(ev.target) && ev.target!==elBusca){ elTaList.style.display='none'; } });
+document.addEventListener('click',ev=>{ if(!elTaList.contains(ev.target) && ev.target!==elBusca){ elTaList.style.display='none'; } });
 
-['m_imp','m_fix','m_op'].forEach(name=>{
-  document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', ()=> atualizarPreco()));
-});
-['v_imp','v_fix','v_op'].forEach(id=> document.getElementById(id).addEventListener('input', ()=> atualizarPreco()));
+['m_imp','m_fix','m_op'].forEach(name=>{ document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', atualizarPreco)); });
+['v_imp','v_fix','v_op'].forEach(id=> document.getElementById(id).addEventListener('input', atualizarPreco));
 
-document.getElementById('pv_input').addEventListener('input', e=>{ MARGEM = toNumberBR(e.target.value); atualizarPreco(); });
+document.getElementById('pv_input').addEventListener('input', e=>{ MARGEM=toNumberBR(e.target.value); atualizarPreco(); });
 document.getElementById('btnCSV').addEventListener('click', exportCSV);
 document.getElementById('btnClear').addEventListener('click', ()=>{ ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value=''); MARGEM=0; atualizarPreco(); });
 
 document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(!PROD){ alert('Selecione um produto na busca.'); return; }
-  const btn = document.getElementById('btnSalvarPainel'); btn.disabled=true; btn.textContent='Salvando...';
-
+  const btn=document.getElementById('btnSalvarPainel'); btn.disabled=true; btn.textContent='Salvando...';
   try{
     atualizarPreco();
-    const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
+    const user=(document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
+    const base=BASE.total||0;
+    const impV=lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+    const fixV=lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+    const opV =lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+    const addTot=impV+fixV+opV; const finalLote=base+addTot;
 
-    const base = BASE.total||0;
-    const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
-    const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
-    const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
-    const addTot = impV+fixV+opV;
-    const finalLote = base+addTot;
-
-    let unidadeUnit='un', multLote=1;
-    const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
+    let unidadeUnit='un', multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
     if(u==='kg'||u==='l'){ multLote=rend||1; unidadeUnit=(u==='kg'?'kg':'L'); }
     else if(u==='g'||u==='ml'){ multLote=(rend||0)/1000; unidadeUnit=(u==='g'?'kg':'L'); }
     else { multLote=rend||1; unidadeUnit='un'; }
 
-    const pvUnit = Number(window.__PV_PER_UNIT||0);
-    const pvLote = Number(window.__PV_LOTE||0);
-    const custoFinalUnit = multLote>0 ? (finalLote/(multLote)) : 0;
-    const markup = (pvUnit>0 && custoFinalUnit>0) ? (pvUnit / custoFinalUnit) : (1 + (Number(MARGEM)||0)/100);
+    const pvUnit=Number(window.__PV_PER_UNIT||0); const pvLote=Number(window.__PV_LOTE||0);
+    const custoFinalUnit= multLote>0 ? (finalLote/multLote) : 0;
+    const markup=(pvUnit>0 && custoFinalUnit>0)?(pvUnit/custoFinalUnit):(1 + (Number(MARGEM)||0)/100);
 
-    const payload = {
-      empresa: PROD.empresa||elEmpresa.value||'',
-      codigoSistema: PROD.codigoSistema||'',
-      numero: PROD.numero||'',
-      item: PROD.item||'',
-      unidadeRend: BASE.unidade||'',
-      rendimento: BASE.rendimento||0,
-      custoReceitaLote: base,
-      modoImpostos: getRadio('m_imp'), valorImpostos: toNumberBR(document.getElementById('v_imp')),
-      modoDespFixa:  getRadio('m_fix'), valorDespFixa: toNumberBR(document.getElementById('v_fix')),
-      modoDespOper:  getRadio('m_op'),  valorDespOper:  toNumberBR(document.getElementById('v_op')),
-      custosAdicionaisLote: addTot,
-      custoFinalLote: finalLote,
-      custoFinalUnit: custoFinalUnit,
-      unidadeUnit,
-      precoVendaUnit: pvUnit,
-      precoVendaLote: pvLote,
-      markup,
-      margemPerc: Number(MARGEM||0),
-      usuario: user
+    const payload={
+      empresa:PROD.empresa||elEmpresa.value||'', codigoSistema:PROD.codigoSistema||'', numero:PROD.numero||'', item:PROD.item||'',
+      unidadeRend:BASE.unidade||'', rendimento:BASE.rendimento||0, custoReceitaLote:base,
+      modoImpostos:getRadio('m_imp'), valorImpostos:toNumberBR(document.getElementById('v_imp')),
+      modoDespFixa:getRadio('m_fix'), valorDespFixa:toNumberBR(document.getElementById('v_fix')),
+      modoDespOper:getRadio('m_op'),  valorDespOper:toNumberBR(document.getElementById('v_op')),
+      custosAdicionaisLote:addTot, custoFinalLote:finalLote, custoFinalUnit:custoFinalUnit, unidadeUnit,
+      precoVendaUnit:pvUnit, precoVendaLote:pvLote, markup, margemPerc:Number(MARGEM||0), usuario:user
     };
 
-    const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    const res = await fetchJSON(WEBAPP_URL+'?action=salvar_precificacao', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     });
-    const txt = await res.text(); let j;
-    try{ j = JSON.parse(txt); }catch(_){ j={ok:false,error:'Resposta não-JSON: '+txt}; }
-    if(j.ok){ alert('Salvo no PainelPreco ✓'); }
-    else    { alert('Erro ao salvar: '+(j.error||'desconhecido')); }
-  }catch(err){ alert('Falha ao salvar: '+err); }
-  finally{ btn.disabled=false; btn.textContent='Salvar no Painel'; }
+    if(res.ok){ alert('Salvo no PainelPreco ✓'); }
+    else { alert('Falha ao salvar: '+(res.error||'erro desconhecido')+'\nDica: verifique as permissões do Web App (Execute as: Me / Anyone).'); }
+  }finally{
+    btn.disabled=false; btn.textContent='Salvar no Painel';
+  }
 });
 
-/* ====== Boot ====== */
+/* ===== Boot ===== */
 (async function boot(){
   await fetchEmpresas();
   try{ const saved=localStorage.getItem('AUTH_USER'); if(saved) document.getElementById('usuario').value=saved; }catch(_){}
