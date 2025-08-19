@@ -5,36 +5,40 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Análise de Custos & Formação de Preço</title>
 <style>
-  :root{ --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf; --brand:#2563eb; --ghost:#374151; --accent:#b75507; }
+  :root{
+    --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
+    --brand:#2563eb; --ghost:#374151; --accent:#b75507;
+    --gold-dark:#8B6B00; /* dourado escuro */
+  }
   *{ box-sizing:border-box }
   body{ font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:24px }
   h1{ margin:0 0 16px }
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; box-shadow:0 4px 20px rgba(0,0,0,.3) }
   .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px }
-  label{ font-size:.85rem; color:var(--muted) }
-  select, input[type="text"], input[type="number"]{ width:100%; padding:10px; border-radius:10px; border:1px solid #333; background:#0f0f10; color:#fff }
+  label{ font-size:.95rem; color:var(--muted) }
+  select, input[type="text"], input[type="number"]{ width:100%; padding:12px; border-radius:10px; border:1px solid #333; background:#0f0f10; color:#fff }
   .btn{ cursor:pointer; border:0; border-radius:12px; padding:10px 14px; background:var(--brand); color:#fff }
   .btn.secondary{ background:#334155 }
-  .btn.ghost{ background:transparent; border:1px solid var(--ghost) }
+  .btn.ghost{ background:transparent; border:1px solid var(--ghost); color:#fff }
   .muted{ color:var(--muted) }
   .right{ text-align:right }
-  .pill{ padding:6px 10px; border-radius:999px; border:1px solid var(--ghost); background:#111; font-size:.85rem }
+  .pill{ padding:6px 10px; border-radius:999px; border:1px solid var(--ghost); background:#111; font-size:.9rem }
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
   .mini{ padding:6px 10px; border-radius:10px }
   table{ width:100%; border-collapse:collapse }
   th,td{ border:1px solid var(--line); padding:8px; text-align:left; white-space:nowrap }
-  th{ background:#fff; color:#000; font-weight:600; }
+  th{ background:#fff; color:#000; font-weight:700 }
   .tbl-wrap{ overflow:auto; border-radius:10px; }
   .stat{ display:flex; gap:10px; flex-wrap:wrap }
   .stat .pill strong{ color:#fff }
   .kpi{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px }
   .kpi .box{ background:#101014; border:1px solid var(--line); border-radius:12px; padding:12px }
-  .kpi .val{ font-weight:700; font-size:1.1rem }
+  .kpi .val{ font-weight:800; font-size:1.2rem }
+
   .cost-row{ display:grid; grid-template-columns:150px 130px 1fr 160px; gap:10px; align-items:center }
   .cost-row .mode{ display:flex; gap:6px; }
   .hr{ height:1px; background:var(--line); margin:10px 0 }
-  .warn{ color:#f59e0b; font-size:.85rem }
-  .row-actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
+  .warn{ color:#f59e0b; font-size:.9rem }
 
   /* Typeahead */
   .ta-wrap{ position:relative; }
@@ -47,27 +51,41 @@
   .ta-item{ padding:10px 12px; border-bottom:1px solid #1b1b1b; cursor:pointer; }
   .ta-item:last-child{ border-bottom:none }
   .ta-item:hover, .ta-item.active{ background:#1b1b1b }
-  .ta-title{ font-weight:600; color:#fff }
+  .ta-title{ font-weight:700; color:#fff }
   .ta-meta{ font-size:.85rem; color:#a3a3a3; margin-left:6px }
 
-  /* ======= BLOCO DE FORMAÇÃO DE PREÇO EM BRANCO ======= */
-  #cardVenda{ background:#fff !important; color:#000 !important; border:1px solid #e5e5e5 !important; }
-  #cardVenda label, #cardVenda .muted, #cardVenda .warn{ color:#000 !important; }
-  #cardVenda .kpi .box{ background:#fff !important; border:1px solid #e5e5e5 !important; }
-  #cardVenda .kpi .val{ color:#000 !important; }
-  #cardVenda input{ background:#fff !important; color:#000 !important; border:1px solid #d4d4d4 !important; }
+  /* ===== BLOCO "Formação de preço" — dourado escuro com letras brancas ===== */
+  #cardVenda{
+    background:linear-gradient(180deg, var(--gold-dark) 0%, #6c5200 100%) !important;
+    color:#fff !important; border:1px solid #b28600 !important;
+  }
+  #cardVenda label, #cardVenda .muted, #cardVenda .warn{ color:#fff !important; }
+  #cardVenda .kpi .box{ background:rgba(0,0,0,.15) !important; border:1px solid rgba(255,255,255,.25) !important; }
+  #cardVenda .kpi .val{ color:#fff !important; font-size:1.35rem; letter-spacing:.2px }
+  #cardVenda input{
+    background:rgba(0,0,0,.18) !important; color:#fff !important; border:1px solid rgba(255,255,255,.35) !important;
+  }
+  #cardVenda input::placeholder{ color:rgba(255,255,255,.85) }
+  #cardVenda .btn, #cardVenda .btn.ghost, #cardVenda .btn.secondary{
+    color:#fff !important; border-color:rgba(255,255,255,.55) !important;
+  }
+  #cardVenda .btn.ghost:hover{ background:rgba(255,255,255,.12) }
+  #cardVenda strong, #cardVenda .grid-2 > strong{
+    font-size:1.3rem; color:#fff; letter-spacing:.3px
+  }
   /* ===================================================== */
 
   @media (max-width: 980px){
-    .row{ grid-template-columns: 1fr 1fr; }
-    .kpi{ grid-template-columns:1fr 1fr; }
+    .row{ grid-template-columns:1fr 1fr }
+    .kpi{ grid-template-columns:1fr 1fr }
     .cost-row{ grid-template-columns:1fr 120px 1fr 120px }
+    #cardVenda .kpi .val{ font-size:1.2rem }
   }
   @media (max-width: 640px){
     body{ padding:14px }
     .row{ grid-template-columns:1fr }
-    .kpi{ grid-template-columns:1fr; }
-    .cost-row{ grid-template-columns:1fr 1fr; }
+    .kpi{ grid-template-columns:1fr }
+    .cost-row{ grid-template-columns:1fr 1fr }
   }
 </style>
 </head>
@@ -83,7 +101,7 @@
         <div class="muted" id="infoEmpresa"></div>
       </div>
 
-      <!-- Busca (nome/código) com autocomplete -->
+      <!-- Busca única (nome/código) com autocomplete -->
       <div style="grid-column:span 9" class="ta-wrap">
         <label>Produto (busca por nome/código)</label>
         <input id="busca" type="text" placeholder="Ex.: Bolo, 102, P-001..." autocomplete="off">
@@ -111,22 +129,10 @@
       </div>
       <div style="grid-column:span 6">
         <div class="kpi">
-          <div class="box">
-            <div class="muted">Rendimento</div>
-            <div class="val" id="k_rend">—</div>
-          </div>
-          <div class="box">
-            <div class="muted">Custo da Receita</div>
-            <div class="val" id="k_custoRec">—</div>
-          </div>
-          <div class="box">
-            <div class="muted">Custo por g/ml</div>
-            <div class="val" id="k_custoGml">—</div>
-          </div>
-          <div class="box">
-            <div class="muted">Custo por kg/L</div>
-            <div class="val" id="k_custoKgL">—</div>
-          </div>
+          <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
+          <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
+          <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
+          <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
         </div>
       </div>
     </div>
@@ -199,26 +205,14 @@
 
     <div class="hr"></div>
     <div class="kpi">
-      <div class="box">
-        <div class="muted">Custo da Receita (lote)</div>
-        <div class="val" id="k_base">—</div>
-      </div>
-      <div class="box">
-        <div class="muted">Custos Adicionais</div>
-        <div class="val" id="k_add">—</div>
-      </div>
-      <div class="box">
-        <div class="muted">Custo Final (lote)</div>
-        <div class="val" id="k_final">—</div>
-      </div>
-      <div class="box">
-        <div class="muted" id="kf_label">Custo Final por —</div>
-        <div class="val" id="k_final_unit">—</div>
-      </div>
+      <div class="box"><div class="muted">Custo da Receita (lote)</div><div class="val" id="k_base">—</div></div>
+      <div class="box"><div class="muted">Custos Adicionais</div><div class="val" id="k_add">—</div></div>
+      <div class="box"><div class="muted">Custo Final (lote)</div><div class="val" id="k_final">—</div></div>
+      <div class="box"><div class="muted" id="kf_label">Custo Final por —</div><div class="val" id="k_final_unit">—</div></div>
     </div>
   </div>
 
-  <!-- Formação de preço (AGORA POR MARGEM) -->
+  <!-- Formação de preço (por Margem) -->
   <div class="card" id="cardVenda" style="display:none">
     <div class="grid-2">
       <strong>Formação de preço</strong>
@@ -228,23 +222,13 @@
       <div style="grid-column:span 4">
         <label id="pv_label">Margem de lucro (%)</label>
         <input id="pv_input" type="text" placeholder="Ex.: 40">
-        <div class="muted small" id="pv_hint">Digite a % de margem desejada</div>
+        <div class="muted small" id="pv_hint">Base: —</div>
       </div>
       <div style="grid-column:span 8">
         <div class="kpi">
-          <div class="box">
-            <div class="muted">Preço de venda (lote)</div>
-            <div class="val" id="pv_lote">—</div>
-          </div>
-          <div class="box">
-            <div class="muted">Markup</div>
-            <div class="val" id="pv_markup">—</div>
-          </div>
-          <div class="box">
-            <div class="muted">Lucro (lote)</div>
-            <div class="val" id="pv_lucro">—</div>
-          </div>
-          <!-- (box “Margem” removido) -->
+          <div class="box"><div class="muted">Preço de venda (lote)</div><div class="val" id="pv_lote">—</div></div>
+          <div class="box"><div class="muted">Markup</div><div class="val" id="pv_markup">—</div></div>
+          <div class="box"><div class="muted">Lucro (lote)</div><div class="val" id="pv_lucro">—</div></div>
         </div>
       </div>
     </div>
@@ -366,10 +350,7 @@ function renderSugestoes(){
   elTaList.innerHTML = list.map(p=>{
     const idx = PRODUTOS.indexOf(p);
     const meta = [p.codigoSistema||'-', (p.numero ? ('Nº '+p.numero) : '')].filter(Boolean).join(' • ');
-    return `<div class="ta-item" data-idx="${idx}">
-      <span class="ta-title">${p.item||'(produto)'}</span>
-      <span class="ta-meta">— ${meta}</span>
-    </div>`;
+    return `<div class="ta-item" data-idx="${idx}"><span class="ta-title">${p.item||'(produto)'}</span><span class="ta-meta">— ${meta}</span></div>`;
   }).join('');
   elTaList.style.display='block';
   taActive = -1;
@@ -379,7 +360,7 @@ function selectByIndex(idxInProd){
   const p = PRODUTOS[idxInProd];
   elBusca.value = `${p.item||'(produto)'} — ${p.codigoSistema||'-'}`;
   elTaList.style.display='none';
-  fillProduto(p);
+  fillProduto(p); // async (não precisamos aguardar)
 }
 elTaList.addEventListener('click', e=>{
   const item = e.target.closest('.ta-item');
@@ -393,6 +374,38 @@ function updateActive(){
 }
 
 /* ===== CÁLCULO DA RECEITA ===== */
+async function enriquecerComCompostos(prodClonado){
+  // Se algum item vier sem custoUnit (0/NaN), tentamos obter pelo endpoint comparar_ingrediente
+  const empresaSel = (prodClonado.empresa || document.getElementById('empresa').value || '').toLowerCase();
+  for(const l of (prodClonado.receita||[])){
+    const custo = toNumberBR(l.custoUnit);
+    if(custo>0) continue;
+
+    const nome = l.item || l.nome || '';
+    const codigo = l.codigo || '';
+    const qtd = toNumberBR(l.qtd) || 1;
+    const um  = (l.um||'').toLowerCase();
+    if(!nome && !codigo) continue;
+
+    try{
+      const qs = new URLSearchParams({ action:'comparar_ingrediente', nome, codigo, qtd, um });
+      const r  = await fetch(WEBAPP_URL+'?'+qs.toString(), {cache:'no-store'});
+      const j  = await r.json();
+      if(!(j && j.ok && j.data && Array.isArray(j.data.empresas))) continue;
+
+      // pega preço da mesma empresa, se houver; senão, o menor
+      const lista = j.data.empresas;
+      let escolha = lista.find(x => (x.empresa||'').toLowerCase() === empresaSel);
+      if(!escolha){
+        escolha = lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null);
+      }
+      if(escolha && typeof escolha.custoUnit==='number' && escolha.custoUnit>0){
+        l.custoUnit = escolha.custoUnit;           // custo unitário do ingrediente composto
+        l.priceUm   = (escolha.umPreco || um || 'kg'); // unidade do preço retornado
+      }
+    }catch(_){}
+  }
+}
 function calcularReceita(prod){
   const linhas = Array.isArray(prod?.receita)? prod.receita : [];
   const itens = [];
@@ -422,14 +435,18 @@ function calcularReceita(prod){
 }
 
 /* ===== ATUALIZA TELAS ===== */
-function fillProduto(prod){
-  PROD = prod;
-  const calc = calcularReceita(prod);
+async function fillProduto(prod){
+  // clona e enriquece (para compostos)
+  const prodEnri = JSON.parse(JSON.stringify(prod||{}));
+  await enriquecerComCompostos(prodEnri);
+
+  PROD = prodEnri;
+  const calc = calcularReceita(prodEnri);
   BASE = calc;
 
-  document.getElementById('p_nome').textContent = prod.item || '(produto)';
+  document.getElementById('p_nome').textContent = prodEnri.item || '(produto)';
   document.getElementById('p_meta').textContent =
-    `${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+    `${prodEnri.codigoSistema||'-'} • Nº ${prodEnri.numero||'-'} • ${prodEnri.classificacao||'-'}`;
   document.getElementById('k_rend').textContent = `${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
   document.getElementById('k_custoRec').textContent = fmtBRL(calc.total);
   document.getElementById('k_custoGml').textContent = 'R$ ' + (calc.gml||0).toFixed(4).replace('.',',');
@@ -443,8 +460,7 @@ function fillProduto(prod){
       <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
       <td>${(r.um||'').toUpperCase()}</td>
       <td class="right">${fmtBRL(r.custoUnit)}</td>
-      <td class="right">${fmtBRL(r.subtotal)}</td>
-    `;
+      <td class="right">${fmtBRL(r.subtotal)}</td>`;
     elTbody.appendChild(tr);
   });
   document.getElementById('s_itens').textContent = calc.itens.length;
@@ -455,7 +471,6 @@ function fillProduto(prod){
   let unidadeVenda = 'un';
   if(TYPE(calc.unidade)==='mass') unidadeVenda = 'kg';
   else if(TYPE(calc.unidade)==='vol') unidadeVenda = 'L';
-
   document.getElementById('kf_label').textContent = `Custo Final por ${unidadeVenda}`;
   document.getElementById('pv_hint').textContent  = `Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
 
@@ -468,7 +483,7 @@ function fillProduto(prod){
   document.getElementById('cardVenda').style.display= 'block';
 
   (async ()=>{
-    const saved = await fetchPrecoSalvo(prod);
+    const saved = await fetchPrecoSalvo(prodEnri);
     if(saved && typeof saved.margemPerc==='number'){
       MARGEM = saved.margemPerc;
       document.getElementById('pv_input').value = String(MARGEM).replace('.',',');
@@ -478,8 +493,6 @@ function fillProduto(prod){
 }
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
-function setRadio(name,val){ const list=document.querySelectorAll(`input[name="${name}"]`); list.forEach(r=>{ r.checked = (r.value===val); }); }
-
 function lineValue(mode, rawVal, base){
   const v = toNumberBR(rawVal);
   if(mode==='pct') return base * (v/100);
@@ -488,7 +501,6 @@ function lineValue(mode, rawVal, base){
 
 function atualizarCustos(){
   const base = BASE.total||0;
-
   const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
   const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
   const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
@@ -498,7 +510,6 @@ function atualizarCustos(){
   document.getElementById('r_imp').textContent = fmtBRL(impV);
   document.getElementById('r_fix').textContent = fmtBRL(fixV);
   document.getElementById('r_op').textContent  = fmtBRL(opV);
-
   document.getElementById('k_base').textContent = fmtBRL(base);
   document.getElementById('k_add').textContent  = fmtBRL(add);
   document.getElementById('k_final').textContent= fmtBRL(final);
@@ -506,7 +517,6 @@ function atualizarCustos(){
   let perUnit = 0;
   const u = (BASE.unidade||'').toLowerCase();
   const rend = Number(BASE.rendimento||0);
-
   if (rend > 0) {
     if (u === 'kg' || u === 'l') perUnit = final / rend;
     else if (u === 'g' || u === 'ml') perUnit = final / (rend / 1000);
@@ -520,7 +530,7 @@ function atualizarCustos(){
 function atualizarPreco(){
   const { custoFinalLote, custoUnit } = atualizarCustos();
 
-  // fator para converter preço unitário -> lote
+  // unitário -> lote
   let multLote = 1;
   const u = (BASE.unidade||'').toLowerCase();
   const rend = Number(BASE.rendimento||0);
@@ -528,12 +538,10 @@ function atualizarPreco(){
   else if (u === 'g' || u === 'ml') multLote = rend / 1000;
   else multLote = rend || 1;
 
-  // margem válida (0 a <100)
   let m = Number(MARGEM)||0;
   const warn = document.getElementById('pv_warn');
   if(m >= 100){ m = 99.9; warn.style.display='block'; } else { warn.style.display='none'; }
 
-  // pv_lote = custo / (1 - margem)
   const pvLote = (m>0 ? (custoFinalLote / (1 - m/100)) : 0);
   const pvPerUnit = pvLote / (multLote || 1);
 
@@ -544,7 +552,6 @@ function atualizarPreco(){
   document.getElementById('pv_markup').textContent = markup ? (markup.toFixed(2)+'x') : '—';
   document.getElementById('pv_lucro').textContent  = fmtBRL(lucro||0);
 
-  // guarda para o salvar
   window.__PV_PER_UNIT = pvPerUnit;
   window.__PV_LOTE     = pvLote;
 }
@@ -595,7 +602,7 @@ elBusca.addEventListener('keydown', e=>{
 
 ['m_imp','m_fix','m_op'].forEach(name=>{
   document.querySelectorAll(`input[name="${name}"]`).forEach(r=>{
-    r.addEventListener('change', ()=>{ atualizarPreco(); });
+    r.addEventListener('change', ()=> atualizarPreco());
   });
 });
 document.getElementById('v_imp').addEventListener('input', ()=> atualizarPreco());
@@ -609,25 +616,20 @@ document.getElementById('pv_input').addEventListener('input', e=>{
 document.getElementById('btnCSV').addEventListener('click', exportCSV);
 document.getElementById('btnClear').addEventListener('click', ()=>{
   ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value='');
-  MARGEM = 0;
-  atualizarPreco();
+  MARGEM = 0; atualizarPreco();
 });
 document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(!PROD){ alert('Selecione um produto na busca.'); return; }
   const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
 
-  // garante cálculo atualizado
-  atualizarPreco();
-
-  // custos base
+  atualizarPreco(); // garante cálculo atualizado
   const base = BASE.total||0;
-  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
-  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
-  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+  const impV = lineValue('pct', document.getElementById('v_imp').value, base);
+  const fixV = lineValue('pct', document.getElementById('v_fix').value, base);
+  const opV  = lineValue('pct', document.getElementById('v_op').value,  base);
   const addTot = impV+fixV+opV;
   const finalLote = base + addTot;
 
-  // unidade do preço unitário salvo
   let unidadeUnit = 'un';
   const u = (BASE.unidade||'').toLowerCase();
   const rend = Number(BASE.rendimento||0);
@@ -648,11 +650,11 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
     unidadeRend: BASE.unidade||'',
     rendimento: BASE.rendimento||0,
     custoReceitaLote: base,
-    modoImpostos: getRadio('m_imp'),
+    modoImpostos: 'pct',
     valorImpostos: toNumberBR(document.getElementById('v_imp')),
-    modoDespFixa: getRadio('m_fix'),
+    modoDespFixa: 'pct',
     valorDespFixa: toNumberBR(document.getElementById('v_fix')),
-    modoDespOper: getRadio('m_op'),
+    modoDespOper: 'pct',
     valorDespOper: toNumberBR(document.getElementById('v_op')),
     custosAdicionaisLote: addTot,
     custoFinalLote: finalLote,
