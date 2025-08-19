@@ -350,11 +350,34 @@ function convertQty(qty, from, to){
 }
 
 function toNumberBR(val){
-  if(typeof val !== 'string') val = String(val||'');
-  val = val.replace(/\./g, '').replace(',', '.');
+  // já é número?
+  if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+
+  // se, por engano, vier o próprio input
+  if (val && val.nodeType === 1 && typeof val.value !== 'undefined') {
+    if (val.type === 'number') {
+      const n = val.valueAsNumber;
+      if (!Number.isNaN(n)) return n;
+    }
+    val = val.value;
+  }
+
+  val = String(val ?? '').trim();
+  const hasComma = val.includes(',');
+  const hasDot   = val.includes('.');
+
+  if (hasComma && hasDot) {
+    // padrão BR: ponto = milhar, vírgula = decimal
+    val = val.replace(/\./g, '').replace(',', '.');
+  } else if (hasComma) {
+    // só vírgula: vira ponto decimal
+    val = val.replace(',', '.');
+  } // só ponto: já está no padrão JS
+
   const n = parseFloat(val);
-  return isNaN(n) ? 0 : n;
+  return Number.isFinite(n) ? n : 0;
 }
+
 
 /* ===== USUÁRIOS ===== */
 const USERS_KEY = 'AUTH_USERS_V1';
