@@ -34,6 +34,7 @@
   .cost-row .mode{ display:flex; gap:6px; }
   .hr{ height:1px; background:var(--line); margin:10px 0 }
   .warn{ color:#f59e0b; font-size:.85rem }
+  .row-actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
   @media (max-width: 980px){
     .row{ grid-template-columns: 1fr 1fr; }
     .kpi{ grid-template-columns:1fr 1fr; }
@@ -66,8 +67,12 @@
         <label>Selecione o produto</label>
         <select id="produto"></select>
       </div>
+      <div style="grid-column:span 4">
+        <label>Usuário (opcional)</label>
+        <input id="usuario" type="text" placeholder="Seu nome/login">
+      </div>
     </div>
-    <div class="right" style="margin-top:10px">
+    <div class="row-actions" style="margin-top:10px">
       <button class="btn secondary" id="btnReload">Recarregar</button>
       <a class="btn ghost" href="./">← Cadastro</a>
     </div>
@@ -133,7 +138,10 @@
 
   <!-- Custos extras -->
   <div class="card" id="cardCusto" style="display:none">
-    <strong>Custos adicionais</strong> <span class="muted">(% aplicados sobre o custo da receita)</span>
+    <div class="grid-2">
+      <strong>Custos adicionais</strong>
+      <div class="right"><span class="muted">(% aplicados sobre o custo da receita)</span></div>
+    </div>
     <div class="hr"></div>
 
     <div class="cost-row">
@@ -189,7 +197,10 @@
 
   <!-- Preço de venda -->
   <div class="card" id="cardVenda" style="display:none">
-    <strong>Formação de preço</strong>
+    <div class="grid-2">
+      <strong>Formação de preço</strong>
+      <div class="row-actions"><button class="btn" id="btnSalvarPainel">Salvar no Painel</button></div>
+    </div>
     <div class="row" style="margin-top:10px">
       <div style="grid-column:span 4">
         <label id="pv_label">Preço de venda por —</label>
@@ -273,8 +284,7 @@ async function fetchEmpresas(){
   EMPRESAS.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; elEmpresa.appendChild(o); });
 }
 
-/* Ajuste aqui se seu endpoint tiver outro nome:
-   tente 'produtos', 'receitas', 'produtos_all' etc.  */
+/* produtos da aba Produtos */
 async function fetchProdutos(empresa){
   const url = WEBAPP_URL+'?action=produtos&empresa='+encodeURIComponent(empresa||'')+'&ts='+Date.now();
   try{
@@ -289,6 +299,34 @@ async function fetchProdutos(empresa){
     console.warn('fetchProdutos:', e);
   }
   renderProdutos();
+}
+
+/* pega configuração salva no PainelPreco */
+async function fetchPrecoSalvo(prod){
+  const params = new URLSearchParams({
+    action:'preco_get',
+    empresa: prod.empresa||'',
+    codigo:  prod.codigoSistema||'',
+    numero:  prod.numero||'',
+    item:    prod.item||''
+  });
+  try{
+    const r = await fetch(WEBAPP_URL+'?'+params.toString(), {cache:'no-store'});
+    const j = await r.json();
+    if(!j.ok || !j.data) return null;
+    return j.data;
+  }catch{ return null; }
+}
+
+/* salva configuração no PainelPreco */
+async function salvarPrecoPainel(payload){
+  const r = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  const txt = await r.text();
+  try{ return JSON.parse(txt); }catch{ return {ok:false, error:'Resposta não-JSON: '+txt}; }
 }
 
 /* ===== RENDER LISTA ===== */
@@ -385,7 +423,6 @@ function fillProduto(prod){
   document.getElementById('kf_label').textContent = `Custo Final por ${unidadeVenda}`;
   document.getElementById('pv_label').textContent = `Preço de venda por ${unidadeVenda}`;
   document.getElementById('pv_hint').textContent  = `Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
-  // limpa precificação anterior
   PRECO.perUnit = 0;
   document.getElementById('pv_input').value = '';
 
@@ -395,10 +432,32 @@ function fillProduto(prod){
   document.getElementById('cardCusto').style.display= 'block';
   document.getElementById('cardVenda').style.display= 'block';
 
-  // recalcular
-  atualizarCustos();
-  atualizarPreco();
+  // carregar valores salvos (se houver) e recalcular
+  (async ()=>{
+    const saved = await fetchPrecoSalvo(prod);
+    if(saved){
+      // modos
+      setRadio('m_imp', saved.modoImpostos||'pct');
+      setRadio('m_fix', saved.modoDespFixa||'pct');
+      setRadio('m_op',  saved.modoDespOper||'pct');
+      // valores
+      document.getElementById('v_imp').value = saved.valorImpostos ?? '';
+      document.getElementById('v_fix').value = saved.valorDespFixa ?? '';
+      document.getElementById('v_op').value  = saved.valorDespOper ?? '';
+      ADD.imp = {mode: getRadio('m_imp'), val: document.getElementById('v_imp').value};
+      ADD.fix = {mode: getRadio('m_fix'), val: document.getElementById('v_fix').value};
+      ADD.op  = {mode: getRadio('m_op'),  val: document.getElementById('v_op').value};
+      // preço
+      PRECO.perUnit = Number(saved.precoVendaUnit||0);
+      document.getElementById('pv_input').value = PRECO.perUnit ? String(PRECO.perUnit).replace('.',',') : '';
+    }
+    atualizarCustos();
+    atualizarPreco();
+  })();
 }
+
+function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
+function setRadio(name,val){ const list=document.querySelectorAll(`input[name="${name}"]`); list.forEach(r=>{ r.checked = (r.value===val); }); }
 
 /* calcula valor de uma linha de custo (pct ou abs) */
 function lineValue(mode, rawVal, base){
@@ -410,6 +469,10 @@ function lineValue(mode, rawVal, base){
 /* Atualiza cards de custos extras */
 function atualizarCustos(){
   const base = BASE.total||0;
+
+  ADD.imp.mode = getRadio('m_imp');
+  ADD.fix.mode = getRadio('m_fix');
+  ADD.op.mode  = getRadio('m_op');
 
   const impV = lineValue(ADD.imp.mode, ADD.imp.val, base);
   const fixV = lineValue(ADD.fix.mode, ADD.fix.val, base);
@@ -446,7 +509,7 @@ function atualizarPreco(){
   else { multLote = (BASE.rendimento||1); } // un
 
   const pvLote = pvPerUnit * multLote;
-  const custoFinalLote = (BASE.total||0) + ( (lineValue(ADD.imp.mode,ADD.imp.val,BASE.total)||0) + (lineValue(ADD.fix.mode,ADD.fix.val,BASE.total)||0) + (lineValue(ADD.op.mode,ADD.op.val,BASE.total)||0) );
+  const custoFinalLote = (BASE.total||0) + ( lineValue(ADD.imp.mode,ADD.imp.val,BASE.total) + lineValue(ADD.fix.mode,ADD.fix.val,BASE.total) + lineValue(ADD.op.mode,ADD.op.val,BASE.total) );
 
   const lucro = Math.max(0, pvLote - custoFinalLote);
   const markup = (custoPorUn>0 && pvPerUnit>0) ? (pvPerUnit/custoPorUn) : 0;
@@ -521,10 +584,64 @@ document.getElementById('btnClear').addEventListener('click', ()=>{
   ADD.imp.val=ADD.fix.val=ADD.op.val=0; PRECO.perUnit=0;
   atualizarPreco();
 });
+document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
+  if(!PROD){ alert('Selecione um produto.'); return; }
+  const user = (document.getElementById('usuario').value || localStorage.getItem('AUTH_USER') || '').trim();
+
+  // recalc, empacota e envia
+  const custoUnit = atualizarCustos(); // retorna custo final por unidade
+  const base = BASE.total||0;
+  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+  const addTot = impV+fixV+opV;
+  const finalLote = base + addTot;
+
+  let multLote = 1;
+  let unidadeUnit = 'un';
+  if(TYPE(BASE.unidade)==='mass'){ multLote = (BASE.rendimento||0)/1000; unidadeUnit='kg'; }
+  else if(TYPE(BASE.unidade)==='vol'){ multLote = (BASE.rendimento||0)/1000; unidadeUnit='L'; }
+  else { multLote = (BASE.rendimento||1); unidadeUnit='un'; }
+
+  const pvUnit = PRECO.perUnit||0;
+  const pvLote = pvUnit * multLote;
+  const markup = (custoUnit>0 && pvUnit>0) ? (pvUnit/custoUnit) : 0;
+  const margem = (pvLote>0) ? ((pvLote - finalLote)/pvLote)*100 : 0;
+
+  const payload = {
+    empresa: PROD.empresa||elEmpresa.value||'',
+    codigoSistema: PROD.codigoSistema||'',
+    numero: PROD.numero||'',
+    item: PROD.item||'',
+    unidadeRend: BASE.unidade||'',
+    rendimento: BASE.rendimento||0,
+    custoReceitaLote: base,
+    modoImpostos: getRadio('m_imp'),
+    valorImpostos: toNumberBR(document.getElementById('v_imp')),
+    modoDespFixa: getRadio('m_fix'),
+    valorDespFixa: toNumberBR(document.getElementById('v_fix')),
+    modoDespOper: getRadio('m_op'),
+    valorDespOper: toNumberBR(document.getElementById('v_op')),
+    custosAdicionaisLote: addTot,
+    custoFinalLote: finalLote,
+    custoFinalUnit: custoUnit,
+    unidadeUnit,
+    precoVendaUnit: pvUnit,
+    precoVendaLote: pvLote,
+    markup,
+    margemPerc: margem,
+    usuario: user
+  };
+
+  const res = await salvarPrecoPainel(payload);
+  if(res.ok){ alert('Salvo no PainelPreco ✓'); }
+  else { alert('Erro ao salvar: ' + (res.error||'desconhecido')); }
+});
 
 /* ===== BOOT ===== */
 (async function boot(){
   await fetchEmpresas();
+  try{ const savedUser = localStorage.getItem('AUTH_USER'); if(savedUser){ document.getElementById('usuario').value = savedUser; } }catch(_){}
   if(EMPRESAS.length){ elEmpresa.value = EMPRESAS[0]; await fetchProdutos(EMPRESAS[0]); }
 })();
 </script>
