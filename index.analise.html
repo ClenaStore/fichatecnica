@@ -6,34 +6,50 @@
 <title>Painel de Análise • Receitas</title>
 <style>
   :root{
-    --bg:#0f0f10; --panel:#141414; --line:#2a2a2a; --text:#f0f0f0; --muted:#cfcfcf;
-    --brand:#2563eb; --ghost:#374151; --accent:#b75507; --danger:#ef4444; --ok:#16a34a;
+    /* === paleta do painel anterior === */
+    --bg:#0e1116; --panel:#141923; --line:#2b3040; --text:#f5f7fb; --muted:#c9ced9;
+    --brand:#2563eb; --ghost:#3b4254;
+    /* extras já existentes (mantidos) */
+    --accent:#b75507; --danger:#ef4444; --ok:#16a34a;
     --foto-size: 200px;
+    --chip-bg:#ffffff; --chip-text:#0b0c10; --chip-line:#e5e7eb; /* (não usadas aqui, só por consistência) */
   }
   *{box-sizing:border-box}
-  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
+  body{
+    font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, Helvetica;
+    background: linear-gradient(#0c0f14, #0e1116); /* gradiente do painel anterior */
+    color:var(--text); margin:0; padding:24px
+  }
 
   header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px;}
   h1{margin:0; font-size:1.6rem; font-weight:700}
 
   .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 16px;font-size:.95rem;transition:.2s}
   .btn:hover{opacity:.92}
-  .btn.primary{background:var(--brand); color:#fff;}
+  .btn.primary{background:var(--brand); color:#fff; box-shadow:0 6px 16px rgba(37,99,235,.35)}
   .btn.secondary{background:#334155; color:#fff;}
-  .btn.ghost{background:transparent; border:1px solid var(--ghost); color:var(--text);}
+  .btn.ghost{background:transparent; border:1px solid var(--ghost); color:var(--text); box-shadow:none}
   .btn.back{background:var(--accent); color:#fff;}
   .btn.danger{background:var(--danger); color:#fff;}
   .btn.ok{background:var(--ok); color:#fff;}
+  .btn[disabled]{opacity:.6; cursor:default}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;
+    box-shadow:0 8px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.02)
+  }
   .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  label{font-size:.85rem;color:var(--muted)}
-  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f10;color:#fff}
+  label{font-size:.9rem;color:var(--muted)}
+  input,select,textarea{
+    width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2a2f3b;background:#0e1118;color:#fff
+  }
   textarea{min-height:72px}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#405075;box-shadow:0 0 0 3px rgba(64,80,117,.25)}
+
   .right{text-align:right}
-  .muted{opacity:.85}
+  .muted{color:var(--muted)}
   .small{font-size:.9rem}
-  .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);font-size:.8rem;background:#111}
+  .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--ghost);font-size:.8rem;background:#0f131c}
   .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;font-size:.75rem}
   .link{cursor:pointer;color:#93c5fd}
   .actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
@@ -42,19 +58,19 @@
   .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
   #tblReceitas{ min-width: 980px; }
-  th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
-  th{ background:#fff; color:#000; font-weight:600; border:1px solid var(--line); }
+  th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top; white-space:nowrap}
+  th{ background:#f8fafc; color:#0b0c10; font-weight:700; }
   .best{outline:2px solid #16a34a; background:rgba(22,163,74,.12)}
   .best::after{content:" 💚"}
 
   .comp-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;border:1px solid #7c3aed;background:#1f1433;color:#e9d5ff;font-size:.72rem}
 
   /* ===== Modal ===== */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
-  .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
+  .modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:#0f141d;border:1px solid #2b3040;border-radius:12px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
   .m-head{display:grid;grid-template-columns: 1fr auto;gap:16px;align-items:start;margin-bottom:8px;}
   .m-title{display:flex;flex-direction:column;gap:4px}
-  .m-title .name{font-size:1.4rem;font-weight:700;margin:0;line-height:1.1}
+  .m-title .name{font-size:1.4rem;font-weight:800;margin:0;line-height:1.1}
   .m-title .sub{font-size:.95rem;color:var(--muted)}
   .m-right{display:grid;grid-template-rows:auto auto;gap:10px;align-items:start;justify-items:end}
   .m-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -71,8 +87,8 @@
   .edit-grid .c12{grid-column:span 12}
   .help{font-size:.8rem;color:var(--muted)}
 
-  .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:52;padding:8px}
-  .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:52;padding:8px}
+  .hist-modal .box{width:100%;max-width:1100px;max-height:90vh;overflow:auto;background:#0f141d;border:1px solid #2b3040;border-radius:12px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
   .h-filtros{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
   .h-filtros > div{grid-column: span 3}
   .h-filtros .w2{grid-column: span 2}
@@ -89,6 +105,19 @@
   .caret-btn[aria-expanded="true"]{ transform:rotate(90deg); }
   .comp-row{ background:#0f0f10; }
   .comp-row td{ padding:10px 12px; border-top:0; }
+
+  /* ===== Loader: três bolinhas (mesmo do painel anterior) ===== */
+  #loaderDots{
+    display:none; align-items:center; justify-content:center; gap:8px;
+    margin:10px 0 6px 0;
+  }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--brand); animation:bounce 1s infinite alternate; }
+  .dot:nth-child(2){ animation-delay:.2s }
+  .dot:nth-child(3){ animation-delay:.4s }
+  @keyframes bounce{ from{ transform:translateY(0); opacity:.6 } to{ transform:translateY(-8px); opacity:1 } }
+  @media (prefers-reduced-motion: reduce){
+    .dot{ animation: none }
+  }
 
   @media (hover:none){ .btn{ min-height:44px } }
   @media (max-width: 1024px){ body{ padding:18px } }
@@ -134,6 +163,12 @@
         <button class="btn secondary" id="btnAtualizar">Atualizar</button>
       </div>
     </div>
+
+    <!-- Loader (idêntico ao do outro painel) -->
+    <div id="loaderDots" aria-live="polite" aria-busy="true">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
     <div id="metaInfo" class="small muted" style="margin-top:8px"></div>
   </div>
 
@@ -358,6 +393,11 @@ function parseBRDateTime(ts){
   if(!m) return null;
   return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), Number(m[4]), Number(m[5]));
 }
+
+/* ===== Loader helpers (idênticos ao outro painel) ===== */
+const loaderEl = document.getElementById('loaderDots');
+function showLoader(){ loaderEl.style.display='flex'; }
+function hideLoader(){ loaderEl.style.display='none'; }
 
 /* ==== helpers histórico ==== */
 function hEsc(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
@@ -729,7 +769,7 @@ async function abrirModal(prod){
         tr.appendChild(td);
       });
 
-      tbody.appendChild(tr);
+      document.getElementById('tbodyDet').appendChild(tr);
 
       // === linha expandível com a composição ===
       let trComp = null;
@@ -750,7 +790,7 @@ async function abrirModal(prod){
         td.innerHTML = blocos || `<div class="small muted">Sem detalhes de composição.</div>`;
         trComp.style.display = 'none'; // começa fechado
         trComp.appendChild(td);
-        tbody.appendChild(trComp);
+        document.getElementById('tbodyDet').appendChild(trComp);
 
         // handler do caret
         const caretBtn = tr.querySelector('.caret-btn');
@@ -778,8 +818,10 @@ async function abrirModal(prod){
       'Os preços vêm do cadastro de ingredientes. A quantidade da receita é convertida para a U.M. do preço (kg↔g, L↔ml, un 1:1).';
   }
 
-  await renderView();
-  document.getElementById('mCompare').onchange = renderView;
+  /* loader apenas em volta do trabalho assíncrono do modal (sem alterar lógica) */
+  try{ showLoader(); await renderView(); } finally { hideLoader(); }
+
+  document.getElementById('mCompare').onchange = async ()=>{ try{ showLoader(); await renderView(); } finally { hideLoader(); } };
 
   fillEditForm(CURRENT_PROD);
   modal.style.display='flex';
@@ -789,7 +831,7 @@ async function abrirModal(prod){
 /* ====== EDIT MODE + AUTOCOMPLETE ====== */
 const viewBlk = document.getElementById('viewBlk');
 const editBlk = document.getElementById('editBlk');
-document.getElementById('mEditar').addEventListener('click', ()=> {
+document.getElementById('mEditar').addEventListener('click', ()=>{
   if(!CURRENT_PROD) return;
   setEditMode(true);
   rebuildIngDatalist(CURRENT_PROD.empresa || EMPRESA_ATUAL || '');
@@ -947,256 +989,4 @@ function collectEditData(orig){
     const get = (sel)=> tr.querySelector(sel);
     let itemRaw = (get('input[data-k="item"]').value||'').trim();
     const codigo = (get('input[data-k="codigo"]').value||'').trim();
-    if(itemRaw.includes('—')) itemRaw = itemRaw.split('—')[0].trim();
-    const qtd = Number(get('input[data-k="qtd"]').value||0);
-    const um = get('select[data-k="um"]').value;
-    if(itemRaw || codigo){
-      data.receita.push({ item: itemRaw, codigo, qtd, um });
-    }
-  });
-  data.data = orig.data || '';
-  data.custoReceita = orig.custoReceita || 0;
-  data.custoPorKgOuL = orig.custoPorKgOuL || 0;
-  data.fotoId = data.fotoUrl;
-  return data;
-}
-
-/* SALVAR */
-document.getElementById('eSalvar').addEventListener('click', async ()=>{
-  if(!CURRENT_PROD) return;
-  const payload = collectEditData(CURRENT_PROD);
-
-  if(!payload.item){ alert('Informe o nome da receita.'); return; }
-  if(!payload.empresa){ alert('Defina a empresa (use o filtro antes de abrir).'); return; }
-
-  const btn = document.getElementById('eSalvar');
-  const old = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Salvando...';
-
-  try{
-    const res = await apiPost('?action=salvar_receita', { receita: payload, usuario: payload.usuario || '', original: {
-      empresa: CURRENT_PROD.empresa || '',
-      codigoSistema: CURRENT_PROD.codigoSistema || '',
-      numero: CURRENT_PROD.numero || '',
-      item: CURRENT_PROD.item || ''
-    }});
-    if(!res || res.ok===false) throw new Error(res?.error || 'Falha ao salvar');
-
-    const idx = (PRODUTOS||[]).findIndex(p =>
-      (payload.codigoSistema && p.codigoSistema===payload.codigoSistema) ||
-      (p.numero && payload.numero && p.numero===payload.numero) ||
-      (p.item && payload.item && norm(p.item)===norm(payload.item) && norm(p.empresa)===norm(payload.empresa))
-    );
-    const novo = {...CURRENT_PROD, ...payload};
-    if(idx>=0) PRODUTOS[idx] = novo; else PRODUTOS.unshift(novo);
-    CURRENT_PROD = structuredClone(novo);
-
-    setEditMode(false);
-    renderTabela();
-    await abrirModal(novo);
-
-    alert('Receita salva com sucesso ✅');
-  }catch(err){
-    console.error(err);
-    alert('Não foi possível salvar: '+ err.message);
-  }finally{
-    btn.disabled = false; btn.textContent = old;
-  }
-});
-
-/* ====== EXCLUIR RECEITA (com senha) ====== */
-document.getElementById('mExcluir').addEventListener('click', async ()=>{
-  if(!CURRENT_PROD) return;
-  const k = CURRENT_PROD;
-  const msg = `Tem certeza que deseja EXCLUIR a receita?\n\nEmpresa: ${k.empresa}\nItem: ${k.item}\nCódigo: ${k.codigoSistema||'-'} • Nº: ${k.numero||'-'}`;
-  if(!confirm(msg)) return;
-
-  const senha = prompt('Digite a senha de exclusão:');
-  if(senha===null) return; // cancelou
-  const usuario = prompt('Informe seu nome (para registrar no histórico):') || '';
-
-  const btn = document.getElementById('mExcluir');
-  const old = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Excluindo...';
-
-  try{
-    const res = await apiPost('?action=excluir_produto', {
-      empresa: k.empresa || '',
-      codigoSistema: k.codigoSistema || '',
-      numero: k.numero || '',
-      item: k.item || '',
-      senha,
-      usuario
-    });
-    if(!res || !res.ok) throw new Error(res?.error || 'Falha ao excluir');
-
-    // remove localmente
-    PRODUTOS = (PRODUTOS||[]).filter(p=>{
-      const sameEmp = norm(p.empresa)===norm(k.empresa);
-      const byCod = k.codigoSistema && p.codigoSistema===k.codigoSistema;
-      const byNum = k.numero && p.numero===k.numero;
-      const byItem= k.item && norm(p.item)===norm(k.item);
-      return !(sameEmp && (byCod || byNum || byItem));
-    });
-
-    modal.style.display='none';
-    setEditMode(false);
-    renderTabela();
-    alert('Receita excluída com sucesso 🗑️');
-  }catch(err){
-    console.error(err);
-    alert('Não foi possível excluir: '+ err.message);
-  }finally{
-    btn.disabled = false; btn.textContent = old;
-  }
-});
-
-/* ===== HISTÓRICO ===== */
-const histModal = document.getElementById('histModal');
-document.getElementById('hFechar').addEventListener('click', ()=> histModal.style.display='none');
-document.getElementById('btnHistorico').addEventListener('click', abrirHistorico);
-
-async function abrirHistorico(){
-  const hEmp = document.getElementById('hEmpresa');
-  hEmp.innerHTML = '<option value="">(Todas)</option>' + EMPRESAS.map(e=>`<option value="${e}">${e}</option>`).join('');
-
-  const dAte = new Date();
-  const dDe  = new Date(); dDe.setDate(dAte.getDate()-30);
-  const iso = d => d.toISOString().slice(0,10);
-  document.getElementById('hDe').value = iso(dDe);
-  document.getElementById('hAte').value = iso(dAte);
-
-  await carregarHistorico();
-  aplicarFiltroHistorico();
-  histModal.style.display='flex';
-}
-async function carregarHistorico(){
-  HIST = []; HIST_LINK = '';
-  try{
-    const j = await apiGet('?action=historico&ts='+Date.now());
-    if(j && j.ok && Array.isArray(j.data)){
-      HIST = j.data;
-      document.getElementById('hFallback').style.display='none';
-      return;
-    }
-  }catch(_){}
-  try{
-    const j2 = await apiGet('?action=historico_link&ts='+Date.now());
-    if(j2 && j2.ok && j2.url){
-      HIST_LINK = j2.url;
-      document.getElementById('hFallback').style.display='block';
-      document.getElementById('hAbrirPlanilha').onclick = ()=> window.open(HIST_LINK,'_blank');
-      document.getElementById('hInfo').textContent = 'Exibindo fallback: abra o histórico completo no Google Sheets.';
-      return;
-    }
-  }catch(_){}
-  document.getElementById('hInfo').textContent = 'Não foi possível carregar o histórico.';
-  document.getElementById('hFallback').style.display='none';
-}
-function aplicarFiltroHistorico(){
-  const tbody = document.getElementById('hTbody');
-  tbody.innerHTML = '';
-  if(!HIST.length){
-    if(HIST_LINK){ /* só fallback */ }
-    return;
-  }
-  const vDe  = document.getElementById('hDe').value ? new Date(document.getElementById('hDe').value) : null;
-  const vAte = document.getElementById('hAte').value ? new Date(document.getElementById('hAte').value) : null;
-  if(vAte) vAte.setHours(23,59,59,999);
-  const vEmp = norm(document.getElementById('hEmpresa').value);
-  const vBus = norm(document.getElementById('hBusca').value);
-
-  const arr = HIST.filter(r=>{
-    const d = parseBRDateTime(r.Timestamp||r.timestamp||'');
-    if(vDe && d && d < vDe) return false;
-    if(vAte && d && d > vAte) return false;
-    const empOk = !vEmp || norm(r.Empresa||r.empresa||'')===vEmp || norm(String(r.Chave||'')).startsWith(vEmp+'::');
-
-    const bOk = !vBus || [
-      r.Chave, r.Usuario, r.Acao, r.Entidade,
-      (r['Depois(JSON)']||r.Depois||r.DepoisJSON||''),
-      (r['Antes(JSON)'] ||r.Antes ||r.AntesJSON ||''),
-      (r['Diff(JSON)']  ||r.diff   ||r.diffJson   ||'')
-    ].some(v=> String(v||'').toLowerCase().includes(vBus));
-
-    return empOk && bOk;
-  });
-
-  arr.forEach(r=>{
-    const d = r.Timestamp || r.timestamp || '';
-
-    const diffStr   = (r['Diff(JSON)']  || r.diff   || r.diffJson   || '').toString();
-    const depoisStr = (r['Depois(JSON)']|| r.Depois || r.DepoisJSON || '').toString();
-    const antesStr  = (r['Antes(JSON)'] || r.Antes  || r.AntesJSON  || '').toString();
-
-    const diffObj   = hTryParseJSON(diffStr);
-    const depoisObj = hTryParseJSON(depoisStr);
-    const antesObj  = hTryParseJSON(antesStr);
-
-    const resumoHTML = hResumoAlteracoes(diffObj, antesObj, depoisObj);
-
-    const detalhesHTML = `
-      <details>
-        <summary>ver</summary>
-        ${resumoHTML}
-        <div style="display:grid;gap:8px;margin-top:6px">
-          <div>
-            <div class="small muted">Depois (JSON)</div>
-            <pre style="white-space:pre-wrap;font-size:.8rem">${hEsc(depoisObj ? hPretty(depoisObj) : depoisStr)}</pre>
-          </div>
-          <div>
-            <div class="small muted">Antes (JSON)</div>
-            <pre style="white-space:pre-wrap;font-size:.8rem">${hEsc(antesObj ? hPretty(antesObj) : antesStr)}</pre>
-          </div>
-        </div>
-      </details>
-    `;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${d}</td>
-      <td>${r.Usuario||r.usuario||''}</td>
-      <td>${r.Entidade||r.entidade||''}</td>
-      <td>${r.Acao||r.acao||''}</td>
-      <td>${r.Chave||r.chave||''}</td>
-      <td>${detalhesHTML}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById('hInfo').textContent = `${arr.length} registros encontrados`;
-}
-['hDe','hAte','hEmpresa','hBusca'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', aplicarFiltroHistorico);
-});
-
-/* ===== BOOT ===== */
-async function boot(){
-  const btn = document.getElementById('btnAtualizar');
-  btn.disabled = true; btn.textContent = 'Carregando...';
-  await carregarEmpresas();
-  await carregarDados();
-  renderEmpresasSelect();
-  renderTabela();
-  btn.disabled = false; btn.textContent = 'Atualizar';
-}
-document.getElementById('btnAtualizar').addEventListener('click', async ()=>{
-  const btn = document.getElementById('btnAtualizar');
-  btn.disabled = true; btn.textContent = 'Atualizando...';
-  await carregarEmpresas();
-  await carregarDados();
-  renderEmpresasSelect();
-  renderTabela();
-  btn.disabled = false; btn.textContent = 'Atualizar';
-});
-document.getElementById('fEmpresa').addEventListener('change', ()=>{
-  renderTabela();
-  if(editBlk.style.display==='block'){
-    rebuildIngDatalist(document.getElementById('fEmpresa').value || (CURRENT_PROD?.empresa||''));
-  }
-});
-document.getElementById('fBusca').addEventListener('input', renderTabela);
-boot();
-</script>
-</body>
-</html>
+    if(itemRaw.includes('—')) itemRaw = itemRaw.split
