@@ -53,18 +53,15 @@ td.right,th.right{text-align:right}
            border:1px solid var(--gold-border)!important}
 #cardVenda input{background:rgba(0,0,0,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important}
 
-/* ===== Custos adicionais: compacto ===== */
+/* ===== Custos adicionais ===== */
 .cost-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
 .cost-item{grid-column:span 8;background:rgba(255,255,255,.03);border:1px dashed var(--line);
            border-radius:10px;padding:8px}
 .cost-head{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:6px}
 .cost-options{display:flex;gap:10px;font-size:.86rem;color:var(--muted)}
 .cost-input input{padding:9px 10px}
-.value-chip{
-  display:flex;align-items:center;justify-content:center;
-  background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-line);
-  border-radius:12px; padding:8px 10px; font-weight:700; min-height:40px
-}
+.value-chip{display:flex;align-items:center;justify-content:center;background:var(--chip-bg);color:var(--chip-text);
+            border:1px solid var(--chip-line);border-radius:12px;padding:8px 10px;font-weight:700;min-height:40px}
 .value-chip small{font-weight:600;opacity:.7;margin-right:6px}
 
 /* detalhes composto */
@@ -88,6 +85,21 @@ td.right,th.right{text-align:right}
 /* responsivo */
 @media (max-width:980px){ .row{grid-template-columns:1fr 1fr} .kpi{grid-template-columns:1fr 1fr} }
 @media (max-width:640px){ body{padding:12px} .row{grid-template-columns:1fr} .kpi{grid-template-columns:1fr} }
+
+/* ===== Modal: Sem Preço de Venda ===== */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:99}
+.modal{background:#0f141d;border:1px solid #2b3040;border-radius:12px;max-width:860px;width:92%;max-height:80vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #2b3040}
+.modal .title{font-weight:800}
+.modal .body{padding:10px 14px}
+.progress{font-size:.9rem;color:var(--muted);margin-bottom:8px}
+.list{border:1px solid #2b3040;border-radius:10px;overflow:hidden}
+.item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #202635;cursor:pointer}
+.item:last-child{border-bottom:none}
+.item:hover{background:#121927}
+.badge{border:1px solid #38445a;color:#cfe0ff;background:#121826;border-radius:999px;padding:2px 8px;font-size:.75rem}
+.small{font-size:.88rem;color:#aab3c2}
+.empty{padding:16px;border:1px dashed #2b3040;border-radius:10px;text-align:center;color:#c9ced9}
 </style>
 </head>
 <body>
@@ -114,6 +126,7 @@ td.right,th.right{text-align:right}
   </div>
   <div class="right" style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
     <button class="btn ghost" id="btnReload" type="button">Recarregar</button>
+    <button class="btn ghost" id="btnSemPV" type="button" title="Listar receitas sem preço de venda">Sem Preço de Venda</button>
     <a class="btn ghost" href="./">← Cadastro</a>
   </div>
 </div>
@@ -162,7 +175,7 @@ td.right,th.right{text-align:right}
   </div>
 </div>
 
-<!-- Custos adicionais (compacto + valores brancos) -->
+<!-- Custos adicionais -->
 <div class="card" id="cardCusto" style="display:none">
   <div class="row" style="align-items:center;margin-bottom:6px">
     <div style="grid-column:span 6"><strong>Custos adicionais</strong></div>
@@ -170,7 +183,6 @@ td.right,th.right{text-align:right}
   </div>
 
   <div class="cost-grid">
-    <!-- Impostos -->
     <div class="cost-item">
       <div class="cost-head">
         <label style="margin:0">Impostos</label>
@@ -185,7 +197,6 @@ td.right,th.right{text-align:right}
       <div class="value-chip" style="width:100%"><small>Valor</small><span id="r_imp">R$ 0,00</span></div>
     </div>
 
-    <!-- Despesa fixa -->
     <div class="cost-item">
       <div class="cost-head">
         <label style="margin:0">Despesa Fixa</label>
@@ -200,7 +211,6 @@ td.right,th.right{text-align:right}
       <div class="value-chip" style="width:100%"><small>Valor</small><span id="r_fix">R$ 0,00</span></div>
     </div>
 
-    <!-- Despesa operacional -->
     <div class="cost-item">
       <div class="cost-head">
         <label style="margin:0">Despesa Operacional</label>
@@ -249,6 +259,20 @@ td.right,th.right{text-align:right}
   </div>
 </div>
 
+<!-- Modal -->
+<div id="modalSemPV" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="semPVTitle">
+  <div class="modal">
+    <header>
+      <div class="title" id="semPVTitle">Receitas sem preço de venda</div>
+      <button class="btn ghost" type="button" id="fecharSemPV">Fechar</button>
+    </header>
+    <div class="body">
+      <div class="progress" id="semPVProg">—</div>
+      <div id="semPVContainer"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ====== CONFIG ====== */
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzGrhJ8QyGbC092D3VpfCwRjSn6VqDxS2V30v6UfoKeibD7fMnh1NH6htIN5rfd2TPo/exec';
@@ -278,7 +302,6 @@ const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').
 /* ===== Estado ===== */
 let EMPRESAS=[], PRODUTOS=[], PROD=null;
 let BASE = { total:0,gml:0,kgl:0,rendimento:0,unidade:'',itens:[] };
-let ADD = { imp:{mode:'pct',val:0}, fix:{mode:'pct',val:0}, op:{mode:'pct',val:0} };
 let MARGEM=0;
 
 /* ===== DOM ===== */
@@ -303,9 +326,10 @@ async function fetchJSON(url, options={}, timeoutMs=20000){
 }
 
 /* ===== Backend ===== */
+async function fetchEmpesasFallback(){ return DEFAULT_EMPRESAS.slice(); }
 async function fetchEmpresas(){
   const j = await fetchJSON(WEBAPP_URL+'?action=empresas');
-  EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : DEFAULT_EMPRESAS.slice();
+  EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : await fetchEmpesasFallback();
   elEmpresa.innerHTML='';
   const o0=document.createElement('option'); o0.value=''; o0.textContent='— selecione —'; elEmpresa.appendChild(o0);
   EMPRESAS.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;elEmpresa.appendChild(o);});
@@ -343,11 +367,24 @@ function renderSugestoes(){
   }).join('');
   elTaList.style.display='block'; taActive=-1;
 }
-function selectByIndex(idx){ if(isNaN(idx)||idx<0||!PRODUTOS[idx]) return; const p=PRODUTOS[idx]; elBusca.value=`${p.item} — ${p.codigoSistema||'-'}`; elTaList.style.display='none'; fillProduto(p); }
-elTaList.addEventListener('mousedown',e=>{const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));});
-function updateActive(){ const items=[...elTaList.querySelectorAll('.ta-item')]; items.forEach((el,i)=>el.classList.toggle('active',i===taActive)); if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'}); }
+function selectByIndex(idx){
+  if(isNaN(idx)||idx<0||!PRODUTOS[idx]) return;
+  const p=PRODUTOS[idx];
+  elBusca.value = `${p.item} — ${p.codigoSistema||'-'}`;
+  elTaList.style.display='none';
+  fillProduto(p);
+}
+elTaList.addEventListener('mousedown',e=>{
+  const it=e.target.closest('.ta-item'); if(!it) return;
+  selectByIndex(Number(it.dataset.idx));
+});
+function updateActive(){
+  const items=[...elTaList.querySelectorAll('.ta-item')];
+  items.forEach((el,i)=>el.classList.toggle('active',i===taActive));
+  if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'});
+}
 
-/* ===== >>> NOVO: forçar preço do CADASTRO de INGREDIENTES (inclui compostos) <<< ===== */
+/* ===== Preços do Cadastro (inclui compostos) ===== */
 async function enriquecerComPrecosDoCadastro(prod){
   const emp=(prod.empresa||elEmpresa.value||'').toLowerCase();
   for(const l of (prod.receita||[])){
@@ -361,16 +398,13 @@ async function enriquecerComPrecosDoCadastro(prod){
     const j = await fetchJSON(WEBAPP_URL+'?'+qs.toString());
     if(!(j?.ok && Array.isArray(j.data?.empresas))) continue;
 
-    // Preferir preço da empresa atual; senão, menor custo disponível
     let esc = j.data.empresas.find(x=>String(x.empresa||'').toLowerCase()===emp)
           || j.data.empresas.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m, null);
 
     if(esc && typeof esc.custoUnit==='number' && esc.custoUnit>0){
-      // Sempre sobrescreve custo da linha pelo cadastro
       l.custoUnit = esc.custoUnit;
       l.priceUm   = (esc.umPreco || l.um || 'kg');
 
-      // Se o cadastro diz que é composto, anexar detalhes para exibição
       if(esc.comp && Array.isArray(esc.comp)){
         l._compInfo = {
           tipo: esc.tipo,
@@ -404,10 +438,7 @@ function calcularReceita(prod){
 /* ===== Preenche ===== */
 async function fillProduto(raw){
   const prod=JSON.parse(JSON.stringify(raw||{}));
-
-  // >>> usa sempre os preços do cadastro de ingredientes
   await enriquecerComPrecosDoCadastro(prod);
-
   PROD=prod; const calc=calcularReceita(prod); BASE=calc;
 
   document.getElementById('p_nome').textContent=prod.item||'(produto)';
@@ -417,12 +448,10 @@ async function fillProduto(raw){
   document.getElementById('k_custoGml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
   document.getElementById('k_custoKgL').textContent=fmtBRL(calc.kgl);
 
-  // cabeçalho impressão
   const usuario=(document.getElementById('usuario').value||'').trim();
   const empresa=elEmpresa.value || (prod.empresa||''); const now=new Date();
   document.getElementById('ph_info').textContent=`Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
 
-  // tabela
   elTbody.innerHTML='';
   calc.itens.forEach(r=>{
     const tr=document.createElement('tr');
@@ -513,15 +542,93 @@ function atualizarPreco(){
 function exportCSV(){
   if(!BASE||!Array.isArray(BASE.itens)) return;
   const head=['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
-  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace(',',',')]);
+  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace('.',',')]);
   rows.unshift(head); const csv=rows.map(r=>r.join(';')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=`receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`; a.click();
 }
 
+/* ===== Modal helpers ===== */
+function openSemPV(){ document.getElementById('modalSemPV').style.display='flex'; }
+function closeSemPV(){ document.getElementById('modalSemPV').style.display='none'; }
+document.getElementById('fecharSemPV').addEventListener('click', closeSemPV);
+document.getElementById('modalSemPV').addEventListener('click', e=>{ if(e.target.id==='modalSemPV') closeSemPV(); });
+
+/* ===== Listar “Sem Preço de Venda” ===== */
+async function listarSemPrecoVenda(){
+  const emp = elEmpresa.value;
+  if(!emp){ alert('Selecione uma empresa primeiro.'); return; }
+  if(!Array.isArray(PRODUTOS) || !PRODUTOS.length){ alert('Nenhum produto carregado para esta empresa.'); return; }
+
+  openSemPV();
+  const prog = document.getElementById('semPVProg');
+  const cont = document.getElementById('semPVContainer');
+  cont.innerHTML = '<div class="empty">Iniciando verificação...</div>';
+
+  // Limite de concorrência leve para não sobrecarregar o Apps Script
+  const limit = 5;
+  let idx = 0, found = [];
+  prog.textContent = `Verificando 0/${PRODUTOS.length}...`;
+
+  async function worker(){
+    while(true){
+      const i = idx++;
+      if(i>=PRODUTOS.length) break;
+      const p = PRODUTOS[i];
+      const saved = await fetchPrecoSalvo(p);
+      const semPreco = !(saved && (Number(saved.precoVendaUnit)>0 || Number(saved.precoVendaLote)>0));
+      if(semPreco) found.push(p);
+      prog.textContent = `Verificando ${i+1}/${PRODUTOS.length} • Sem preço: ${found.length}`;
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(limit, PRODUTOS.length)}, worker));
+
+  if(!found.length){
+    cont.innerHTML = `<div class="empty">Tudo certo! Todas as receitas têm preço de venda registrado.</div>`;
+    return;
+  }
+
+  // Render lista
+  const html = `
+    <div class="small" style="margin-bottom:8px">Encontrados: <span class="badge">${found.length}</span></div>
+    <div class="list" id="listaSemPV">
+      ${found.map((p,ix)=>{
+        const meta = [p.codigoSistema||'-', (p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
+        return `<div class="item" data-idx="${PRODUTOS.indexOf(p)}">
+                  <div>
+                    <div><strong>${p.item||'(produto)'}</strong></div>
+                    <div class="small">${meta}</div>
+                  </div>
+                  <span class="badge">abrir</span>
+                </div>`;
+      }).join('')}
+    </div>`;
+  cont.innerHTML = html;
+
+  // Clique em cada item: abre como busca
+  cont.querySelectorAll('.item').forEach(div=>{
+    div.addEventListener('click', ()=>{
+      const idx = Number(div.dataset.idx);
+      if(!isNaN(idx) && PRODUTOS[idx]){
+        const p = PRODUTOS[idx];
+        elBusca.value = `${p.item} — ${p.codigoSistema||'-'}`;
+        closeSemPV();
+        fillProduto(p);
+      }
+    });
+  });
+}
+
 /* ===== Eventos ===== */
-elEmpresa.addEventListener('change', async ()=>{ const emp=elEmpresa.value; if(!emp){PRODUTOS=[];renderSugestoes();return;} await fetchProdutos(emp); });
-document.getElementById('btnReload').addEventListener('click', async ()=>{ const emp=elEmpresa.value; if(emp) await fetchProdutos(emp); });
+elEmpresa.addEventListener('change', async ()=>{
+  const emp=elEmpresa.value;
+  if(!emp){PRODUTOS=[];renderSugestoes();return;}
+  await fetchProdutos(emp);
+});
+document.getElementById('btnReload').addEventListener('click', async ()=>{
+  const emp=elEmpresa.value; if(emp) await fetchProdutos(emp);
+});
+document.getElementById('btnSemPV').addEventListener('click', listarSemPrecoVenda);
 
 elBusca.addEventListener('input', renderSugestoes);
 elBusca.addEventListener('focus', renderSugestoes);
@@ -529,18 +636,29 @@ elBusca.addEventListener('keydown',e=>{
   const items=[...elTaList.querySelectorAll('.ta-item')];
   if(e.key==='ArrowDown'&&items.length){e.preventDefault();taActive=(taActive+1)%items.length;updateActive();}
   else if(e.key==='ArrowUp'&&items.length){e.preventDefault();taActive=(taActive-1+items.length)%items.length;updateActive();}
-  else if(e.key==='Enter'){e.preventDefault(); if(items.length===1) selectByIndex(Number(items[0].dataset.idx)); else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx)); else if(items.length>0) selectByIndex(Number(items[0].dataset.idx));}
+  else if(e.key==='Enter'){
+    e.preventDefault();
+    if(items.length===1) selectByIndex(Number(items[0].dataset.idx));
+    else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx));
+    else if(items.length>0) selectByIndex(Number(items[0].dataset.idx));
+  }
   else if(e.key==='Escape'){ elTaList.style.display='none'; }
 });
-document.addEventListener('click',ev=>{ if(!elTaList.contains(ev.target) && ev.target!==elBusca){ elTaList.style.display='none'; } });
+document.addEventListener('click',ev=>{
+  if(!elTaList.contains(ev.target) && ev.target!==elBusca){ elTaList.style.display='none'; }
+});
 
-['m_imp','m_fix','m_op'].forEach(name=>{ document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', atualizarPreco)); });
+['m_imp','m_fix','m_op'].forEach(name=>{
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', atualizarPreco));
+});
 ['v_imp','v_fix','v_op'].forEach(id=> document.getElementById(id).addEventListener('input', atualizarPreco));
 
 document.getElementById('pv_input').addEventListener('input', e=>{ MARGEM=toNumberBR(e.target.value); atualizarPreco(); });
 document.getElementById('btnCSV').addEventListener('click', exportCSV);
-document.getElementById('btnClear').addEventListener('click', ()=>{ ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value=''); MARGEM=0; atualizarPreco(); });
-
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  ['v_imp','v_fix','v_op','pv_input'].forEach(id=>document.getElementById(id).value='');
+  MARGEM=0; atualizarPreco();
+});
 document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
   if(!PROD){ alert('Selecione um produto na busca.'); return; }
   const btn=document.getElementById('btnSalvarPainel');
@@ -574,11 +692,7 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
       precoVendaUnit:pvUnit, precoVendaLote:pvLote, markup, margemPerc:Number(MARGEM||0), usuario:user
     };
 
-    // POST sem headers para evitar preflight (Apps Script não responde OPTIONS)
-    const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
+    const res = await fetch(WEBAPP_URL+'?action=salvar_precificacao', { method:'POST', body: JSON.stringify(payload) });
     const text = await res.text();
     let j; try{ j=JSON.parse(text); }catch{ j={ok:false,error:'Resposta não-JSON: '+text}; }
     if(j.ok){ alert('Salvo no PainelPreco ✓'); }
