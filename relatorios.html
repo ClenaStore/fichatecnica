@@ -53,15 +53,18 @@ td.right,th.right{text-align:right}
            border:1px solid var(--gold-border)!important}
 #cardVenda input{background:rgba(0,0,0,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important}
 
-/* ===== Custos adicionais ===== */
+/* custos adicionais */
 .cost-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
 .cost-item{grid-column:span 8;background:rgba(255,255,255,.03);border:1px dashed var(--line);
            border-radius:10px;padding:8px}
 .cost-head{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:6px}
 .cost-options{display:flex;gap:10px;font-size:.86rem;color:var(--muted)}
 .cost-input input{padding:9px 10px}
-.value-chip{display:flex;align-items:center;justify-content:center;background:var(--chip-bg);color:var(--chip-text);
-            border:1px solid var(--chip-line);border-radius:12px;padding:8px 10px;font-weight:700;min-height:40px}
+.value-chip{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-line);
+  border-radius:12px; padding:8px 10px; font-weight:700; min-height:40px
+}
 .value-chip small{font-weight:600;opacity:.7;margin-right:6px}
 
 /* detalhes composto */
@@ -100,6 +103,16 @@ td.right,th.right{text-align:right}
 .badge{border:1px solid #38445a;color:#cfe0ff;background:#121826;border-radius:999px;padding:2px 8px;font-size:.75rem}
 .small{font-size:.88rem;color:#aab3c2}
 .empty{padding:16px;border:1px dashed #2b3040;border-radius:10px;text-align:center;color:#c9ced9}
+
+/* ===== Loader: três bolinhas ===== */
+#loaderDots{
+  display:none; align-items:center; justify-content:center; gap:8px;
+  margin:10px 0 6px 0;
+}
+.dot{ width:10px; height:10px; border-radius:50%; background:var(--brand); animation:bounce 1s infinite alternate; }
+.dot:nth-child(2){ animation-delay:.2s }
+.dot:nth-child(3){ animation-delay:.4s }
+@keyframes bounce{ from{ transform:translateY(0); opacity:.6 } to{ transform:translateY(-8px); opacity:1 } }
 </style>
 </head>
 <body>
@@ -124,6 +137,12 @@ td.right,th.right{text-align:right}
       <input id="usuario" type="text" placeholder="Seu nome/login" autocomplete="name">
     </div>
   </div>
+
+  <!-- Loader de três bolinhas (aparece em recarregar/selecionar) -->
+  <div id="loaderDots" aria-live="polite" aria-busy="true">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+
   <div class="right" style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
     <button class="btn ghost" id="btnReload" type="button">Recarregar</button>
     <button class="btn ghost" id="btnSemPV" type="button" title="Listar receitas sem preço de venda">Sem Preço de Venda</button>
@@ -259,7 +278,7 @@ td.right,th.right{text-align:right}
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal: Sem Preço de Venda -->
 <div id="modalSemPV" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="semPVTitle">
   <div class="modal">
     <header>
@@ -310,6 +329,11 @@ const elBusca  =document.getElementById('busca');
 const elTaList =document.getElementById('ta_list');
 const elTbody  =document.getElementById('tbody');
 
+/* ===== Loader helpers ===== */
+const loaderEl = document.getElementById('loaderDots');
+function showLoader(){ loaderEl.style.display='flex'; }
+function hideLoader(){ loaderEl.style.display='none'; }
+
 /* ===== Fetch util ===== */
 async function fetchJSON(url, options={}, timeoutMs=20000){
   const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort('timeout'), timeoutMs);
@@ -326,10 +350,9 @@ async function fetchJSON(url, options={}, timeoutMs=20000){
 }
 
 /* ===== Backend ===== */
-async function fetchEmpesasFallback(){ return DEFAULT_EMPRESAS.slice(); }
 async function fetchEmpresas(){
   const j = await fetchJSON(WEBAPP_URL+'?action=empresas');
-  EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : await fetchEmpesasFallback();
+  EMPRESAS = (j.ok && Array.isArray(j.data) && j.data.length) ? j.data : DEFAULT_EMPRESAS.slice();
   elEmpresa.innerHTML='';
   const o0=document.createElement('option'); o0.value=''; o0.textContent='— selecione —'; elEmpresa.appendChild(o0);
   EMPRESAS.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;elEmpresa.appendChild(o);});
@@ -372,7 +395,8 @@ function selectByIndex(idx){
   const p=PRODUTOS[idx];
   elBusca.value = `${p.item} — ${p.codigoSistema||'-'}`;
   elTaList.style.display='none';
-  fillProduto(p);
+  // loader ao selecionar produto
+  (async ()=>{ try{ showLoader(); await fillProduto(p); } finally { hideLoader(); } })();
 }
 elTaList.addEventListener('mousedown',e=>{
   const it=e.target.closest('.ta-item'); if(!it) return;
@@ -565,7 +589,7 @@ async function listarSemPrecoVenda(){
   const cont = document.getElementById('semPVContainer');
   cont.innerHTML = '<div class="empty">Iniciando verificação...</div>';
 
-  // Limite de concorrência leve para não sobrecarregar o Apps Script
+  // showLoader(); // <- opcional: exiba loader global durante a varredura
   const limit = 5;
   let idx = 0, found = [];
   prog.textContent = `Verificando 0/${PRODUTOS.length}...`;
@@ -582,17 +606,16 @@ async function listarSemPrecoVenda(){
     }
   }
   await Promise.all(Array.from({length:Math.min(limit, PRODUTOS.length)}, worker));
+  // hideLoader(); // <- opcional
 
   if(!found.length){
     cont.innerHTML = `<div class="empty">Tudo certo! Todas as receitas têm preço de venda registrado.</div>`;
     return;
   }
-
-  // Render lista
   const html = `
     <div class="small" style="margin-bottom:8px">Encontrados: <span class="badge">${found.length}</span></div>
     <div class="list" id="listaSemPV">
-      ${found.map((p,ix)=>{
+      ${found.map((p)=>{
         const meta = [p.codigoSistema||'-', (p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
         return `<div class="item" data-idx="${PRODUTOS.indexOf(p)}">
                   <div>
@@ -605,15 +628,14 @@ async function listarSemPrecoVenda(){
     </div>`;
   cont.innerHTML = html;
 
-  // Clique em cada item: abre como busca
   cont.querySelectorAll('.item').forEach(div=>{
-    div.addEventListener('click', ()=>{
+    div.addEventListener('click', async ()=>{
       const idx = Number(div.dataset.idx);
       if(!isNaN(idx) && PRODUTOS[idx]){
         const p = PRODUTOS[idx];
         elBusca.value = `${p.item} — ${p.codigoSistema||'-'}`;
         closeSemPV();
-        fillProduto(p);
+        try{ showLoader(); await fillProduto(p); } finally { hideLoader(); }
       }
     });
   });
@@ -623,10 +645,11 @@ async function listarSemPrecoVenda(){
 elEmpresa.addEventListener('change', async ()=>{
   const emp=elEmpresa.value;
   if(!emp){PRODUTOS=[];renderSugestoes();return;}
-  await fetchProdutos(emp);
+  try{ showLoader(); await fetchProdutos(emp); } finally { hideLoader(); }
 });
 document.getElementById('btnReload').addEventListener('click', async ()=>{
-  const emp=elEmpresa.value; if(emp) await fetchProdutos(emp);
+  const emp=elEmpresa.value; if(!emp){ alert('Selecione uma empresa.'); return; }
+  try{ showLoader(); await fetchProdutos(emp); } finally { hideLoader(); }
 });
 document.getElementById('btnSemPV').addEventListener('click', listarSemPrecoVenda);
 
@@ -708,7 +731,10 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
 (async function boot(){
   await fetchEmpresas();
   try{ const saved=localStorage.getItem('AUTH_USER'); if(saved) document.getElementById('usuario').value=saved; }catch(_){}
-  if(EMPRESAS.length){ elEmpresa.value=EMPRESAS[0]; await fetchProdutos(EMPRESAS[0]); }
+  if(EMPRESAS.length){
+    elEmpresa.value=EMPRESAS[0];
+    try{ showLoader(); await fetchProdutos(EMPRESAS[0]); } finally { hideLoader(); }
+  }
 })();
 </script>
 </body>
