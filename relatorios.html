@@ -53,6 +53,11 @@ td.right,th.right{text-align:right}
            border:1px solid var(--gold-border)!important}
 #cardVenda input{background:rgba(0,0,0,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important}
 
+/* ===== AUMENTO DE FONTES — FORMAÇÃO DE PREÇO ===== */
+#cardVenda .val{ font-size:1.8rem; font-weight:900; line-height:1.15; }
+#cardVenda .muted{ font-size:1.05rem; }
+#cardVenda input{ font-size:1.25rem; }
+
 /* custos adicionais */
 .cost-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
 .cost-item{grid-column:span 8;background:rgba(255,255,255,.03);border:1px dashed var(--line);
@@ -138,7 +143,7 @@ td.right,th.right{text-align:right}
     </div>
   </div>
 
-  <!-- Loader de três bolinhas (aparece em recarregar/selecionar) -->
+  <!-- Loader -->
   <div id="loaderDots" aria-live="polite" aria-busy="true">
     <div class="dot"></div><div class="dot"></div><div class="dot"></div>
   </div>
@@ -383,7 +388,7 @@ function buscar(q){
 function renderSugestoes(){
   const q=elBusca.value.trim(); const list=buscar(q);
   if(!q||!list.length){ elTaList.style.display='none'; elTaList.innerHTML=''; taActive=-1; return; }
-  elTaList.innerHTML=list.map((p,i)=>{
+  elTaList.innerHTML=list.map((p)=>{
     const idx=PRODUTOS.indexOf(p);
     const meta=[p.codigoSistema||'-',(p.numero?('Nº '+p.numero):'')].filter(Boolean).join(' • ');
     return `<div class="ta-item" data-idx="${idx}"><span class="ta-title">${p.item||'(produto)'}</span><span class="ta-meta"> — ${meta}</span></div>`;
@@ -395,12 +400,10 @@ function selectByIndex(idx){
   const p=PRODUTOS[idx];
   elBusca.value = `${p.item} — ${p.codigoSistema||'-'}`;
   elTaList.style.display='none';
-  // loader ao selecionar produto
   (async ()=>{ try{ showLoader(); await fillProduto(p); } finally { hideLoader(); } })();
 }
 elTaList.addEventListener('mousedown',e=>{
-  const it=e.target.closest('.ta-item'); if(!it) return;
-  selectByIndex(Number(it.dataset.idx));
+  const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));
 });
 function updateActive(){
   const items=[...elTaList.querySelectorAll('.ta-item')];
@@ -566,7 +569,7 @@ function atualizarPreco(){
 function exportCSV(){
   if(!BASE||!Array.isArray(BASE.itens)) return;
   const head=['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
-  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace('.',',')]);
+  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace(',',',')]);
   rows.unshift(head); const csv=rows.map(r=>r.join(';')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=`receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`; a.click();
@@ -589,7 +592,6 @@ async function listarSemPrecoVenda(){
   const cont = document.getElementById('semPVContainer');
   cont.innerHTML = '<div class="empty">Iniciando verificação...</div>';
 
-  // showLoader(); // <- opcional: exiba loader global durante a varredura
   const limit = 5;
   let idx = 0, found = [];
   prog.textContent = `Verificando 0/${PRODUTOS.length}...`;
@@ -606,7 +608,6 @@ async function listarSemPrecoVenda(){
     }
   }
   await Promise.all(Array.from({length:Math.min(limit, PRODUTOS.length)}, worker));
-  // hideLoader(); // <- opcional
 
   if(!found.length){
     cont.innerHTML = `<div class="empty">Tudo certo! Todas as receitas têm preço de venda registrado.</div>`;
@@ -662,7 +663,7 @@ elBusca.addEventListener('keydown',e=>{
   else if(e.key==='Enter'){
     e.preventDefault();
     if(items.length===1) selectByIndex(Number(items[0].dataset.idx));
-    else if(taActive>=0) selectByIndex(Number(items[taActive].dataset.idx));
+    else if(taActive>=0) selectByIndex(Number(taActive));
     else if(items.length>0) selectByIndex(Number(items[0].dataset.idx));
   }
   else if(e.key==='Escape'){ elTaList.style.display='none'; }
