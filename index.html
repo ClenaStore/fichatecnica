@@ -657,36 +657,50 @@ function openPicker(){ picker.style.display='flex'; renderListaIng(); buscaIng.f
 function closePicker(){ picker.style.display='none'; }
 function renderListaIng(){
   const q = (buscaIng.value||'').toLowerCase();
-  const arr = INGREDIENTES.filter(x=> (x.nome||'').toLowerCase().includes(q) || String(x.codigo||'').toLowerCase().includes(q) );
+  const arr = INGREDIENTES.filter(x =>
+    (x.nome||'').toLowerCase().includes(q) ||
+    String(x.codigo||'').toLowerCase().includes(q)
+  );
+
   listaIng.innerHTML = '';
   if(!arr.length){
-    const empty=document.createElement('div'); empty.className='row-item';
+    const empty=document.createElement('div');
+    empty.className='row-item';
     empty.innerHTML='<em class="muted">Nada encontrado para a empresa selecionada.</em>';
-    listaIng.appendChild(empty); return;
+    listaIng.appendChild(empty);
+    return;
   }
-  arr.forEach((x, idx) => {
-    const row = document.createElement('div'); row.className = 'row-item';
+
+  arr.forEach((x) => {
+    const row = document.createElement('div');
+    row.className = 'row-item';
     const tipoBadge = (x.tipo==='composto') ? ' <span class="badge comp">composto</span>' : '';
+
     row.innerHTML = `
       <div>
         <div><strong>${x.nome||''}</strong> <span class="badge">${(x.um||'').toLowerCase()}</span>${tipoBadge}</div>
         <div class="small muted">${x.codigo||'-'}${x.empresa?(' • '+x.empresa):''} • ${fmtBRL(x.custoUnit||0)} ${(x.obs?('• '+x.obs):'')}</div>
       </div>
       <div class="inline">
-        <button class="btn ghost mini" data-act="sel" data-idx="${idx}">Selecionar</button>
-        <button class="btn ghost mini" data-act="edit" data-idx="${idx}">Editar</button>
+        <button class="btn ghost mini" data-act="sel"  data-cod="${x.codigo??''}" data-nome="${(x.nome||'').replace(/"/g,'&quot;')}">Selecionar</button>
+        <button class="btn ghost mini" data-act="edit" data-cod="${x.codigo??''}" data-nome="${(x.nome||'').replace(/"/g,'&quot;')}">Editar</button>
       </div>`;
     listaIng.appendChild(row);
   });
+
   listaIng.querySelectorAll('button').forEach(btn=>{
-    const i = Number(btn.dataset.idx); const act = btn.dataset.act;
+    const act = btn.dataset.act;
+    const cod = btn.dataset.cod || null;
+    const nome = btn.dataset.nome || '';
     btn.addEventListener('click', ()=>{
-      const ing = INGREDIENTES[i]; if(!ing) return;
+      const ing = findInCadastro(cod, nome);   // ✅ busca pelo código/nome
+      if(!ing) return;
       if(act==='sel'){ selectIng(ing); }
       if(act==='edit'){ openModal(ing); }
     });
   });
 }
+
 buscaIng.addEventListener('input', renderListaIng);
 document.getElementById('novoIng').addEventListener('click', ()=> openModal(null));
 function selectIng(ing){
