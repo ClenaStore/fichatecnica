@@ -347,21 +347,40 @@ function selectByIndex(idx){ if(isNaN(idx)||idx<0||!PRODUTOS[idx]) return; const
 elTaList.addEventListener('mousedown',e=>{const it=e.target.closest('.ta-item'); if(!it) return; selectByIndex(Number(it.dataset.idx));});
 function updateActive(){ const items=[...elTaList.querySelectorAll('.ta-item')]; items.forEach((el,i)=>el.classList.toggle('active',i===taActive)); if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'}); }
 
-/* ===== Compostos ===== */
-async function enriquecerComCompostos(prod){
+/* ===== >>> NOVO: forçar preço do CADASTRO de INGREDIENTES (inclui compostos) <<< ===== */
+async function enriquecerComPrecosDoCadastro(prod){
   const emp=(prod.empresa||elEmpresa.value||'').toLowerCase();
   for(const l of (prod.receita||[])){
-    const custo=toNumberBR(l.custoUnit);
-    if(custo>0) continue;
-    const nome=l.item||l.nome||''; const codigo=l.codigo||''; const qtd=toNumberBR(l.qtd)||1; const um=(l.um||'').toLowerCase();
+    const nome=l.item || l.nome || '';
+    const codigo=l.codigo || '';
+    const qtd = toNumberBR(l.qtd) || 1;
+    const um  = (l.um||'').toLowerCase();
     if(!nome && !codigo) continue;
-    const qs=new URLSearchParams({action:'comparar_ingrediente',nome,codigo,qtd,um});
+
+    const qs=new URLSearchParams({action:'comparar_ingrediente', nome, codigo, qtd, um});
     const j = await fetchJSON(WEBAPP_URL+'?'+qs.toString());
-    if(!(j?.ok && j.data?.empresas)) continue;
-    const lista=j.data.empresas;
-    let esc=lista.find(x=>String(x.empresa||'').toLowerCase()===emp) || lista.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m,null);
+    if(!(j?.ok && Array.isArray(j.data?.empresas))) continue;
+
+    // Preferir preço da empresa atual; senão, menor custo disponível
+    let esc = j.data.empresas.find(x=>String(x.empresa||'').toLowerCase()===emp)
+          || j.data.empresas.reduce((m,x)=>(typeof x.custoUnit==='number' && x.custoUnit<(m?.custoUnit??Infinity))?x:m, null);
+
     if(esc && typeof esc.custoUnit==='number' && esc.custoUnit>0){
-      l.custoUnit=esc.custoUnit; l.priceUm=(esc.umPreco||l.um||'kg'); l._compInfo={tipo:esc.tipo,total:esc.compTotal??esc.custoUnit,umPreco:esc.umPreco,filhos:esc.comp||[]};
+      // Sempre sobrescreve custo da linha pelo cadastro
+      l.custoUnit = esc.custoUnit;
+      l.priceUm   = (esc.umPreco || l.um || 'kg');
+
+      // Se o cadastro diz que é composto, anexar detalhes para exibição
+      if(esc.comp && Array.isArray(esc.comp)){
+        l._compInfo = {
+          tipo: esc.tipo,
+          total: (typeof esc.compTotal==='number' ? esc.compTotal : esc.custoUnit),
+          umPreco: esc.umPreco || l.priceUm || 'kg',
+          filhos: esc.comp
+        };
+      }else{
+        l._compInfo = null;
+      }
     }
   }
 }
@@ -384,7 +403,11 @@ function calcularReceita(prod){
 
 /* ===== Preenche ===== */
 async function fillProduto(raw){
-  const prod=JSON.parse(JSON.stringify(raw||{})); await enriquecerComCompostos(prod);
+  const prod=JSON.parse(JSON.stringify(raw||{}));
+
+  // >>> usa sempre os preços do cadastro de ingredientes
+  await enriquecerComPrecosDoCadastro(prod);
+
   PROD=prod; const calc=calcularReceita(prod); BASE=calc;
 
   document.getElementById('p_nome').textContent=prod.item||'(produto)';
@@ -490,7 +513,7 @@ function atualizarPreco(){
 function exportCSV(){
   if(!BASE||!Array.isArray(BASE.itens)) return;
   const head=['Item','Qtd','U.M.','Custo Unit. (R$)','Subtotal (R$)'];
-  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace('.',',')]);
+  const rows=BASE.itens.map(r=>[`"${(r.item||'').replace(/"/g,'""')}"`, String(r.qtd||0).replace('.',','),(r.um||'').toUpperCase(), (r.custoUnit||0).toFixed(4).replace('.',','),(r.subtotal||0).toFixed(2).replace(',',',')]);
   rows.unshift(head); const csv=rows.map(r=>r.join(';')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=`receita_${(PROD?.item||'produto').replace(/\s+/g,'_')}.csv`; a.click();
