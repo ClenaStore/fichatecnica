@@ -456,10 +456,12 @@ function calcularReceita(prod){
                 comp:(l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)?l._compInfo:null});
     total+=subtotal;
   });
-  const rend=toNumberBR(prod?.rendimento); const u=(prod?.unidadeRend||'').toLowerCase(); let gml=0,kgl=0;
-  const toBase=uu=> (uu==='kg'||uu==='l')?1000:1;
-  if(['g','kg','ml','l'].includes(u) && rend>0){ const emBase=rend*toBase(u); gml=total/emBase; kgl= total/(emBase/1000); }
-  return {itens,total,gml:isFinite(gml)?gml:0,kgl:isFinite(kgl)?kgl:0,rendimento:rend||0,unidade:u||''};
+const rend = toNumberBR(prod?.rendimento);
+const unidade = (prod?.unidadeRend || 'un').toLowerCase();
+let custoUnit = 0;
+if (rend > 0) custoUnit = total / rend;
+return { itens, total, custoUnit: isFinite(custoUnit) ? custoUnit : 0, rendimento: rend || 0, unidade };
+
 }
 
 /* ===== Preenche ===== */
@@ -472,8 +474,9 @@ async function fillProduto(raw){
   document.getElementById('p_meta').textContent=`${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
   document.getElementById('k_rend').textContent=`${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
   document.getElementById('k_custoRec').textContent=fmtBRL(calc.total);
-  document.getElementById('k_custoGml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('k_custoKgL').textContent=fmtBRL(calc.kgl);
+ document.getElementById('k_custoGml').textContent = '—'; // remover ou ocultar
+document.getElementById('k_custoKgL').textContent = fmtBRL(calc.custoUnit);
+
 
   const usuario=(document.getElementById('usuario').value||'').trim();
   const empresa=elEmpresa.value || (prod.empresa||''); const now=new Date();
@@ -506,8 +509,9 @@ async function fillProduto(raw){
   });
   document.getElementById('s_itens').textContent=calc.itens.length;
   document.getElementById('s_total').textContent=fmtBRL(calc.total);
-  document.getElementById('s_gml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('s_kgl').textContent=fmtBRL(calc.kgl);
+ document.getElementById('s_gml').textContent = '—';
+document.getElementById('s_kgl').textContent = fmtBRL(calc.custoUnit);
+
 
   let unidadeVenda='un'; if(TYPE(calc.unidade)==='mass') unidadeVenda='kg'; else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
   document.getElementById('kf_label').textContent=`Custo Final por ${unidadeVenda}`;
@@ -531,25 +535,22 @@ function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${na
 function lineValue(mode, raw, base){ const v=toNumberBR(raw); return mode==='pct'? base*(v/100) : v; }
 
 /* ===== Custos + Preço ===== */
-function atualizarCustos(){
-  const base=BASE.total||0;
-  const impV=lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
-  const fixV=lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
-  const opV =lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
-  const add=impV+fixV+opV, final=base+add;
+const { custoFinalLote, custoUnit } = atualizarCustos();
+let m = Number(MARGEM);
+if (!Number.isFinite(m) || m < 0) m = 0;
 
-  document.getElementById('r_imp').textContent=fmtBRL(impV);
-  document.getElementById('r_fix').textContent=fmtBRL(fixV);
-  document.getElementById('r_op').textContent =fmtBRL(opV);
-  document.getElementById('k_base').textContent=fmtBRL(base);
-  document.getElementById('k_add').textContent =fmtBRL(add);
-  document.getElementById('k_final').textContent=fmtBRL(final);
+const pvLote = custoFinalLote * (1 + m / 100);
+const pvPerUnit = custoUnit * (1 + m / 100);
+const markup = (custoUnit > 0 && pvPerUnit > 0) ? (pvPerUnit / custoUnit) : (1 + m / 100);
+const lucro = Math.max(0, pvLote - custoFinalLote);
 
-  let perUnit=0; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-  if(rend>0){ if(u==='kg'||u==='l') perUnit=final/rend; else if(u==='g'||u==='ml') perUnit=final/(rend/1000); else perUnit=final/rend; }
-  document.getElementById('k_final_unit').textContent=fmtBRL(isFinite(perUnit)?perUnit:0);
-  return {custoFinalLote:final,custoUnit:(isFinite(perUnit)?perUnit:0)};
-}
+document.getElementById('pv_lote').textContent = fmtBRL(pvLote || 0);
+document.getElementById('pv_markup').textContent = (isFinite(markup) ? markup : 0).toFixed(2) + 'x';
+document.getElementById('pv_lucro').textContent = fmtBRL(lucro || 0);
+
+window.__PV_PER_UNIT = pvPerUnit || 0;
+window.__PV_LOTE = pvLote || 0;
+
 function atualizarPreco(){
   const {custoFinalLote,custoUnit}=atualizarCustos();
   let multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
