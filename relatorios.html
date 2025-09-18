@@ -501,68 +501,113 @@ function calcularReceita(prod){
 
 /* ===== Preenche ===== */
 async function fillProduto(raw){
-  const prod=JSON.parse(JSON.stringify(raw||{}));
+  const prod = JSON.parse(JSON.stringify(raw||{}));
+
+  // Enriquecer com preços do cadastro
   await enriquecerComPrecosDoCadastro(prod);
-  PROD=prod; const calc=calcularReceita(prod); BASE=calc;
 
-  document.getElementById('p_nome').textContent=prod.item||'(produto)';
-  document.getElementById('p_meta').textContent=`${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
-  document.getElementById('k_rend').textContent=`${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
-  document.getElementById('k_custoRec').textContent=fmtBRL(calc.total);
-  document.getElementById('k_custoGml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('k_custoKgL').textContent=fmtBRL(calc.kgl);
+  PROD = prod;
+  const calc = calcularReceita(prod);
+  BASE = calc;
 
-  const usuario=(document.getElementById('usuario').value||'').trim();
-  const empresa=elEmpresa.value || (prod.empresa||''); const now=new Date();
-  document.getElementById('ph_info').textContent=`Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
+  // Cabeçalho do produto
+  document.getElementById('p_nome').textContent = prod.item || '(produto)';
+  document.getElementById('p_meta').textContent = `${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+  document.getElementById('k_rend').textContent = `${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
+  document.getElementById('k_custoRec').textContent = fmtBRL(calc.total);
 
-  elTbody.innerHTML='';
+  // custo por unidade (NOVO)
+  document.getElementById('k_custoUn').textContent = fmtBRL(calc.custoUn);
+
+  // ainda mantém g/ml e kg/L se quiser exibir
+  document.getElementById('k_custoGml').textContent = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('k_custoKgL').textContent = fmtBRL(calc.kgl);
+
+  // Info no cabeçalho para impressão
+  const usuario = (document.getElementById('usuario').value||'').trim();
+  const empresa = elEmpresa.value || (prod.empresa||''); 
+  const now = new Date();
+  document.getElementById('ph_info').textContent =
+    `Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
+
+  // Renderizar itens da tabela
+  elTbody.innerHTML = '';
   calc.itens.forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
-                  <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
-                  <td>${(r.um||'').toUpperCase()}</td>
-                  <td class="right">${fmtBRL(r.custoUnit)}</td>
-                  <td class="right">${fmtBRL(r.subtotal)}</td>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
+      <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
+      <td>${(r.um||'').toUpperCase()}</td>
+      <td class="right">${fmtBRL(r.custoUnit)}</td>
+      <td class="right">${fmtBRL(r.subtotal)}</td>`;
     elTbody.appendChild(tr);
+
+    // detalhamento de compostos
     if(r.comp){
-      const det=document.createElement('tr');
-      det.innerHTML=`<td colspan="5">
-        <details class="comp-details">
-          <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
-          <div class="tbl-wrap"><table>
-            <thead><tr><th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th><th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr></thead>
-            <tbody>${r.comp.filhos.map(f=>`
-              <tr><td>${f.nome||''}</td><td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td><td>${(f.umComp||'').toUpperCase()}</td>
-                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td><td>${(f.umPreco||'').toUpperCase()}</td>
-                  <td class="right">${fmtBRL(f.custoUnit||0)}</td><td class="right">${fmtBRL(f.valor||0)}</td></tr>`).join('')}
-            </tbody></table></div>
-        </details></td>`;
+      const det = document.createElement('tr');
+      det.innerHTML = `
+        <td colspan="5">
+          <details class="comp-details">
+            <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th><th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr></thead>
+              <tbody>${r.comp.filhos.map(f=>`
+                <tr>
+                  <td>${f.nome||''}</td>
+                  <td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td>
+                  <td>${(f.umComp||'').toUpperCase()}</td>
+                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td>
+                  <td>${(f.umPreco||'').toUpperCase()}</td>
+                  <td class="right">${fmtBRL(f.custoUnit||0)}</td>
+                  <td class="right">${fmtBRL(f.valor||0)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table></div>
+          </details>
+        </td>`;
       elTbody.appendChild(det);
     }
   });
-  document.getElementById('s_itens').textContent=calc.itens.length;
-  document.getElementById('s_total').textContent=fmtBRL(calc.total);
-  document.getElementById('s_gml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-  document.getElementById('s_kgl').textContent=fmtBRL(calc.kgl);
 
-  let unidadeVenda='un'; if(TYPE(calc.unidade)==='mass') unidadeVenda='kg'; else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
-  document.getElementById('kf_label').textContent=`Custo Final por ${unidadeVenda}`;
-  document.getElementById('pv_hint').textContent=`Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
+  // Resumos abaixo da tabela
+  document.getElementById('s_itens').textContent = calc.itens.length;
+  document.getElementById('s_total').textContent = fmtBRL(calc.total);
 
-  MARGEM=0; document.getElementById('pv_input').value='';
+  // NOVO → custo por unidade
+  document.getElementById('s_unit').textContent = fmtBRL(calc.custoUn);
 
+  // se ainda quiser manter g/ml e kg/L
+  document.getElementById('s_gml').textContent = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('s_kgl').textContent = fmtBRL(calc.kgl);
+
+  // Label do custo final
+  let unidadeVenda = 'un';
+  if(TYPE(calc.unidade) === 'mass') unidadeVenda='kg';
+  else if(TYPE(calc.unidade) === 'vol') unidadeVenda='L';
+  document.getElementById('kf_label').textContent = `Custo Final por ${unidadeVenda}`;
+  document.getElementById('pv_hint').textContent = `Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
+
+  // reset da margem
+  MARGEM=0; 
+  document.getElementById('pv_input').value='';
+
+  // mostrar cards
   document.getElementById('cardProd').style.display='block';
   document.getElementById('cardRec').style.display='block';
   document.getElementById('cardCusto').style.display='block';
   document.getElementById('cardVenda').style.display='block';
 
+  // carrega margem salva, se houver
   (async ()=>{
-    const saved=await fetchPrecoSalvo(prod);
-    if(saved && typeof saved.margemPerc==='number'){ MARGEM=saved.margemPerc; document.getElementById('pv_input').value=String(MARGEM).replace('.',','); }
+    const saved = await fetchPrecoSalvo(prod);
+    if(saved && typeof saved.margemPerc==='number'){ 
+      MARGEM = saved.margemPerc; 
+      document.getElementById('pv_input').value = String(MARGEM).replace('.',','); 
+    }
     atualizarPreco();
   })();
 }
+
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
 function lineValue(mode, raw, base){ const v=toNumberBR(raw); return mode==='pct'? base*(v/100) : v; }
