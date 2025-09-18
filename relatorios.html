@@ -167,8 +167,7 @@ td.right,th.right{text-align:right}
       <div class="kpi">
         <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
         <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
-        <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
-        <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
+        <div class="box"><div class="muted">Custo por Unidade</div><div class="val" id="k_custoUn">—</div></div>
       </div>
     </div>
   </div>
@@ -194,8 +193,7 @@ td.right,th.right{text-align:right}
   <div style="margin-top:6px">
     <div class="pill">Itens: <strong id="s_itens">0</strong></div>
     <div class="pill">Custo da Receita: <strong id="s_total">R$ 0,00</strong></div>
-    <div class="pill">Custo por g/ml: <strong id="s_gml">R$ 0,0000</strong></div>
-    <div class="pill">Custo por kg/L: <strong id="s_kgl">R$ 0,00</strong></div>
+    <div class="pill">Custo por Unidade: <strong id="s_unit">R$ 0,00</strong></div>
   </div>
 </div>
 
@@ -474,8 +472,8 @@ async function fillProduto(raw){
   document.getElementById('p_meta').textContent=`${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
   document.getElementById('k_rend').textContent=`${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
   document.getElementById('k_custoRec').textContent=fmtBRL(calc.total);
- document.getElementById('k_custoGml').textContent = '—'; // remover ou ocultar
-document.getElementById('k_custoKgL').textContent = fmtBRL(calc.custoUnit);
+document.getElementById('k_custoUn').textContent = fmtBRL(calc.custoUnit);
+
 
 
   const usuario=(document.getElementById('usuario').value||'').trim();
@@ -509,12 +507,11 @@ document.getElementById('k_custoKgL').textContent = fmtBRL(calc.custoUnit);
   });
   document.getElementById('s_itens').textContent=calc.itens.length;
   document.getElementById('s_total').textContent=fmtBRL(calc.total);
- document.getElementById('s_gml').textContent = '—';
-document.getElementById('s_kgl').textContent = fmtBRL(calc.custoUnit);
+document.getElementById('s_unit').textContent = fmtBRL(calc.custoUnit);
 
 
-  let unidadeVenda='un'; if(TYPE(calc.unidade)==='mass') unidadeVenda='kg'; else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
-  document.getElementById('kf_label').textContent=`Custo Final por ${unidadeVenda}`;
+
+ document.getElementById('kf_label').textContent = `Custo Final por Unidade`;
   document.getElementById('pv_hint').textContent=`Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
 
   MARGEM=0; document.getElementById('pv_input').value='';
@@ -533,37 +530,54 @@ document.getElementById('s_kgl').textContent = fmtBRL(calc.custoUnit);
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
 function lineValue(mode, raw, base){ const v=toNumberBR(raw); return mode==='pct'? base*(v/100) : v; }
+function atualizarCustos(){
+  const base = BASE.total || 0;
+
+  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+
+  const addTot = impV + fixV + opV;
+  const finalLote = base + addTot;
+
+ const rend = Number(BASE.rendimento || 0);
+const multLote = rend > 0 ? rend : 1;
+const unidadeUnit = 'un';
+
+
+  const custoUnit = multLote>0 ? (finalLote/multLote) : 0;
+
+  // atualiza os campos visuais
+  document.getElementById('r_imp').textContent = fmtBRL(impV);
+  document.getElementById('r_fix').textContent = fmtBRL(fixV);
+  document.getElementById('r_op').textContent  = fmtBRL(opV);
+
+  document.getElementById('k_base').textContent = fmtBRL(base);
+  document.getElementById('k_add').textContent  = fmtBRL(addTot);
+  document.getElementById('k_final').textContent= fmtBRL(finalLote);
+  document.getElementById('k_final_unit').textContent = fmtBRL(custoUnit);
+
+  return { custoFinalLote: finalLote, custoUnit };
+}
 
 /* ===== Custos + Preço ===== */
-const { custoFinalLote, custoUnit } = atualizarCustos();
-let m = Number(MARGEM);
-if (!Number.isFinite(m) || m < 0) m = 0;
-
-const pvLote = custoFinalLote * (1 + m / 100);
-const pvPerUnit = custoUnit * (1 + m / 100);
-const markup = (custoUnit > 0 && pvPerUnit > 0) ? (pvPerUnit / custoUnit) : (1 + m / 100);
-const lucro = Math.max(0, pvLote - custoFinalLote);
-
-document.getElementById('pv_lote').textContent = fmtBRL(pvLote || 0);
-document.getElementById('pv_markup').textContent = (isFinite(markup) ? markup : 0).toFixed(2) + 'x';
-document.getElementById('pv_lucro').textContent = fmtBRL(lucro || 0);
-
-window.__PV_PER_UNIT = pvPerUnit || 0;
-window.__PV_LOTE = pvLote || 0;
-
 function atualizarPreco(){
-  const {custoFinalLote,custoUnit}=atualizarCustos();
-  let multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-  if(u==='kg'||u==='l') multLote=rend||1; else if(u==='g'||u==='ml') multLote=(rend||0)/1000; else multLote=rend||1;
-  let m=Number(MARGEM); if(!Number.isFinite(m)||m<0) m=0;
-  const pvLote=custoFinalLote*(1+m/100);
-  const pvPerUnit=multLote>0 ? (pvLote/multLote) : 0;
-  const markup=(custoUnit>0 && pvPerUnit>0) ? (pvPerUnit/custoUnit) : (1+m/100);
-  const lucro=Math.max(0, pvLote-custoFinalLote);
-  document.getElementById('pv_lote').textContent=fmtBRL(pvLote||0);
-  document.getElementById('pv_markup').textContent=(isFinite(markup)?markup:0).toFixed(2)+'x';
-  document.getElementById('pv_lucro').textContent=fmtBRL(lucro||0);
-  window.__PV_PER_UNIT=pvPerUnit||0; window.__PV_LOTE=pvLote||0;
+  const { custoFinalLote, custoUnit } = atualizarCustos();
+
+  let m = Number(MARGEM);
+  if (!Number.isFinite(m) || m < 0) m = 0;
+
+  const pvLote = custoFinalLote * (1 + m / 100);
+  const pvPerUnit = custoUnit * (1 + m / 100);
+  const markup = (custoUnit > 0 && pvPerUnit > 0) ? (pvPerUnit / custoUnit) : (1 + m / 100);
+  const lucro = Math.max(0, pvLote - custoFinalLote);
+
+  document.getElementById('pv_lote').textContent = fmtBRL(pvLote || 0);
+  document.getElementById('pv_markup').textContent = (isFinite(markup) ? markup : 0).toFixed(2) + 'x';
+  document.getElementById('pv_lucro').textContent = fmtBRL(lucro || 0);
+
+  window.__PV_PER_UNIT = pvPerUnit || 0;
+  window.__PV_LOTE = pvLote || 0;
 }
 
 /* ===== CSV ===== */
@@ -698,10 +712,10 @@ document.getElementById('btnSalvarPainel').addEventListener('click', async ()=>{
     const opV =lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
     const addTot=impV+fixV+opV; const finalLote=base+addTot;
 
-    let unidadeUnit='un', multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
-    if(u==='kg'||u==='l'){ multLote=rend||1; unidadeUnit=(u==='kg'?'kg':'L'); }
-    else if(u==='g'||u==='ml'){ multLote=(rend||0)/1000; unidadeUnit=(u==='g'?'kg':'L'); }
-    else { multLote=rend||1; unidadeUnit='un'; }
+   const rend = Number(BASE.rendimento || 0);
+const multLote = rend > 0 ? rend : 1;
+const unidadeUnit = 'un';
+
 
     const pvUnit=Number(window.__PV_PER_UNIT||0); const pvLote=Number(window.__PV_LOTE||0);
     const custoFinalUnit= multLote>0 ? (finalLote/multLote) : 0;
