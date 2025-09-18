@@ -165,11 +165,7 @@ td.right,th.right{text-align:right}
     </div>
     <div style="grid-column:span 6">
       <div class="kpi">
-        <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
-        <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
-        <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
-        <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
-      </div>
+       <div class="pill">Custo por Unidade: <strong id="s_unit">R$ 0,00</strong></div>
     </div>
   </div>
 </div>
@@ -448,18 +444,59 @@ async function enriquecerComPrecosDoCadastro(prod){
 
 /* ===== Calcular ===== */
 function calcularReceita(prod){
-  const linhas=Array.isArray(prod?.receita)?prod.receita:[]; const itens=[]; let total=0;
+  const linhas = Array.isArray(prod?.receita) ? prod.receita : [];
+  const itens = [];
+  let total = 0;
+
+  // percorre todos os ingredientes
   linhas.forEach(l=>{
-    const qtd=toNumberBR(l.qtd), umLinha=(l.um||'').toLowerCase(), umPreco=(l.priceUm||l.um||'').toLowerCase(), custo=toNumberBR(l.custoUnit);
-    const conv=convertQty(qtd, umLinha, umPreco); const subtotal=(isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
-    itens.push({item:l.item||l.nome||l.codigo||'(ing.)', qtd, um:umLinha, custoUnit:custo, subtotal,
-                comp:(l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)?l._compInfo:null});
-    total+=subtotal;
+    const qtd = toNumberBR(l.qtd);
+    const umLinha = (l.um||'').toLowerCase();
+    const umPreco = (l.priceUm||l.um||'').toLowerCase();
+    const custo = toNumberBR(l.custoUnit);
+
+    // converte quantidade para a unidade de preço
+    const conv = convertQty(qtd, umLinha, umPreco);
+    const subtotal = (isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
+
+    itens.push({
+      item: l.item || l.nome || l.codigo || '(ing.)',
+      qtd,
+      um: umLinha,
+      custoUnit: custo,
+      subtotal,
+      comp: (l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)
+              ? l._compInfo : null
+    });
+
+    total += subtotal;
   });
-  const rend=toNumberBR(prod?.rendimento); const u=(prod?.unidadeRend||'').toLowerCase(); let gml=0,kgl=0;
-  const toBase=uu=> (uu==='kg'||uu==='l')?1000:1;
-  if(['g','kg','ml','l'].includes(u) && rend>0){ const emBase=rend*toBase(u); gml=total/emBase; kgl= total/(emBase/1000); }
-  return {itens,total,gml:isFinite(gml)?gml:0,kgl:isFinite(kgl)?kgl:0,rendimento:rend||0,unidade:u||''};
+
+  // rendimento informado no cadastro
+  const rend = toNumberBR(prod?.rendimento) || 0;
+  const unidade = (prod?.unidadeRend || 'un').toLowerCase();
+
+  // cálculo de custo por unidade
+  const custoUn = rend > 0 ? total / rend : 0;
+
+  // (mantive g/ml e kg/L caso ainda queira usar em paralelo)
+  let gml = 0, kgl = 0;
+  const toBase = uu => (uu === 'kg' || uu === 'l') ? 1000 : 1;
+  if(['g','kg','ml','l'].includes(unidade) && rend > 0){
+    const emBase = rend * toBase(unidade);
+    gml = total / emBase;
+    kgl = total / (emBase/1000);
+  }
+
+  return {
+    itens,
+    total,
+    rendimento: rend,
+    unidade,
+    custoUn: isFinite(custoUn) ? custoUn : 0,
+    gml: isFinite(gml) ? gml : 0,
+    kgl: isFinite(kgl) ? kgl : 0
+  };
 }
 
 /* ===== Preenche ===== */
