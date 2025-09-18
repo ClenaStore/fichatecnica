@@ -168,6 +168,11 @@ td.right,th.right{text-align:right}
         <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
         <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
         <div class="box"><div class="muted">Custo por Unidade</div><div class="val" id="k_custoUn">—</div></div>
+        <div class="box">
+  <div class="muted">CMV da Receita</div>
+  <div class="val" id="pv_cmv">—</div>
+</div>
+
       </div>
     </div>
   </div>
@@ -575,6 +580,8 @@ function atualizarPreco(){
   document.getElementById('pv_lote').textContent = fmtBRL(pvLote || 0);
   document.getElementById('pv_markup').textContent = (isFinite(markup) ? markup : 0).toFixed(2) + 'x';
   document.getElementById('pv_lucro').textContent = fmtBRL(lucro || 0);
+  document.getElementById('pv_cmv').textContent = fmtBRL(custoFinalLote || 0);
+
 
   window.__PV_PER_UNIT = pvPerUnit || 0;
   window.__PV_LOTE = pvLote || 0;
