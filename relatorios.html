@@ -165,7 +165,11 @@ td.right,th.right{text-align:right}
     </div>
     <div style="grid-column:span 6">
       <div class="kpi">
-       <div class="pill">Custo por Unidade: <strong id="s_unit">R$ 0,00</strong></div>
+        <div class="box"><div class="muted">Rendimento</div><div class="val" id="k_rend">—</div></div>
+        <div class="box"><div class="muted">Custo da Receita</div><div class="val" id="k_custoRec">—</div></div>
+        <div class="box"><div class="muted">Custo por g/ml</div><div class="val" id="k_custoGml">—</div></div>
+        <div class="box"><div class="muted">Custo por kg/L</div><div class="val" id="k_custoKgL">—</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -190,7 +194,8 @@ td.right,th.right{text-align:right}
   <div style="margin-top:6px">
     <div class="pill">Itens: <strong id="s_itens">0</strong></div>
     <div class="pill">Custo da Receita: <strong id="s_total">R$ 0,00</strong></div>
-   <div class="pill">Custo por Unidade: <strong id="s_unit">R$ 0,00</strong></div>
+    <div class="pill">Custo por g/ml: <strong id="s_gml">R$ 0,0000</strong></div>
+    <div class="pill">Custo por kg/L: <strong id="s_kgl">R$ 0,00</strong></div>
   </div>
 </div>
 
@@ -442,131 +447,109 @@ async function enriquecerComPrecosDoCadastro(prod){
 }
 
 /* ===== Calcular ===== */
-// NOVO → custo por unidade
-document.getElementById('s_unit').textContent = fmtBRL(calc.custoUn);
+function calcularReceita(prod){
+  const linhas=Array.isArray(prod?.receita)?prod.receita:[]; const itens=[]; let total=0;
+  linhas.forEach(l=>{
+    const qtd=toNumberBR(l.qtd), umLinha=(l.um||'').toLowerCase(), umPreco=(l.priceUm||l.um||'').toLowerCase(), custo=toNumberBR(l.custoUnit);
+    const conv=convertQty(qtd, umLinha, umPreco); const subtotal=(isNaN(conv)?0:conv) * (isNaN(custo)?0:custo);
+    itens.push({item:l.item||l.nome||l.codigo||'(ing.)', qtd, um:umLinha, custoUnit:custo, subtotal,
+                comp:(l._compInfo && Array.isArray(l._compInfo.filhos) && l._compInfo.filhos.length)?l._compInfo:null});
+    total+=subtotal;
+  });
+  const rend=toNumberBR(prod?.rendimento); const u=(prod?.unidadeRend||'').toLowerCase(); let gml=0,kgl=0;
+  const toBase=uu=> (uu==='kg'||uu==='l')?1000:1;
+  if(['g','kg','ml','l'].includes(u) && rend>0){ const emBase=rend*toBase(u); gml=total/emBase; kgl= total/(emBase/1000); }
+  return {itens,total,gml:isFinite(gml)?gml:0,kgl:isFinite(kgl)?kgl:0,rendimento:rend||0,unidade:u||''};
+}
 
-// se ainda quiser manter g/ml e kg/L
-document.getElementById('s_gml').textContent = 'R$ '+(calc.gml||0).toFixed(4).replace('.',',');
-document.getElementById('s_kgl').textContent = fmtBRL(calc.kgl);
-
-/* ===== Preenche ===== */
 /* ===== Preenche ===== */
 async function fillProduto(raw){
-  const prod = JSON.parse(JSON.stringify(raw||{}));
-
-  // Enriquecer com preços do cadastro
+  const prod=JSON.parse(JSON.stringify(raw||{}));
   await enriquecerComPrecosDoCadastro(prod);
+  PROD=prod; const calc=calcularReceita(prod); BASE=calc;
 
-  PROD = prod;
-  const calc = calcularReceita(prod);
-  BASE = calc;
+  document.getElementById('p_nome').textContent=prod.item||'(produto)';
+  document.getElementById('p_meta').textContent=`${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+  document.getElementById('k_rend').textContent=`${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()}`;
+  document.getElementById('k_custoRec').textContent=fmtBRL(calc.total);
+  document.getElementById('k_custoGml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('k_custoKgL').textContent=fmtBRL(calc.kgl);
 
-  // Cabeçalho do produto
-  document.getElementById('p_nome').textContent = prod.item || '(produto)';
-  document.getElementById('p_meta').textContent = `${prod.codigoSistema||'-'} • Nº ${prod.numero||'-'} • ${prod.classificacao||'-'}`;
+  const usuario=(document.getElementById('usuario').value||'').trim();
+  const empresa=elEmpresa.value || (prod.empresa||''); const now=new Date();
+  document.getElementById('ph_info').textContent=`Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
 
-  // Info no cabeçalho para impressão
-  const usuario = (document.getElementById('usuario').value||'').trim();
-  const empresa = elEmpresa.value || (prod.empresa||''); 
-  const now = new Date();
-  document.getElementById('ph_info').textContent =
-    `Empresa: ${empresa||'—'} • Produto: ${prod.item||'—'} • Código: ${prod.codigoSistema||'—'} • Nº: ${prod.numero||'—'} • Usuário: ${usuario||'—'} • ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
-
-  // Renderizar itens da tabela
-  elTbody.innerHTML = '';
+  elTbody.innerHTML='';
   calc.itens.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
-      <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
-      <td>${(r.um||'').toUpperCase()}</td>
-      <td class="right">${fmtBRL(r.custoUnit)}</td>
-      <td class="right">${fmtBRL(r.subtotal)}</td>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.item}${r.comp?` <span class="comp-badge">composto</span>`:''}</td>
+                  <td class="right">${(r.qtd||0).toLocaleString('pt-BR')}</td>
+                  <td>${(r.um||'').toUpperCase()}</td>
+                  <td class="right">${fmtBRL(r.custoUnit)}</td>
+                  <td class="right">${fmtBRL(r.subtotal)}</td>`;
     elTbody.appendChild(tr);
-
-    // detalhamento de compostos
     if(r.comp){
-      const det = document.createElement('tr');
-      det.innerHTML = `
-        <td colspan="5">
-          <details class="comp-details">
-            <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th><th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr></thead>
-              <tbody>${r.comp.filhos.map(f=>`
-                <tr>
-                  <td>${f.nome||''}</td>
-                  <td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umComp||'').toUpperCase()}</td>
-                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td>
-                  <td>${(f.umPreco||'').toUpperCase()}</td>
-                  <td class="right">${fmtBRL(f.custoUnit||0)}</td>
-                  <td class="right">${fmtBRL(f.valor||0)}</td>
-                </tr>`).join('')}
-              </tbody>
-            </table></div>
-          </details>
-        </td>`;
+      const det=document.createElement('tr');
+      det.innerHTML=`<td colspan="5">
+        <details class="comp-details">
+          <summary>Ver composição (${r.comp.filhos.length} itens) — custo unitário ${fmtBRL(r.comp.total)} (${(r.comp.umPreco||'').toUpperCase()})</summary>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Ingrediente</th><th class="right">Qtd (comp.)</th><th>U.M.</th><th class="right">Conv. → preço</th><th>U.M. preço</th><th class="right">Custo unit.</th><th class="right">Valor</th></tr></thead>
+            <tbody>${r.comp.filhos.map(f=>`
+              <tr><td>${f.nome||''}</td><td class="right">${(f.qtdComp||0).toLocaleString('pt-BR')}</td><td>${(f.umComp||'').toUpperCase()}</td>
+                  <td class="right">${(f.qtdConvertida??0).toLocaleString('pt-BR')}</td><td>${(f.umPreco||'').toUpperCase()}</td>
+                  <td class="right">${fmtBRL(f.custoUnit||0)}</td><td class="right">${fmtBRL(f.valor||0)}</td></tr>`).join('')}
+            </tbody></table></div>
+        </details></td>`;
       elTbody.appendChild(det);
     }
   });
+  document.getElementById('s_itens').textContent=calc.itens.length;
+  document.getElementById('s_total').textContent=fmtBRL(calc.total);
+  document.getElementById('s_gml').textContent='R$ '+(calc.gml||0).toFixed(4).replace('.',',');
+  document.getElementById('s_kgl').textContent=fmtBRL(calc.kgl);
 
-  // Resumos abaixo da tabela
-  document.getElementById('s_itens').textContent = calc.itens.length;
-  document.getElementById('s_total').textContent = fmtBRL(calc.total);
-  document.getElementById('s_unit').textContent = fmtBRL(calc.custoUn);
+  let unidadeVenda='un'; if(TYPE(calc.unidade)==='mass') unidadeVenda='kg'; else if(TYPE(calc.unidade)==='vol') unidadeVenda='L';
+  document.getElementById('kf_label').textContent=`Custo Final por ${unidadeVenda}`;
+  document.getElementById('pv_hint').textContent=`Base: ${calc.rendimento||0} ${(calc.unidade||'').toUpperCase()} por lote`;
 
-  // Label do custo final → sempre em unidade
-  document.getElementById('kf_label').textContent = `Custo Final por Unidade`;
-  document.getElementById('pv_hint').textContent = `Base: ${calc.rendimento||0} UN por lote`;
+  MARGEM=0; document.getElementById('pv_input').value='';
 
-  // reset da margem
-  MARGEM=0; 
-  document.getElementById('pv_input').value='';
-
-  // mostrar cards
   document.getElementById('cardProd').style.display='block';
   document.getElementById('cardRec').style.display='block';
   document.getElementById('cardCusto').style.display='block';
   document.getElementById('cardVenda').style.display='block';
 
-  // carrega margem salva, se houver
   (async ()=>{
-    const saved = await fetchPrecoSalvo(prod);
-    if(saved && typeof saved.margemPerc==='number'){ 
-      MARGEM = saved.margemPerc; 
-      document.getElementById('pv_input').value = String(MARGEM).replace('.',','); 
-    }
+    const saved=await fetchPrecoSalvo(prod);
+    if(saved && typeof saved.margemPerc==='number'){ MARGEM=saved.margemPerc; document.getElementById('pv_input').value=String(MARGEM).replace('.',','); }
     atualizarPreco();
   })();
 }
-
 
 function getRadio(name){ const x=[...document.querySelectorAll(`input[name="${name}"]`)].find(r=>r.checked); return x?x.value:'pct'; }
 function lineValue(mode, raw, base){ const v=toNumberBR(raw); return mode==='pct'? base*(v/100) : v; }
 
 /* ===== Custos + Preço ===== */
 function atualizarCustos(){
-  const base = BASE.total || 0;
-  const impV = lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
-  const fixV = lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
-  const opV  = lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
-  const add  = impV + fixV + opV;
-  const final = base + add;
+  const base=BASE.total||0;
+  const impV=lineValue(getRadio('m_imp'), document.getElementById('v_imp').value, base);
+  const fixV=lineValue(getRadio('m_fix'), document.getElementById('v_fix').value, base);
+  const opV =lineValue(getRadio('m_op'),  document.getElementById('v_op').value,  base);
+  const add=impV+fixV+opV, final=base+add;
 
-  document.getElementById('r_imp').textContent = fmtBRL(impV);
-  document.getElementById('r_fix').textContent = fmtBRL(fixV);
-  document.getElementById('r_op').textContent  = fmtBRL(opV);
-  document.getElementById('k_base').textContent = fmtBRL(base);
-  document.getElementById('k_add').textContent  = fmtBRL(add);
-  document.getElementById('k_final').textContent= fmtBRL(final);
+  document.getElementById('r_imp').textContent=fmtBRL(impV);
+  document.getElementById('r_fix').textContent=fmtBRL(fixV);
+  document.getElementById('r_op').textContent =fmtBRL(opV);
+  document.getElementById('k_base').textContent=fmtBRL(base);
+  document.getElementById('k_add').textContent =fmtBRL(add);
+  document.getElementById('k_final').textContent=fmtBRL(final);
 
-  const perUnit = (BASE.rendimento>0) ? (final/BASE.rendimento) : 0;
-  document.getElementById('k_final_unit').textContent = fmtBRL(perUnit);
-
-  return {custoFinalLote: final, custoUnit: perUnit};
+  let perUnit=0; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
+  if(rend>0){ if(u==='kg'||u==='l') perUnit=final/rend; else if(u==='g'||u==='ml') perUnit=final/(rend/1000); else perUnit=final/rend; }
+  document.getElementById('k_final_unit').textContent=fmtBRL(isFinite(perUnit)?perUnit:0);
+  return {custoFinalLote:final,custoUnit:(isFinite(perUnit)?perUnit:0)};
 }
-
 function atualizarPreco(){
   const {custoFinalLote,custoUnit}=atualizarCustos();
   let multLote=1; const u=(BASE.unidade||'').toLowerCase(); const rend=Number(BASE.rendimento||0);
