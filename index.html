@@ -220,7 +220,6 @@
     <div class="totais">
       <span class="pill">Custo da Receita: <strong id="custoReceita">R$ 0,00</strong></span>
     <span class="pill">Custo por Unidade: <strong id="custoPorGMl">R$ 0,00</strong></span>
-      <span class="pill">Custo por kg/L: <strong id="custoPorKgL">R$ 0,00</strong></span>
     </div>
   </div>
 
@@ -555,36 +554,30 @@ function lerTabela(){
 }
 
 function atualizarTotais(){
-  const itens = lerTabela(); let total = 0;
+  const itens = lerTabela();
+  let total = 0;
+
   [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{ 
     const st = itens[i]?.subtotal || 0; 
     tr.querySelector('.subtotal').textContent = fmtBRL(st); 
     total += st; 
   });
+
   document.getElementById('custoReceita').textContent = fmtBRL(total);
 
   const rendimento = toNumberBR(document.getElementById('rendimento').value);
-  const unidadeRend = document.getElementById('unidadeRend').value.toLowerCase();
+  let custoPorUn = 0;
 
-  let custoPorUn = 0, custoPorKgL = 0;
-  const toBase = u => u==='kg' ? 1000 : u==='l' ? 1000 : 1;
-
-  if(unidadeRend==='un' && rendimento>0){
+  if(rendimento > 0){
     custoPorUn = total / rendimento;
   }
-  if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){
-    const emBase = rendimento * toBase(unidadeRend);
-    custoPorKgL = total / (emBase/1000);
-  }
 
-  // Atualiza textos
+  // Atualiza apenas custo por unidade
   document.getElementById('custoPorGMl').textContent =
-    unidadeRend==='un'
-      ? (isFinite(custoPorUn) ? fmtBRL(custoPorUn) : '—')
-      : '—';
+    isFinite(custoPorUn) ? fmtBRL(custoPorUn) : '—';
 
-  document.getElementById('custoPorKgL').textContent =
-    isFinite(custoPorKgL) ? fmtBRL(custoPorKgL) : '—';
+  // Remove cálculo de kg/L
+  document.getElementById('custoPorKgL').textContent = '—';
 }
 
 /* ===== BACKEND ===== */
