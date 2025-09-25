@@ -154,6 +154,22 @@ td.right,th.right{text-align:right}
     <a class="btn ghost" href="./">← Cadastro</a>
   </div>
 </div>
+<!-- Lista de produtos carregados -->
+<div class="card" id="cardLista" style="display:none">
+  <strong>Produtos carregados</strong>
+  <div class="tbl-wrap" style="margin-top:8px;max-height:320px;overflow:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Código</th>
+          <th>Nº</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyLista"></tbody>
+    </table>
+  </div>
+</div>
 
 <!-- Cabeçalho -->
 <div class="card" id="cardProd" style="display:none">
@@ -368,9 +384,11 @@ async function fetchProdutos(empresa){
   if(!(j.ok)) {
     console.warn(j.error); document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.'; PRODUTOS=[]; renderSugestoes(); return;
   }
-  PRODUTOS = Array.isArray(j.data)?j.data:[]; document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
-  renderSugestoes();
-}
+PRODUTOS = Array.isArray(j.data)?j.data:[]; 
+document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
+renderSugestoes();
+renderListaProdutos(); // <<< AQUI chamamos a lista
+
 async function fetchPrecoSalvo(prod){
   const params=new URLSearchParams({action:'preco_get',empresa:prod.empresa||'',codigo:prod.codigoSistema||'',numero:prod.numero||'',item:prod.item||''});
   const j=await fetchJSON(WEBAPP_URL+'?'+params.toString());
@@ -411,6 +429,37 @@ function updateActive(){
   items.forEach((el,i)=>el.classList.toggle('active',i===taActive));
   if(items[taActive]) items[taActive].scrollIntoView({block:'nearest'});
 }
+  function renderListaProdutos(){
+  const tbody = document.getElementById('tbodyLista');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+
+  if(!Array.isArray(PRODUTOS) || !PRODUTOS.length){
+    document.getElementById('cardLista').style.display='none';
+    return;
+  }
+
+  // Cria uma linha para cada produto
+  PRODUTOS.forEach((p)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.item||'(produto)'}</td>
+      <td>${p.codigoSistema||'-'}</td>
+      <td>${p.numero||'-'}</td>`;
+    
+    // deixa a linha clicável → abre o produto
+    tr.style.cursor='pointer';
+    tr.addEventListener('click', async ()=>{
+      try{ showLoader(); await fillProduto(p); } finally{ hideLoader(); }
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  // mostra o card (estava oculto)
+  document.getElementById('cardLista').style.display='block';
+}
+
 
 /* ===== Preços do Cadastro (inclui compostos) ===== */
 async function enriquecerComPrecosDoCadastro(prod){
