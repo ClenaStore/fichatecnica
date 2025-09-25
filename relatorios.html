@@ -388,6 +388,9 @@ PRODUTOS = Array.isArray(j.data)?j.data:[];
 document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
 renderSugestoes();
 renderListaProdutos(); // <<< AQUI chamamos a lista
+}
+
+async function fetchPrecoSalvo(prod){
 
 async function fetchPrecoSalvo(prod){
   const params=new URLSearchParams({action:'preco_get',empresa:prod.empresa||'',codigo:prod.codigoSistema||'',numero:prod.numero||'',item:prod.item||''});
