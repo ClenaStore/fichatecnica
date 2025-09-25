@@ -382,21 +382,33 @@ async function fetchEmpresas(){
 async function fetchProdutos(empresa){
   const j = await fetchJSON(WEBAPP_URL+'?action=produtos&empresa='+encodeURIComponent(empresa||'')+'&ts='+Date.now());
   if(!(j.ok)) {
-    console.warn(j.error); document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.'; PRODUTOS=[]; renderSugestoes(); return;
+    console.warn(j.error);
+    document.getElementById('infoEmpresa').textContent='Não foi possível carregar produtos.';
+    PRODUTOS=[];
+    renderSugestoes();
+    return;
   }
-PRODUTOS = Array.isArray(j.data)?j.data:[]; 
-document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
-renderSugestoes();
-renderListaProdutos(); // <<< AQUI chamamos a lista
+
+  PRODUTOS = Array.isArray(j.data)?j.data:[];
+  document.getElementById('infoEmpresa').textContent=`Produtos: ${PRODUTOS.length}`;
+  renderSugestoes();
+  renderListaProdutos(); // <<< aqui chama a lista
 }
 
-async function fetchPrecoSalvo(prod){
+// ✅ agora a função fecha corretamente
 
 async function fetchPrecoSalvo(prod){
-  const params=new URLSearchParams({action:'preco_get',empresa:prod.empresa||'',codigo:prod.codigoSistema||'',numero:prod.numero||'',item:prod.item||''});
+  const params=new URLSearchParams({
+    action:'preco_get',
+    empresa:prod.empresa||'',
+    codigo:prod.codigoSistema||'',
+    numero:prod.numero||'',
+    item:prod.item||''
+  });
   const j=await fetchJSON(WEBAPP_URL+'?'+params.toString());
   return j.ok ? (j.data||null) : null;
 }
+
 
 /* ===== Busca ===== */
 let taActive=-1;
