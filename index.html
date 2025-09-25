@@ -172,11 +172,15 @@
         <select id="empresa"></select>
         <div class="small muted" id="infoEmpresa"></div>
       </div>
-      <div style="grid-column: span 3">
-        <label>Usuário <span class="small muted">(selecione ou digite)</span></label>
-        <input id="usuario" list="listaUsuarios" placeholder="Seu nome ou login" autocomplete="off">
-        <datalist id="listaUsuarios"></datalist>
-      </div>
+<div style="grid-column: span 3">
+  <label>Usuário <span class="small muted">(obrigatório)</span></label>
+  <select id="usuario" required></select>
+</div>
+<div style="grid-column: span 3">
+  <label>Senha <span class="small muted">(obrigatória)</span></label>
+  <input id="senha" type="password" placeholder="Digite sua senha" required>
+</div>
+
       <div style="grid-column: span 6">
         <label>OBS.</label>
         <input id="obs" placeholder="Anotações gerais">
@@ -322,6 +326,14 @@ function toast(msg){
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwvWmsR9Sng_2UHJXKZnjn0Z6oUbqMa0FE2XmvhA_IZjIs1D3ocmm0WcgdI_MPgyJ3z/exec';
 const DEFAULT_EMPRESAS = ['Mercatto','Padaria'];
 
+  /* ===== LOGIN LOCAL ===== */
+const DEFAULT_USERS = [
+  { nome: "Luciana Carneiro", senha: "8486" },
+  { nome: "Nalbert Souza", senha: "abcd" },
+  { nome: "Ficha Técnica", senha: "xyz123" }
+];
+
+
 /* ===== ESTADO ===== */
 let INGREDIENTES = [];
 let EMPRESAS = [];
@@ -379,8 +391,19 @@ function toNumberBR(val){
 const USERS_KEY = 'AUTH_USERS_V1';
 function getUsers(){ try{ const j=localStorage.getItem(USERS_KEY); const arr=j?JSON.parse(j):[]; return Array.isArray(arr)?arr:[]; }catch(_){ return []; } }
 function setUsers(arr){ try{ localStorage.setItem(USERS_KEY, JSON.stringify(arr)); }catch(_){} }
-function renderUsersDatalist(){ const dl=document.getElementById('listaUsuarios'); if(!dl) return; dl.innerHTML=''; getUsers().forEach(u=>{ const o=document.createElement('option'); o.value=u; dl.appendChild(o); }); }
-function rememberUser(name){ name=String(name||'').trim(); if(!name) return; const list=getUsers(); if(!list.find(x=>x.toLowerCase()===name.toLowerCase())){ list.push(name); setUsers(list); } try{ localStorage.setItem('AUTH_USER', name); }catch(_){} renderUsersDatalist(); }
+function renderUsersSelect(){
+  const sel = document.getElementById('usuario');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— selecione —</option>';
+  DEFAULT_USERS.forEach(u=>{
+    const o=document.createElement('option');
+    o.value=u.nome;
+    o.textContent=u.nome;
+    sel.appendChild(o);
+  });
+}
+
+
 
 /* ===== FOTO ===== */
 const inpFoto = document.getElementById('fotoProduto');
@@ -989,23 +1012,33 @@ btnSalvarIng.addEventListener('click', async ()=>{
 
 /* ===== SALVAR PRODUTO ===== */
 async function handleSalvar(){
-  const CURRENT_USER = (document.getElementById('usuario')?.value || localStorage.getItem('AUTH_USER') || '').trim();
-  const empresaSel = document.getElementById('empresa')?.value || '';
-  const receita = lerTabela();
-  try{
-    if(!empresaSel) throw new Error('Selecione a Empresa.');
-    if(!receita.length) throw new Error('Adicione pelo menos 1 ingrediente.');
-    if(receita.some(r => !r.qtd || r.qtd < 0)) throw new Error('Quantidade deve ser > 0.');
-    if(receita.some(r => !r.custoUnit || r.custoUnit < 0)) throw new Error('Custo unitário deve ser > 0.');
-    if(receita.some(r => !r.um)) throw new Error('Selecione a U.M. em todas as linhas.');
-  }catch(e){ alert(e.message); return; }
+const usuarioSel = document.getElementById('usuario')?.value || '';
+const senha = document.getElementById('senha')?.value || '';
+const empresaSel = document.getElementById('empresa')?.value || '';
+const receita = lerTabela();
+
+try {
+  if(!empresaSel) throw new Error('Selecione a Empresa.');
+  if(!usuarioSel) throw new Error('Selecione o Usuário.');
+  if(!senha) throw new Error('Digite a senha.');
+
+  const user = DEFAULT_USERS.find(u => u.nome === usuarioSel);
+  if(!user) throw new Error('Usuário inválido.');
+  if(user.senha !== senha) throw new Error('Senha incorreta.');
+
+  if(!receita.length) throw new Error('Adicione pelo menos 1 ingrediente.');
+  if(receita.some(r => !r.qtd || r.qtd < 0)) throw new Error('Quantidade deve ser > 0.');
+  if(receita.some(r => !r.custoUnit || r.custoUnit < 0)) throw new Error('Custo unitário deve ser > 0.');
+  if(receita.some(r => !r.um)) throw new Error('Selecione a U.M. em todas as linhas.');
+} catch(e) { alert(e.message); return; }
+
   const total = receita.reduce((s,i)=>s+i.subtotal,0);
   const rendimento = toNumberBR(document.getElementById('rendimento').value);
   const unidadeRend = document.getElementById('unidadeRend').value.toLowerCase();
   let custoPorGMl = 0, custoPorKgL = 0; const toBase = u => u==='kg' ? 1000 : u==='l' ? 1000 : 1;
   if(['g','kg','ml','l'].includes(unidadeRend) && rendimento>0){ const emBase = rendimento * toBase(unidadeRend); custoPorGMl = total / emBase; custoPorKgL = total / (emBase/1000); }
   const foto = FOTO ? { name: FOTO.name, type: FOTO.type, base64: FOTO.base64 } : null;
-  const payload = { empresa: empresaSel, codigoSistema: document.getElementById('codigoSistema').value.trim(), numero: document.getElementById('numero').value.trim(), classificacao: document.getElementById('classificacao').value.trim(), item: document.getElementById('item').value.trim(), rendimento: document.getElementById('rendimento').value.trim(), unidadeRend, custoReceita: Number(total.toFixed(4)), custoPorGramaOuML: Number(custoPorGMl.toFixed(6)), custoPorKgOuL: Number(custoPorKgL.toFixed(4)), obs: document.getElementById('obs').value.trim(), receita, usuario: CURRENT_USER || '', foto };
+  const payload = { empresa: empresaSel, codigoSistema: document.getElementById('codigoSistema').value.trim(), numero: document.getElementById('numero').value.trim(), classificacao: document.getElementById('classificacao').value.trim(), item: document.getElementById('item').value.trim(), rendimento: document.getElementById('rendimento').value.trim(), unidadeRend, custoReceita: Number(total.toFixed(4)), custoPorGramaOuML: Number(custoPorGMl.toFixed(6)), custoPorKgOuL: Number(custoPorKgL.toFixed(4)), obs: document.getElementById('obs').value.trim(), receita, usuario: usuarioSel, foto };
   const setStatus = (msg)=>{ const s1=document.getElementById('status'); const s2=document.getElementById('statusDesktop'); if(s1) s1.textContent=msg; if(s2) s2.textContent=msg; };
   setStatus('Enviando...');
   try{
@@ -1013,7 +1046,6 @@ async function handleSalvar(){
     if(r.ok){
       setStatus('Salvo com sucesso na aba "Produtos".');
       toast('Produto salvo ✓');
-      rememberUser(CURRENT_USER);
       clearDraft();
     } else {
       setStatus('Erro ao salvar: ' + (r.error||'')); toast('Erro ao salvar');
@@ -1109,13 +1141,12 @@ let _svT=null; function autoSave(){ clearTimeout(_svT); _svT=setTimeout(saveDraf
   });
 
 tbody.addEventListener('input', autoSave); tbody.addEventListener('change', autoSave);
-const usuarioInput=document.getElementById('usuario'); if(usuarioInput){ usuarioInput.addEventListener('change', ()=>{ rememberUser(usuarioInput.value); }); }
 
 (async function boot(){
   await fetchEmpresas();
   const sel=document.getElementById('empresa'); if(sel && !sel.value && EMPRESAS.length){ sel.value = EMPRESAS[0]; }
   await fetchIngredientes(sel?.value||'');
-  renderUsersDatalist();
+  renderUsersSelect();
   try{ const savedUser = localStorage.getItem('AUTH_USER'); if(savedUser && !document.getElementById('usuario').value){ document.getElementById('usuario').value = savedUser; } }catch(_){ }
   if(!loadDraft()){ novaLinha(); novaLinha(); novaLinha(); }
 })();
